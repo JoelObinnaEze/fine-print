@@ -56,11 +56,11 @@
 **Description:** Add process, reject, and drop with terminal/horizon enforcement and property-tested identity/locus invariants.
 
 **Acceptance criteria:**
-- [ ] All specified actions obey bounds, adjacency, capacity, and terminal rules.
-- [ ] Processed/rejected items cannot be retrieved.
-- [ ] At least 1,000 seeded random traces preserve unique IDs and one locus per item.
+- [x] All specified actions obey bounds, adjacency, capacity, and terminal rules.
+- [x] Processed/rejected items cannot be retrieved.
+- [x] At least 1,000 seeded random traces preserve unique IDs and one locus per item.
 
-**Verification:** Vitest plus fast-check property suite.
+**Verification:** Four tests failed before implementation, including fast-check shrinking `finish → wait` to the terminal-state bug. After implementation and review mutation, 13 tests, 1,000 seeded property traces, typecheck, and build passed on October 26, 2026.
 
 **Dependencies:** Task 3
 
@@ -70,8 +70,8 @@
 
 ## Checkpoint: Deterministic world
 
-- [ ] Full suite, typecheck, and build pass.
-- [ ] Scripted deposit/retrieve loop is reproducible and preserves item identity.
+- [x] Full suite, typecheck, and build pass.
+- [x] Scripted deposit/retrieve loop is reproducible and preserves item identity.
 
 ## Task 5: Add strict policy validation and payout receipts
 

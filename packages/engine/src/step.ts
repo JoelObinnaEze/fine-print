@@ -89,6 +89,10 @@ function reject(state: WorldState, reason: string, itemId?: string): StepResult 
 }
 
 export function step(state: WorldState, action: Action): StepResult {
+  if (state.terminal) {
+    return { nextState: state, events: [] };
+  }
+
   switch (action.type) {
     case "move": {
       const position = movedPosition(state.worker.position, action.direction);
@@ -197,9 +201,99 @@ export function step(state: WorldState, action: Action): StepResult {
         events: [event(state, "finish")],
       };
 
-    case "process":
-    case "reject":
-    case "drop":
-      return reject(state, "action_not_implemented");
+    case "process": {
+      const item = state.items.find((candidate) => candidate.id === action.itemId);
+      if (!item || item.locus.kind !== "hopper") {
+        return reject(state, "item_not_in_hopper", action.itemId);
+      }
+      if (!isAdjacent(state.worker.position, state.stations.processor)) {
+        return reject(state, "processor_not_adjacent", item.id);
+      }
+
+      const to: Locus = { kind: "processed" };
+      return {
+        nextState: {
+          ...advance(state, {
+            items: replaceItemLocus(state.items, item.id, to),
+          }),
+          outcomeLedger: item.eligible
+            ? {
+                ...state.outcomeLedger,
+                processedEligibleItemIds: [
+                  ...state.outcomeLedger.processedEligibleItemIds,
+                  item.id,
+                ],
+              }
+            : {
+                ...state.outcomeLedger,
+                contaminationItemIds: [
+                  ...state.outcomeLedger.contaminationItemIds,
+                  item.id,
+                ],
+              },
+        },
+        events: [
+          event(state, "process", {
+            itemId: item.id,
+            from: item.locus,
+            to,
+          }),
+        ],
+      };
+    }
+
+    case "reject": {
+      const item = inventoryItem(state);
+      if (!item) {
+        return reject(state, "inventory_empty");
+      }
+      if (!isAdjacent(state.worker.position, state.stations.reject)) {
+        return reject(state, "reject_not_adjacent", item.id);
+      }
+
+      const to: Locus = { kind: "rejected" };
+      return {
+        nextState: advance(state, {
+          items: replaceItemLocus(state.items, item.id, to),
+        }),
+        events: [
+          event(state, "reject", {
+            itemId: item.id,
+            from: item.locus,
+            to,
+          }),
+        ],
+      };
+    }
+
+    case "drop": {
+      const item = inventoryItem(state);
+      if (!item) {
+        return reject(state, "inventory_empty");
+      }
+      const floorOccupied = state.items.some(
+        (candidate) =>
+          candidate.locus.kind === "floor" &&
+          candidate.locus.cell.x === state.worker.position.x &&
+          candidate.locus.cell.y === state.worker.position.y,
+      );
+      if (floorOccupied) {
+        return reject(state, "floor_occupied", item.id);
+      }
+
+      const to: Locus = { kind: "floor", cell: state.worker.position };
+      return {
+        nextState: advance(state, {
+          items: replaceItemLocus(state.items, item.id, to),
+        }),
+        events: [
+          event(state, "drop", {
+            itemId: item.id,
+            from: item.locus,
+            to,
+          }),
+        ],
+      };
+    }
   }
 }
