@@ -39,11 +39,11 @@
 **Description:** Implement pure transitions for move, take, deposit, retrieve, wait, and finish, including deterministic invalid-action events.
 
 **Acceptance criteria:**
-- [ ] A bottle can be deposited, retrieved, and deposited again without duplicating identity.
-- [ ] Every action consumes one tick; invalid actions change no physical state and never substitute another action.
-- [ ] Inputs remain immutable and repeated runs produce identical events.
+- [x] A bottle can be deposited, retrieved, and deposited again without duplicating identity.
+- [x] Every action consumes one tick; invalid actions change no physical state and never substitute another action.
+- [x] Inputs remain immutable and repeated runs produce identical events.
 
-**Verification:** Red/green trace tests plus full suite/typecheck/build.
+**Verification:** Three red tests failed before implementation; then 6 full-suite tests, typecheck, and build passed on October 26, 2026.
 
 **Dependencies:** Task 2
 
