@@ -22,11 +22,11 @@
 **Description:** Define loci, items, world state, actions, events, and the deterministic seeded Bottle Return initial state.
 
 **Acceptance criteria:**
-- [ ] The 9×7 world contains six eligible and two ineligible stable item IDs at exactly one locus each.
-- [ ] Worker, station, capacity, tick, horizon, and terminal state match the specification.
-- [ ] Action decoding rejects unknown/invalid shapes at the boundary.
+- [x] The 9×7 world contains six eligible and two ineligible stable item IDs at exactly one locus each.
+- [x] Worker, station, capacity, tick, horizon, and terminal state match the specification.
+- [x] Action decoding rejects unknown/invalid shapes at the boundary.
 
-**Verification:** Focused unit tests and TypeScript exhaustive checks.
+**Verification:** Red test failed on missing exports, then `npm ci --ignore-scripts`, 3 focused/full tests, typecheck, build, and high-severity audit passed on October 26, 2026.
 
 **Dependencies:** Task 1
 
