@@ -5,11 +5,11 @@
 **Description:** Create the npm workspace, strict TypeScript configuration, test runner, durable project rules, and safe ignore/config defaults.
 
 **Acceptance criteria:**
-- [ ] Clean `npm ci` produces the pinned toolchain.
-- [ ] `.env` and generated output are ignored; `.env.example` contains only placeholders and safe defaults.
-- [ ] `npm test`, `npm run typecheck`, and `npm run build` exist.
+- [x] Clean `npm ci` produces the pinned toolchain.
+- [x] `.env` and generated output are ignored; `.env.example` contains only placeholders and safe defaults.
+- [x] `npm test`, `npm run typecheck`, and `npm run build` exist.
 
-**Verification:** Run a clean install, tests, typecheck, build, and staged secret scan.
+**Verification:** Passed `npm install --ignore-scripts`, `npm test`, `npm run typecheck`, `npm run build`, `npm audit --audit-level=high`, and a staged secret-file check on October 26, 2026.
 
 **Dependencies:** None
 
