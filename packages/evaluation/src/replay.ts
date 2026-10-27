@@ -1,4 +1,6 @@
 import {
+  canonicalHash,
+  ENGINE_VERSION,
   step,
   type Action,
   type EngineEvent,
@@ -16,6 +18,10 @@ export interface ReplayResult {
   readonly state: WorldState;
   readonly events: readonly EngineEvent[];
   readonly payouts: readonly Payout[];
+}
+
+export function hashReplay(replay: ReplayResult): string {
+  return canonicalHash({ engineVersion: ENGINE_VERSION, replay });
 }
 
 export function replayActions(

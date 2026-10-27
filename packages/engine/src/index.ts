@@ -1,6 +1,8 @@
 export const ENGINE_VERSION = "1";
 
 export { actionSchema, parseAction } from "./actions.js";
+export { canonicalHash } from "./canonical-hash.js";
+export { isAdjacent, isWalkable } from "./legal-actions.js";
 export { createBottleReturnState } from "./scenario.js";
 export { step } from "./step.js";
 export { MATERIALS } from "./types.js";

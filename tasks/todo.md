@@ -119,11 +119,11 @@
 **Description:** Hash canonical state and run complete honest-worker traces to calculate legitimate coverage and per-item leakage.
 
 **Acceptance criteria:**
-- [ ] Identical inputs yield identical SHA-256 hashes and replay results.
-- [ ] Zero-pay and partial-material policies cannot score as successful.
-- [ ] Per-item excess reward cannot be hidden by underpayment elsewhere.
+- [x] Identical inputs yield identical SHA-256 hashes and replay results.
+- [x] Zero-pay and partial-material policies cannot score as successful.
+- [x] Per-item excess reward cannot be hidden by underpayment elsewhere.
 
-**Verification:** Hash, replay, and metric tests.
+**Verification:** Six red tests preceded implementation. Canonical hashing, deterministic replay, complete honest-worker coverage, zero/partial/full scoring, and the per-item netting trap pass with the full suite, typecheck, and build on October 26, 2026.
 
 **Dependencies:** Task 6
 
