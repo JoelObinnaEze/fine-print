@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -100,7 +100,8 @@ describe("offline replay game", () => {
   });
 
   it("runs a live Meta attack and loads the host-verified trace", async () => {
-    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+    let attackedPolicy: unknown;
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url === "/api/health") {
         return Response.json({
@@ -113,6 +114,7 @@ describe("offline replay game", () => {
         return Response.json({ availableAppUsd: 9.8, settledUsd: 0.2 });
       }
       if (url === "/api/attacks") {
+        attackedPolicy = JSON.parse(String(init?.body)).policy;
         return Response.json(
           {
             searchId: "web-test",
@@ -149,12 +151,17 @@ describe("offline replay game", () => {
     render(<App />);
 
     expect(await screen.findByText(/Meta connected/)).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Run live Muse attack" }));
+    await user.click(screen.getByRole("button", { name: "Test once-per-item patch" }));
+    await user.click(screen.getByRole("button", { name: "Fresh-attack once-per-item patch" }));
 
     expect(await screen.findByText("Live model")).toBeTruthy();
+    expect(attackedPolicy).toEqual(patchPolicies.oncePerItem);
     expect(screen.getByText("muse-spark-1.3")).toBeTruthy();
     expect(screen.getByText("Test repeated deposits.")).toBeTruthy();
     expect(screen.getByLabelText("Replay position").getAttribute("max")).toBe("12");
+    expect(screen.getAllByText("Pay only once per item when it is deposited.")).toHaveLength(2);
+    expect((screen.getByLabelText("Reward policy") as HTMLTextAreaElement).value).toBe("Pay only once per item when it is deposited.");
+    expect(screen.getByRole("button", { name: "Test once-per-item patch" }).getAttribute("aria-pressed")).toBe("false");
   });
 
   it("interprets and explicitly activates a natural-language policy", async () => {
@@ -188,9 +195,16 @@ describe("offline replay game", () => {
     await user.click(screen.getByRole("button", { name: "Interpret with Meta" }));
 
     expect(await screen.findByText("Pays once after eligible processing.")).toBeTruthy();
+    expect(screen.getByText("Reward trigger")).toBeTruthy();
+    expect(screen.getByText("Eligible objects")).toBeTruthy();
+    expect(screen.getByText("Repeat limit")).toBeTruthy();
+    expect(screen.getByText("Successful processing required")).toBeTruthy();
+    expect(screen.getByText("Yes")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Activate candidate" }));
     expect(screen.getAllByText(sourceText)).toHaveLength(2);
-    expect(screen.getByText("process", { selector: "dd" })).toBeTruthy();
-    expect(screen.getByText("eligible items", { selector: "dd" })).toBeTruthy();
+    const activePolicy = screen.getByText(/^Active policy/).closest("section");
+    expect(activePolicy).not.toBeNull();
+    expect(within(activePolicy!).getByText("process", { selector: "dd" })).toBeTruthy();
+    expect(within(activePolicy!).getByText("eligible items", { selector: "dd" })).toBeTruthy();
   });
 });

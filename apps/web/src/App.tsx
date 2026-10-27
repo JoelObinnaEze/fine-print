@@ -4,6 +4,7 @@ import { Depot } from "./depot/Depot.js";
 import {
   RedTeamArena,
   scriptedEvidence,
+  type AttackTarget,
   type RunEvidence,
 } from "./arena/RedTeamArena.js";
 import { PolicyCard } from "./policy/PolicyCard.js";
@@ -15,12 +16,12 @@ import {
   createReplayFrames,
   patchPolicies,
   exploitActions,
+  patchSourceTexts,
   startingPolicy,
+  startingPolicySourceText,
   type PatchId,
 } from "./replay-data.js";
 import type { Policy } from "../../../packages/policy/src/index.js";
-
-const initialSourceText = "Pay 10 points whenever an item is deposited.";
 
 export function App() {
   const [frameIndex, setFrameIndex] = useState(0);
@@ -30,7 +31,14 @@ export function App() {
   const [traceActions, setTraceActions] = useState(exploitActions);
   const [evidence, setEvidence] = useState<RunEvidence>(scriptedEvidence);
   const [activePolicy, setActivePolicy] = useState<Policy>(startingPolicy);
-  const [sourceText, setSourceText] = useState(initialSourceText);
+  const [sourceText, setSourceText] = useState(startingPolicySourceText);
+  const attackTarget: AttackTarget = activePatch
+    ? {
+        label: activePatch === "oncePerItem" ? "once-per-item patch" : "eligible-processing patch",
+        policy: patchPolicies[activePatch],
+        sourceText: patchSourceTexts[activePatch],
+      }
+    : { label: "active policy", policy: activePolicy, sourceText };
   const activeFrames = useMemo(
     () => createReplayFrames(activePolicy, traceActions),
     [activePolicy, traceActions],
@@ -102,8 +110,8 @@ export function App() {
 
       <RedTeamArena
         evidence={evidence}
-        policy={activePolicy}
-        sourceText={sourceText}
+        activeSourceText={sourceText}
+        attackTarget={attackTarget}
         onActivatePolicy={(policy, text) => {
           setActivePolicy(policy);
           setSourceText(text);
@@ -113,12 +121,14 @@ export function App() {
           setTraceActions(exploitActions);
           setEvidence(scriptedEvidence);
         }}
-        onLoadTrace={(actions, nextEvidence) => {
+        onLoadTrace={(actions, nextEvidence, target) => {
           setIsPlaying(false);
           setFrameIndex(0);
           setActivePatch(null);
           setTraceActions(actions);
           setEvidence(nextEvidence);
+          setActivePolicy(target.policy);
+          setSourceText(target.sourceText);
         }}
       />
 

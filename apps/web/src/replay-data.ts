@@ -18,6 +18,8 @@ export const startingPolicy: Policy = {
   ],
 };
 
+export const startingPolicySourceText = "Pay 10 points whenever an item is deposited.";
+
 export const patchPolicies = {
   oncePerItem: {
     schemaVersion: 1,
@@ -43,6 +45,11 @@ export const patchPolicies = {
 } as const satisfies Readonly<Record<string, Policy>>;
 
 export type PatchId = keyof typeof patchPolicies;
+
+export const patchSourceTexts: Readonly<Record<PatchId, string>> = {
+  oncePerItem: "Pay only once per item when it is deposited.",
+  eligibleProcessing: "Pay once after eligible material is successfully processed.",
+};
 
 export const exploitActions: readonly Action[] = [
   { type: "move", direction: "up" },

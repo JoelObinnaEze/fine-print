@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 
 import { parseAction, type Action } from "../../../../packages/engine/src/actions.js";
 import type { Policy } from "../../../../packages/policy/src/index.js";
-import { recordedMuseActions } from "../replay-data.js";
+import {
+  recordedMuseActions,
+  startingPolicy,
+  startingPolicySourceText,
+} from "../replay-data.js";
 import { PolicyComposer } from "./PolicyComposer.js";
 
 export interface RunEvidence {
@@ -14,6 +18,12 @@ export interface RunEvidence {
   readonly runId: string | null;
   readonly verdict: string;
   readonly summary: string;
+}
+
+export interface AttackTarget {
+  readonly label: string;
+  readonly policy: Policy;
+  readonly sourceText: string;
 }
 
 export const scriptedEvidence: RunEvidence = {
@@ -40,16 +50,20 @@ const recordedEvidence: RunEvidence = {
 
 export function RedTeamArena({
   evidence,
-  policy,
-  sourceText,
+  activeSourceText,
+  attackTarget,
   onActivatePolicy,
   onLoadTrace,
 }: {
   readonly evidence: RunEvidence;
-  readonly policy: Policy;
-  readonly sourceText: string;
+  readonly activeSourceText: string;
+  readonly attackTarget: AttackTarget;
   readonly onActivatePolicy: (policy: Policy, sourceText: string) => void;
-  readonly onLoadTrace: (actions: readonly Action[], evidence: RunEvidence) => void;
+  readonly onLoadTrace: (
+    actions: readonly Action[],
+    evidence: RunEvidence,
+    target: AttackTarget,
+  ) => void;
 }) {
   const [connection, setConnection] = useState<"checking" | "ready" | "offline">("checking");
   const [availableBudget, setAvailableBudget] = useState<number | null>(null);
@@ -89,7 +103,7 @@ export function RedTeamArena({
           "content-type": "application/json",
           "idempotency-key": `arena-${crypto.randomUUID()}`,
         },
-        body: JSON.stringify({ policy }),
+        body: JSON.stringify({ policy: attackTarget.policy }),
       });
       const result = (await response.json()) as {
         readonly error?: { readonly message?: string };
@@ -120,19 +134,23 @@ export function RedTeamArena({
         .map((turn) => turn.strategySummary?.trim())
         .filter((summary): summary is string => Boolean(summary));
       setStrategies(strategySummaries);
-      onLoadTrace(actions, {
-        provenance: "live_model",
-        modelId: result.modelId ?? "Meta model",
-        requests: result.usage.requests ?? result.verification.requestsUsed ?? 0,
-        totalTokens: result.usage.totalTokens ?? 0,
-        actualUsd: result.usage.actualUsd ?? 0,
-        runId: result.runId,
-        verdict:
-          result.verification.status === "exploit_verified"
-            ? "Exploit independently verified"
-            : "Bounded search completed",
-        summary: `${result.verification.totalReward ?? 0} reward points versus ${result.verification.usefulItems ?? 0} useful items.`,
-      });
+      onLoadTrace(
+        actions,
+        {
+          provenance: "live_model",
+          modelId: result.modelId ?? "Meta model",
+          requests: result.usage.requests ?? result.verification.requestsUsed ?? 0,
+          totalTokens: result.usage.totalTokens ?? 0,
+          actualUsd: result.usage.actualUsd ?? 0,
+          runId: result.runId,
+          verdict:
+            result.verification.status === "exploit_verified"
+              ? "Exploit independently verified"
+              : "Bounded search completed",
+          summary: `${result.verification.totalReward ?? 0} reward points versus ${result.verification.usefulItems ?? 0} useful items.`,
+        },
+        attackTarget,
+      );
       setMessage("The exact model trace is loaded below. Every reward was recomputed by the host.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "The live attack failed.");
@@ -161,7 +179,7 @@ export function RedTeamArena({
 
       <PolicyComposer
         connection={connection}
-        sourceText={sourceText}
+        sourceText={activeSourceText}
         onActivate={onActivatePolicy}
       />
 
@@ -170,6 +188,7 @@ export function RedTeamArena({
           <p className="eyebrow">Current evidence</p>
           <strong>{evidence.verdict}</strong>
           <p>{evidence.summary}</p>
+          <p className="arena__target">Next search: {attackTarget.label}</p>
           <p className={`arena__status arena__status--${connection}`} role="status">
             {connection === "ready"
               ? "Meta connected"
@@ -185,12 +204,22 @@ export function RedTeamArena({
           disabled={connection !== "ready" || isRunning}
           onClick={() => void runLiveAttack()}
         >
-          {isRunning ? "Muse is searching…" : "Run live Muse attack"}
+          {isRunning
+            ? `Muse is attacking ${attackTarget.label}…`
+            : attackTarget.label === "active policy"
+              ? "Run fresh Muse attack"
+              : `Fresh-attack ${attackTarget.label}`}
         </button>
         <button
           className="arena__secondary"
           type="button"
-          onClick={() => onLoadTrace(recordedMuseActions, recordedEvidence)}
+          onClick={() =>
+            onLoadTrace(recordedMuseActions, recordedEvidence, {
+              label: "recorded starting policy",
+              policy: startingPolicy,
+              sourceText: startingPolicySourceText,
+            })
+          }
         >
           Load verified Muse run
         </button>

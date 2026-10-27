@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   parsePolicyInterpretation,
@@ -19,6 +19,14 @@ export function PolicyComposer({
   const [interpretation, setInterpretation] = useState<PolicyInterpretation | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const candidateClause = interpretation?.status === "candidate"
+    ? interpretation.policy.clauses[0]
+    : undefined;
+
+  useEffect(() => {
+    setDraft(sourceText);
+    setInterpretation(null);
+  }, [sourceText]);
 
   const interpret = async () => {
     const text = draft.trim();
@@ -99,10 +107,13 @@ export function PolicyComposer({
               : "Interpreting policy"}
           </strong>
           <p>{interpretation?.reason ?? message}</p>
-          {interpretation?.status === "candidate" && interpretation.policy.clauses[0] && (
-            <p>
-              {interpretation.policy.clauses[0].points} points · {interpretation.policy.clauses[0].trigger} · {interpretation.policy.clauses[0].repetition.replaceAll("_", " ")}
-            </p>
+          {candidateClause && (
+            <dl>
+              <div><dt>Reward trigger</dt><dd>{candidateClause.trigger}</dd></div>
+              <div><dt>Eligible objects</dt><dd>{candidateClause.eligibleOnly ? candidateClause.materials.join(", ") : "all supported items"}</dd></div>
+              <div><dt>Repeat limit</dt><dd>{candidateClause.repetition === "once_per_item" ? "once per item" : "none"}</dd></div>
+              <div><dt>Successful processing required</dt><dd>{candidateClause.trigger === "process" ? "Yes" : "No"}</dd></div>
+            </dl>
           )}
         </div>
       )}

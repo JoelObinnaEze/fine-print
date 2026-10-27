@@ -48,6 +48,10 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .arena__candidate { grid-column: 2 / -1; padding: .65rem .75rem; border-left: 4px solid var(--green-pale); background: #323833; }
 .arena__candidate strong { color: var(--green-pale); }
 .arena__candidate p { margin: .25rem 0 0; color: #eee5d5; font-size: .75rem; }
+.arena__candidate dl { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin: .65rem 0 0; }
+.arena__candidate dl div { padding-top: .45rem; border-top: 1px solid #66645e; }
+.arena__candidate dt { color: #bcb3a3; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.arena__candidate dd { margin: .15rem 0 0; color: var(--paper); font-size: .75rem; font-weight: 800; }
 .arena__proof { display: grid; align-content: space-between; gap: 1rem; padding-left: 1rem; border-left: 1px solid #66645e; }
 .arena__proof strong { display: block; color: var(--green-pale); }
 .arena__proof p { margin: .35rem 0 0; }
@@ -55,6 +59,7 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .arena__primary:disabled { cursor: wait; opacity: .5; }
 .arena__secondary { min-height: 2.5rem; padding: .55rem .8rem; border: 1px solid #8f8b82; background: transparent; color: var(--paper); cursor: pointer; font-weight: 800; }
 .arena__status { padding-top: .6rem; border-top: 1px solid #66645e; font-weight: 800; }
+.arena__target { color: var(--amber-pale) !important; font-weight: 800; }
 .arena__status--ready { color: var(--green-pale) !important; }
 .arena__status--offline { color: var(--amber-pale) !important; }
 .arena__activity { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .5rem; padding-top: 1rem; border-top: 1px solid #66645e; }
@@ -199,6 +204,7 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
   .arena__composer { grid-column: auto; grid-template-columns: 1fr; }
   .arena__composer-actions, .arena__candidate { grid-column: auto; }
   .arena__composer-actions { grid-template-columns: 1fr; }
+  .arena__candidate dl { grid-template-columns: 1fr 1fr; }
   .tagline { max-width: 12rem; font-size: .9rem; }
   .game-layout { grid-template-columns: 1fr; }
   .depot-panel { grid-row: 1; }
