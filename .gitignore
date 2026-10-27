@@ -3,6 +3,7 @@ dist/
 coverage/
 playwright-report/
 test-results/
+graphify-out/
 *.db
 *.db-*
 .env

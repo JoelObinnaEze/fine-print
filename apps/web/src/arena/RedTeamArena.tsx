@@ -162,11 +162,12 @@ export function RedTeamArena({
   return (
     <section className="arena" aria-labelledby="arena-title">
       <div className="arena__intro">
-        <p className="eyebrow">Judge mode · adversarial policy audit</p>
-        <h2 id="arena-title">Red-team arena</h2>
+        <p className="eyebrow">Fine Print · red-team arena</p>
+        <h2 id="arena-title">Can you earn rewards without recycling anything?</h2>
+        <p className="arena__result">30 points paid. 0 items recycled.</p>
         <p>
-          Turn plain-language incentives into executable rules, let Muse search for loopholes,
-          then replay every claim through a deterministic verifier.
+          The starting rule rewards deposits before recycling is proven. Patch it, then send Muse
+          back in and let the host verify every claimed exploit.
         </p>
       </div>
 
@@ -189,6 +190,8 @@ export function RedTeamArena({
           <strong>{evidence.verdict}</strong>
           <p>{evidence.summary}</p>
           <p className="arena__target">Next search: {attackTarget.label}</p>
+          {/* shortcut: mirrors fixed server limits; expose them from /api/health if they become configurable. */}
+          <p>Search budget: up to 12 requests · 4 trials · 120 ticks per trial · 2 minutes.</p>
           <p className={`arena__status arena__status--${connection}`} role="status">
             {connection === "ready"
               ? "Meta connected"
