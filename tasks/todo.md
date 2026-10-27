@@ -102,11 +102,11 @@
 **Description:** Implement the independent oracle and the three canonical policy traces: repeated deposit, once-per-item deposit, and eligible processing.
 
 **Acceptance criteria:**
-- [ ] Three deposits pay 30 while useful recycling remains zero under the starting rule.
-- [ ] The once-per-item patch pays 10 but still records zero useful recycling.
-- [ ] Eligible processing pays honest work while rubbish increases contamination only.
+- [x] Three deposits pay 30 while useful recycling remains zero under the starting rule.
+- [x] The once-per-item patch pays 10 but still records zero useful recycling.
+- [x] Eligible processing pays honest work while rubbish increases contamination only.
 
-**Verification:** Focused oracle/receipt tests and full suite.
+**Verification:** Red import failure preceded implementation; focused tests cover repeated deposits, the once-per-item patch, all six honest eligible items, and rubbish contamination. Full suite, typecheck, and build passed on October 26, 2026.
 
 **Dependencies:** Task 5
 
