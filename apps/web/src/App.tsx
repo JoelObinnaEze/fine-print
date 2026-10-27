@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Depot } from "./depot/Depot.js";
 import { PolicyCard } from "./policy/PolicyCard.js";
+import { PolicyLab } from "./policy/PolicyLab.js";
 import { EventTimeline } from "./replay/EventTimeline.js";
 import { ReplayControls } from "./replay/ReplayControls.js";
 import {
   createReplayFrames,
   patchPolicies,
+  exploitActions,
   replayFrames,
   startingPolicy,
   type PatchId,
@@ -157,6 +159,13 @@ export function App() {
         frames={replayFrames}
         activeFrame={frameIndex}
         onSelect={selectFrame}
+      />
+      <PolicyLab
+        originalPolicy={startingPolicy}
+        patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
+        frame={frame}
+        patchedFrame={patchedFrame ?? null}
+        actionCount={exploitActions.length}
       />
     </div>
   );

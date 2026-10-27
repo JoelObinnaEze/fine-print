@@ -34,7 +34,7 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 
 .game-layout { display: grid; grid-template-columns: minmax(13rem, .8fr) minmax(32rem, 2.2fr) minmax(15rem, .9fr); gap: 1rem; padding: 1rem 0; }
 .game-layout > * { min-width: 0; }
-.paper-card, .depot-panel, .evidence-panel, .timeline-panel { border: 1px solid var(--line); background: var(--paper); }
+.paper-card, .depot-panel, .evidence-panel, .timeline-panel, .policy-lab { border: 1px solid var(--line); background: var(--paper); }
 .paper-card, .evidence-panel { padding: 1.25rem; }
 .policy-card blockquote { margin: 1.25rem 0; padding: 1rem 0; border-block: 1px solid var(--line); font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; line-height: 1.3; }
 .clause-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin: 0; }
@@ -114,6 +114,23 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .timeline-list b { display: block; margin-top: .25rem; font-size: .76rem; }
 .timeline-list em { display: block; margin-top: .35rem; color: #81360f; font-size: .68rem; font-style: normal; font-weight: 900; }
 
+.policy-lab { margin-top: 1rem; padding: 1rem; }
+.policy-lab__heading { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 2px solid var(--ink); }
+.policy-lab__heading p:last-child { color: var(--muted); font-size: .75rem; }
+.provenance-grid { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; border-bottom: 1px solid var(--line); }
+.provenance-grid div { padding: .8rem; }
+.provenance-grid div + div { border-left: 1px solid var(--line); }
+.provenance-grid dt, .receipt-audit dt { color: var(--muted); font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.provenance-grid dd, .receipt-audit dd { margin: .2rem 0 0; font-weight: 900; }
+.policy-lab__comparison { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.5rem; padding-top: 1rem; }
+.policy-lab table { width: 100%; border-collapse: collapse; font-size: .76rem; }
+.policy-lab th, .policy-lab td { padding: .5rem; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+.policy-lab thead { background: var(--paper-deep); }
+.receipt-audit { display: grid; grid-template-columns: 1fr 1fr; margin: 0; }
+.receipt-audit div { padding: .55rem; border: 1px solid var(--line); }
+.receipt-audit dd { font: 800 1.5rem Georgia, serif; }
+.portable-note { margin: .75rem 0 0; color: var(--muted); font-size: .74rem; }
+
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 1000px) {
@@ -135,6 +152,9 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
   .replay-controls { grid-template-columns: 1fr 1fr; }
   .replay-controls .primary-control, .scrubber { grid-column: 1 / -1; }
   .timeline-heading { display: block; }
+  .policy-lab__heading { display: block; }
+  .provenance-grid, .policy-lab__comparison { grid-template-columns: 1fr 1fr; }
+  .policy-lab__comparison > section { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

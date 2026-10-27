@@ -260,11 +260,11 @@
 **Description:** Expose structured diffs, receipts, same/different-policy branching rules, and a hash-verified replay export.
 
 **Acceptance criteria:**
-- [ ] Same-policy branches inherit both ledgers; changed-policy branches reconstruct the prefix.
-- [ ] Exported runs replay offline and reject corruption/version mismatch.
-- [ ] Every run displays provenance and actual search limits.
+- [x] Same-policy branches inherit both ledgers; changed-policy branches reconstruct the prefix.
+- [x] Exported runs replay offline and reject corruption/version mismatch.
+- [x] Every run displays provenance and actual search limits.
 
-**Verification:** Branch/persistence/export tests and browser flow.
+**Verification:** Branch/persistence tests prove same-policy reward/outcome inheritance and changed-policy prefix reconstruction. Route tests cover branch, replay-under-policy, and export endpoints; portable export tests reject payload corruption and engine-version mismatch. The persisted live run was migrated to `live_model` provenance with exact `muse-spark-1.3` limits and exported as `artifacts/attacker-live-v2.json`, which self-verified before writing. Policy Lab component tests and an Opera GX pass show the exact clause diff, receipt audit, scripted provenance, zero inference requests, and 120-tick limit; the console was clean and the 320 px document width matched the viewport on October 27, 2026.
 
 **Dependencies:** Tasks 11 and 14
 

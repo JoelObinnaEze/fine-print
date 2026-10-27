@@ -20,6 +20,9 @@ describe("offline replay game", () => {
     expect(screen.getByLabelText("Actually recycled").textContent).toBe("0");
     expect(screen.getByRole("button", { name: "Play replay" })).toBeTruthy();
     expect(screen.getByRole("slider", { name: "Replay position" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Policy Lab" })).toBeTruthy();
+    expect(screen.getByText("Scripted fixture")).toBeTruthy();
+    expect(screen.getByText("Observed traces, not a safety guarantee.")).toBeTruthy();
   });
 
   it("jumps to the next payout and keeps useful work separate", async () => {
@@ -54,6 +57,9 @@ describe("offline replay game", () => {
     expect(screen.getByLabelText("Patched paid points").textContent).toBe("0");
     expect(screen.getByText("This exploit stopped paying.")).toBeTruthy();
     expect(screen.getByLabelText("Current tick").textContent).toBe("11");
+    expect(screen.getByRole("row", { name: /Trigger deposit process/i })).toBeTruthy();
+    expect(screen.getByRole("row", { name: /Eligibility required false true/i })).toBeTruthy();
+    expect(screen.getByText("Server exports include the exact policy, actions, provenance, limits, and integrity hashes for offline replay.")).toBeTruthy();
 
     const { rewardLedger: originalLedger, ...originalPhysicalState } = replayFrames[11]!.state;
     const { rewardLedger: patchedLedger, ...patchedPhysicalState } =

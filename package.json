@@ -17,6 +17,7 @@
     "build:web": "vite build --config apps/web/vite.config.ts",
     "check:meta": "npm run build && node --env-file=.env dist/scripts/check-meta-compatibility.js",
     "dev": "vite --config apps/web/vite.config.ts",
+    "export:run": "npm run build:types && node --env-file=.env dist/scripts/export-run.js",
     "preview": "vite preview --config apps/web/vite.config.ts",
     "smoke:meta-attacker": "npm run build:types && node --env-file=.env dist/scripts/smoke-meta-attacker.js",
     "smoke:meta-translation": "npm run build:types && node --env-file=.env dist/scripts/smoke-meta-translation.js",

@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "1",
+  "runId": "74e918a0-786b-4046-b415-9de2e665a6df",
+  "parentRunId": null,
+  "branchTick": null,
+  "provenance": "live_model",
+  "modelId": "muse-spark-1.3",
+  "limits": {
+    "maxInferenceRequests": 12,
+    "maxTicksPerTrial": 120,
+    "maxTrials": 4,
+    "searchDeadlineMs": 120000,
+    "requestTimeoutMs": 30000,
+    "maxActionsPerBatch": 16
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "clauses": [
+      {
+        "id": "pay-10-deposit",
+        "enabled": true,
+        "trigger": "deposit",
+        "points": 10,
+        "eligibleOnly": false,
+        "materials": [
+          "plastic",
+          "aluminium",
+          "carton",
+          "rubbish"
+        ],
+        "repetition": "every_event"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "take",
+      "itemId": "B1"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "retrieve",
+      "itemId": "B1"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "retrieve",
+      "itemId": "B1"
+    },
+    {
+      "type": "deposit"
+    }
+  ],
+  "initialStateHash": "9502330680e4077b1df4d56fe4883ea73cd958b8a7251be93620f5974912354a",
+  "replayHash": "26722928cdb22c639e81ba19bbe99c265e3d126fff2505371460f09c79f69323",
+  "integrityHash": "ec0d2bb6564fde400d6a6b3b3bca7682c8f333127150f8e8fdcea6c232e3f47d"
+}
