@@ -148,15 +148,16 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .gauntlet__heading p:last-child { color: var(--muted); font-size: .75rem; }
 .gauntlet__results { display: grid; grid-template-columns: .75fr .75fr 2fr; gap: 1rem; padding-top: 1rem; }
 .gauntlet__score-card { padding: 1rem; border: 1px solid var(--line); background: var(--paper-deep); }
-.gauntlet__score-card output { display: inline-block; color: var(--green); font: 800 3rem/.9 Georgia, serif; }
-.gauntlet__score-card > span { color: var(--muted); font-size: .68rem; font-weight: 800; }
-.gauntlet__score-card p:not(.eyebrow) { margin: .65rem 0 0; font-size: .74rem; font-weight: 800; }
+.gauntlet__score-card > output { display: block; color: var(--green); font: 800 2rem/.9 Georgia, serif; }
+.gauntlet__score-card p:not(.eyebrow) { margin: .25rem 0 .8rem; color: var(--muted); font-size: .72rem; font-weight: 800; }
 .gauntlet__results ul { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
 .gauntlet__results li { display: grid; grid-template-columns: 5rem 1fr; align-items: center; padding: .8rem; border-left: 5px solid; background: var(--paper-deep); font-size: .8rem; }
 .gauntlet__results li.is-pass { border-color: var(--green); }
 .gauntlet__results li.is-fail { border-color: var(--amber); }
 .gauntlet__results li.is-pass b { color: var(--green); }
 .gauntlet__results li.is-fail b { color: #7f3512; }
+.gauntlet__results li span { display: grid; gap: .15rem; }
+.gauntlet__results li span strong { color: var(--ink); font-size: .72rem; text-transform: uppercase; }
 
 .policy-lab { margin-top: 1rem; padding: 1rem; }
 .policy-lab__heading { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 2px solid var(--ink); }

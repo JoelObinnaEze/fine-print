@@ -78,18 +78,25 @@ describe("offline replay game", () => {
     expect(patchedLedger).not.toBe(originalLedger);
   });
 
-  it("runs the active policy and patch through the deterministic gauntlet", async () => {
+  it("shows the failed first fix and stronger patch as explicit regression evidence", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Policy gauntlet" })).toBeTruthy();
-    expect(screen.getByLabelText("Active tested-policy score").textContent).toBe("50");
-    expect(screen.getByText("Repeat-deposit attack leaked 30 points")).toBeTruthy();
+    expect(screen.getByLabelText("Active honest workflows preserved").textContent).toBe("3 / 3");
+    expect(screen.getByLabelText("Active known failures blocked").textContent).toBe("0 / 3");
+
+    await user.click(screen.getByRole("button", { name: "Test once-per-item patch" }));
+
+    expect(screen.getByLabelText("Selected patch known failures blocked").textContent).toBe("1 / 3");
+    expect(screen.getByText("No duplicate payout")).toBeTruthy();
+    expect(screen.getByText("Ineligible deposit paid 10 points")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));
 
-    expect(screen.getByLabelText("Patched tested-policy score").textContent).toBe("100");
-    expect(screen.getByText("2 / 2 adversarial attacks blocked")).toBeTruthy();
+    expect(screen.getByLabelText("Selected patch known failures blocked").textContent).toBe("3 / 3");
+    expect(screen.getByText("No duplicate payout")).toBeTruthy();
+    expect(screen.getAllByText("Paid nothing")).toHaveLength(2);
   });
 
   it("runs a live Meta attack and loads the host-verified trace", async () => {
