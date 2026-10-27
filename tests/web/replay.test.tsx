@@ -5,6 +5,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "../../apps/web/src/App.js";
+import { createReplayFrames, patchPolicies, replayFrames } from "../../apps/web/src/replay-data.js";
 
 afterEach(cleanup);
 
@@ -40,5 +41,24 @@ describe("offline replay game", () => {
     expect(screen.getByLabelText("Current tick").textContent).toBe("1");
     await user.keyboard("{ArrowLeft}");
     expect(screen.getByLabelText("Current tick").textContent).toBe("0");
+  });
+
+  it("replays the same trace under a process-only patch without mutating the original", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /11.*Deposit B1/i }));
+    await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));
+
+    expect(screen.getByLabelText("Original paid points").textContent).toBe("30");
+    expect(screen.getByLabelText("Patched paid points").textContent).toBe("0");
+    expect(screen.getByText("This exploit stopped paying.")).toBeTruthy();
+    expect(screen.getByLabelText("Current tick").textContent).toBe("11");
+
+    const { rewardLedger: originalLedger, ...originalPhysicalState } = replayFrames[11]!.state;
+    const { rewardLedger: patchedLedger, ...patchedPhysicalState } =
+      createReplayFrames(patchPolicies.eligibleProcessing)[11]!.state;
+    expect(patchedPhysicalState).toEqual(originalPhysicalState);
+    expect(patchedLedger).not.toBe(originalLedger);
   });
 });

@@ -153,11 +153,11 @@
 **Description:** Let the player inspect supported semantics, activate immutable manual presets, and replay identical actions under a patch.
 
 **Acceptance criteria:**
-- [ ] Draft edits never mutate an active run.
-- [ ] Old/new runs use the same root state/actions and separate reward ledgers.
-- [ ] The UI says an exploit stopped paying, not that the policy is safe.
+- [x] Draft edits never mutate an active run.
+- [x] Old/new runs use the same root state/actions and separate reward ledgers.
+- [x] The UI says an exploit stopped paying, not that the policy is safe.
 
-**Verification:** Policy UI tests and browser end-to-end patch replay.
+**Verification:** Four component tests prove immutable original evidence, physical-state equivalence, separate ledgers, and truthful patch wording. A fresh Opera GX run replayed the same 11-action prefix at 30 original versus zero patched points with a clean console on October 26, 2026.
 
 **Dependencies:** Task 8
 
@@ -167,8 +167,8 @@
 
 ## Checkpoint: Playable offline loop
 
-- [ ] A user can inspect the flawed rule, watch the exploit, patch, and replay without inference.
-- [ ] Browser console is clean and counters match host-derived fixtures.
+- [x] A user can inspect the flawed rule, watch the exploit, patch, and replay without inference.
+- [x] Browser console is clean and counters match host-derived fixtures.
 
 ## Task 10: Add the authoritative local run service
 

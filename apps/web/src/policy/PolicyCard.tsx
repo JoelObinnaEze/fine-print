@@ -1,6 +1,15 @@
 import type { Policy } from "../../../../packages/policy/src/index.js";
+import type { PatchId } from "../replay-data.js";
 
-export function PolicyCard({ policy }: { readonly policy: Policy }) {
+export function PolicyCard({
+  policy,
+  activePatch,
+  onTestPatch,
+}: {
+  readonly policy: Policy;
+  readonly activePatch: PatchId | null;
+  readonly onTestPatch: (patch: PatchId) => void;
+}) {
   const clause = policy.clauses[0]!;
   return (
     <section className="paper-card policy-card" aria-labelledby="policy-title">
@@ -16,6 +25,27 @@ export function PolicyCard({ policy }: { readonly policy: Policy }) {
       <p className="policy-warning">
         <span aria-hidden="true">!</span> Depositing is rewarded before recycling is proven.
       </p>
+      <details className="policy-json">
+        <summary>Inspect structured policy</summary>
+        <pre>{JSON.stringify(policy, null, 2)}</pre>
+      </details>
+      <div className="patch-actions" aria-label="Manual patch presets">
+        <h3>Test a patch</h3>
+        <button
+          aria-pressed={activePatch === "oncePerItem"}
+          type="button"
+          onClick={() => onTestPatch("oncePerItem")}
+        >
+          Test once-per-item patch
+        </button>
+        <button
+          aria-pressed={activePatch === "eligibleProcessing"}
+          type="button"
+          onClick={() => onTestPatch("eligibleProcessing")}
+        >
+          Test eligible-processing patch
+        </button>
+      </div>
     </section>
   );
 }

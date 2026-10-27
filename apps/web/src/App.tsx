@@ -4,13 +4,25 @@ import { Depot } from "./depot/Depot.js";
 import { PolicyCard } from "./policy/PolicyCard.js";
 import { EventTimeline } from "./replay/EventTimeline.js";
 import { ReplayControls } from "./replay/ReplayControls.js";
-import { replayFrames, startingPolicy } from "./replay-data.js";
+import {
+  createReplayFrames,
+  patchPolicies,
+  replayFrames,
+  startingPolicy,
+  type PatchId,
+} from "./replay-data.js";
 
 export function App() {
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const [activePatch, setActivePatch] = useState<PatchId | null>(null);
   const frame = replayFrames[frameIndex]!;
+  const patchedFrames = useMemo(
+    () => (activePatch ? createReplayFrames(patchPolicies[activePatch]) : null),
+    [activePatch],
+  );
+  const patchedFrame = patchedFrames?.[frameIndex];
   const nextPayoutFrame = useMemo(
     () =>
       replayFrames.findIndex(
@@ -68,7 +80,11 @@ export function App() {
       </header>
 
       <main className="game-layout">
-        <PolicyCard policy={startingPolicy} />
+        <PolicyCard
+          policy={startingPolicy}
+          activePatch={activePatch}
+          onTestPatch={setActivePatch}
+        />
         <Depot state={frame.state} />
         <aside className="evidence-panel" aria-label="Run evidence">
           <p className="eyebrow">Observed result</p>
@@ -101,6 +117,28 @@ export function App() {
               ))
             )}
           </div>
+          {patchedFrame && (
+            <section className="comparison-panel" aria-label="Patch comparison">
+              <h3>Counterfactual replay</h3>
+              <p className="comparison-basis">Same root state · same {frameIndex} actions · separate ledgers</p>
+              <div className="comparison-values">
+                <p>
+                  <span>Original</span>
+                  <output aria-label="Original paid points">{frame.state.rewardLedger.totalPoints}</output>
+                </p>
+                <p>
+                  <span>Patched</span>
+                  <output aria-label="Patched paid points">{patchedFrame.state.rewardLedger.totalPoints}</output>
+                </p>
+              </div>
+              {activePatch === "eligibleProcessing" && frame.state.rewardLedger.totalPoints > 0 && (
+                <p className="comparison-verdict">This exploit stopped paying.</p>
+              )}
+              {activePatch === "oncePerItem" && frame.state.rewardLedger.totalPoints > patchedFrame.state.rewardLedger.totalPoints && (
+                <p className="comparison-verdict">Repeated payouts stopped; premature deposit payment remains.</p>
+              )}
+            </section>
+          )}
         </aside>
       </main>
 

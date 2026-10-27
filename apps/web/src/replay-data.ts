@@ -18,6 +18,32 @@ export const startingPolicy: Policy = {
   ],
 };
 
+export const patchPolicies = {
+  oncePerItem: {
+    schemaVersion: 1,
+    clauses: [
+      {
+        ...startingPolicy.clauses[0]!,
+        repetition: "once_per_item",
+      },
+    ],
+  },
+  eligibleProcessing: {
+    schemaVersion: 1,
+    clauses: [
+      {
+        ...startingPolicy.clauses[0]!,
+        trigger: "process",
+        eligibleOnly: true,
+        materials: ["plastic", "aluminium"],
+        repetition: "once_per_item",
+      },
+    ],
+  },
+} as const satisfies Readonly<Record<string, Policy>>;
+
+export type PatchId = keyof typeof patchPolicies;
+
 export const exploitActions: readonly Action[] = [
   { type: "move", direction: "up" },
   { type: "take", itemId: "B1" },
@@ -39,10 +65,11 @@ export interface ReplayFrame extends ReplayResult {
   readonly action: Action | null;
 }
 
-export const replayFrames: readonly ReplayFrame[] = Array.from(
-  { length: exploitActions.length + 1 },
-  (_, index) => ({
-    ...replayActions(initialState, exploitActions.slice(0, index), startingPolicy),
+export function createReplayFrames(policy: Policy): readonly ReplayFrame[] {
+  return Array.from({ length: exploitActions.length + 1 }, (_, index) => ({
+    ...replayActions(initialState, exploitActions.slice(0, index), policy),
     action: index === 0 ? null : exploitActions[index - 1]!,
-  }),
-);
+  }));
+}
+
+export const replayFrames = createReplayFrames(startingPolicy);
