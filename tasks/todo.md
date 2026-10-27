@@ -73,6 +73,13 @@
 - [x] Full suite, typecheck, and build pass.
 - [x] Scripted deposit/retrieve loop is reproducible and preserves item identity.
 
+## Checkpoint: Runtime compatibility
+
+- [x] Node 22.23.4 runs the full suite and strict typecheck; Node 24.14.1 remains supported.
+- [x] `better-sqlite3` 13.0.3 persists a file database, rolls back failed transactions, and enables foreign keys on both verified runtimes.
+- [x] The Meta probe is server-only, host-allowlisted, bounded, timed out, and makes only `GET /v1/models`.
+- [ ] Replace or reactivate the configured Meta key: both the project probe and an independent request returned HTTP 401 on October 26, 2026.
+
 ## Task 5: Add strict policy validation and payout receipts
 
 **Description:** Implement the bounded additive clause schema and deterministic receipt evaluation against successful engine events.
@@ -182,7 +189,7 @@
 
 ## Task 11: Persist runs and recover safely
 
-**Description:** Select a Node 24-compatible supported SQLite driver and persist policies, runs, events, payouts, actions, and idempotency claims transactionally.
+**Description:** Use the verified Node 22/24-compatible `better-sqlite3` driver to persist policies, runs, events, payouts, actions, and idempotency claims transactionally.
 
 **Acceptance criteria:**
 - [ ] Unique run/sequence and idempotency constraints are enforced atomically.

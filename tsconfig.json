@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ES2024",
+    "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "lib": ["ES2024"],
+    "lib": ["ES2023"],
     "types": ["node", "vitest/globals"],
     "strict": true,
     "exactOptionalPropertyTypes": true,
@@ -15,5 +15,5 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["apps/**/*.ts", "packages/**/*.ts", "tests/**/*.ts"]
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "scripts/**/*.ts", "tests/**/*.ts"]
 }

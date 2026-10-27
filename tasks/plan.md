@@ -22,13 +22,13 @@ Build order: `engine` → `policy` → `evaluation` → `replay-ui` → `run-ser
 
 ## Architecture decisions
 
-- Use npm workspaces with strict ESM TypeScript so browser and server share contracts without a build-time code generator.
+- Use Node.js 22.23.4 or newer with npm workspaces and strict ESM TypeScript so browser and server share contracts without a build-time code generator.
 - Model actions and loci as discriminated unions; item identity and locus remain authoritative engine facts.
 - Keep `step(state, action, policy, engineVersion)` pure and return a new state plus host-derived events and payouts.
 - Use canonical JSON plus SHA-256 for replay hashes; object keys sort recursively and array order remains significant.
 - Treat the backend as authoritative for live runs; the browser may replay the same pure engine for offline viewing.
 - Keep Meta Model API server-only and off by default. Model output is untrusted and must pass the same validators as manual input.
-- Delay the SQLite driver decision until persistence work. Node 24's built-in SQLite surface is available but not documented as stable; choose a pinned supported option after a focused compatibility check.
+- Use pinned `better-sqlite3` 13.0.3 for persistence. Its bundled N-API build passed file reopen, transaction rollback, and foreign-key checks on Node 22.23.4 and Node 24.14.1.
 - Use simple repository-owned SVG/CSS art. No generated art or additional scenario until the full core loop works.
 
 ## Thin-slice sequence
@@ -64,7 +64,7 @@ The first implementation slice reaches package configuration, engine exports, th
 | Model fabricates an exploit | High | Accept only explicit actions and replay from the saved root state in host code. |
 | Secret or paid call leaks into client/tests | High | Ignore `.env`, server-only adapter, live disabled and budget zero by default. |
 | Overbuilding prevents a polished core loop | High | One world, one core exploit, no extra art/frameworks/features before end-to-end proof. |
-| Persistence dependency fails on Node 24 | Medium | Delay selection; verify official support and a clean install before adopting it. |
+| Runtime/native database mismatch | Low | Require Node 22.23.4+, pin `better-sqlite3` 13.0.3, and keep the cross-runtime database smoke test. |
 | A patch is presented as universally safe | Medium | UI copy reports stopped traces and bounded searches, never global safety. |
 
 ## Open questions deferred without blocking the core
@@ -72,5 +72,5 @@ The first implementation slice reaches package configuration, engine exports, th
 - License choice before the repository becomes public.
 - Hosting/access method for judges.
 - Confirmed usable event credits and explicit project/session/search budgets.
-- Final SQLite driver after the persistence compatibility spike.
+- A valid Meta Model API credential; the configured key reached the official endpoint but returned HTTP 401 on October 26, 2026.
 

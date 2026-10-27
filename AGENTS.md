@@ -6,9 +6,10 @@ Fine Print is a bounded recycling-depot game about specification gaming. Meta pr
 
 ## Stack and commands
 
-- Node.js 24, npm workspaces, strict TypeScript, ESM.
+- Node.js 22.23.4 or newer, npm workspaces, strict TypeScript, ESM.
 - Tests: Vitest; property tests: fast-check; browser tests: Playwright when the UI exists.
 - `npm test`, `npm run typecheck`, `npm run build`, `npm run dev`.
+- Meta auth/catalog probe: `npm run check:meta` (no inference request).
 
 ## Conventions
 
