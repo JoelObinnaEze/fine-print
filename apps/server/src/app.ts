@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
+import { emptyBudgetUsage, type BudgetService } from "./budget/service.js";
+import { readServerConfig, type ServerConfig } from "./config.js";
 import { createRunSchema, idempotencyKeySchema, runIdSchema } from "./runs/contracts.js";
 import { RunService, RunServiceError, type RunEvent, type RunStatus } from "./runs/service.js";
 
@@ -98,9 +100,36 @@ function streamEvents(request: IncomingMessage, response: ServerResponse, servic
   request.once("close", unsubscribe);
 }
 
-async function handle(request: IncomingMessage, response: ServerResponse, service: RunService): Promise<void> {
+interface ServerOptions {
+  readonly config: ServerConfig;
+  readonly budget: BudgetService;
+}
+
+async function handle(
+  request: IncomingMessage,
+  response: ServerResponse,
+  service: RunService,
+  config: ServerConfig,
+  budget: BudgetService | undefined,
+): Promise<void> {
   const method = request.method ?? "GET";
   const url = new URL(request.url ?? "/", "http://localhost");
+
+  if (method === "GET" && url.pathname === "/api/health") {
+    sendJson(response, 200, {
+      status: "ok",
+      liveAgent: config.liveAgent,
+      meta: config.provider
+        ? { isConfigured: true, baseUrl: config.provider.baseUrl, modelId: config.provider.modelId }
+        : { isConfigured: false, baseUrl: null, modelId: null },
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/usage") {
+    sendJson(response, 200, budget?.getUsage() ?? emptyBudgetUsage(config));
+    return;
+  }
 
   if (method === "POST" && url.pathname === "/api/runs") {
     const keyResult = idempotencyKeySchema.safeParse(request.headers["idempotency-key"]);
@@ -137,9 +166,13 @@ async function handle(request: IncomingMessage, response: ServerResponse, servic
   throw new RequestError(404, "NOT_FOUND", "Route was not found.");
 }
 
-export function createRunServer(service = new RunService()) {
+export function createRunServer(service = new RunService(), options?: ServerOptions) {
+  const config = options?.config ?? readServerConfig({});
   return createServer((request, response) => {
-    void handle(request, response, service).catch((error: unknown) => {
+    response.setHeader("content-security-policy", "default-src 'none'; frame-ancestors 'none'");
+    response.setHeader("x-content-type-options", "nosniff");
+    response.setHeader("x-frame-options", "DENY");
+    void handle(request, response, service, config, options?.budget).catch((error: unknown) => {
       if (error instanceof RequestError) {
         sendError(response, error.status, error.code, error.message, error.details);
       } else if (error instanceof RunServiceError) {

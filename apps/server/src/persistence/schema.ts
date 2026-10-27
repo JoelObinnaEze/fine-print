@@ -50,6 +50,18 @@ export function initializeRunSchema(database: Database.Database): void {
       run_id TEXT NOT NULL UNIQUE REFERENCES runs(id),
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS usage_reservations (
+      id TEXT PRIMARY KEY,
+      run_id TEXT REFERENCES runs(id),
+      session_id TEXT NOT NULL,
+      scope_id TEXT NOT NULL,
+      reserved_micros INTEGER NOT NULL CHECK (reserved_micros > 0),
+      actual_micros INTEGER CHECK (actual_micros >= 0),
+      state TEXT NOT NULL CHECK (state IN ('reserved', 'settled', 'ambiguous', 'released')),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 }
 

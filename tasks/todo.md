@@ -209,11 +209,11 @@
 **Description:** Validate server environment settings and reserve/settle bounded provider usage with live calls disabled by default.
 
 **Acceptance criteria:**
-- [ ] Missing credit confirmation or budget keeps live mode off.
-- [ ] Reservations are serial/atomic; ambiguous timeouts retain worst-case cost.
-- [ ] Health/usage responses never expose secrets.
+- [x] Missing credit confirmation or budget keeps live mode off.
+- [x] Reservations are serial/atomic; ambiguous timeouts retain worst-case cost.
+- [x] Health/usage responses never expose secrets.
 
-**Verification:** Configuration and concurrent reservation tests.
+**Verification:** Four provider-budget tests cover fail-closed configuration, upward microdollar rounding, concurrent atomic reservation, ambiguous-timeout retention, settlement, and secret-free health/usage responses. The 54-test suite, typecheck, build, high-severity audit, ambiguity review mutation, and redacted real `.env` readiness check passed on October 27, 2026.
 
 **Dependencies:** Task 11
 
