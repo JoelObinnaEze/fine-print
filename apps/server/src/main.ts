@@ -3,6 +3,7 @@ import { BudgetService } from "./budget/service.js";
 import { readServerConfig } from "./config.js";
 import { openDatabase } from "./persistence/database.js";
 import { MetaPolicyTranslator } from "./providers/meta.js";
+import { LiveAttackService } from "./runs/live-attack-service.js";
 import { RunService } from "./runs/service.js";
 
 const host = "127.0.0.1";
@@ -12,7 +13,8 @@ const database = openDatabase(config.databasePath);
 const service = new RunService(database);
 const budget = new BudgetService(database, config);
 const translator = new MetaPolicyTranslator(database, config, budget);
-const server = createRunServer(service, { config, budget, translator });
+const attacks = new LiveAttackService(database, service, config, budget);
+const server = createRunServer(service, { config, budget, translator, attacks });
 
 server.listen(port, host, () => {
   console.log(`Fine Print server listening on http://${host}:${port}`);

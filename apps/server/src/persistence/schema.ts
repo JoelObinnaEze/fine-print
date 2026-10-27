@@ -86,6 +86,8 @@ export function initializeRunSchema(database: AppDatabase): void {
       provenance TEXT NOT NULL CHECK (provenance IN ('live_model', 'recorded_model_replay')),
       prompt_version TEXT NOT NULL,
       limits_json TEXT NOT NULL,
+      policy_hash TEXT,
+      policy_json TEXT,
       status TEXT NOT NULL CHECK (status IN ('claimed', 'completed', 'incomplete')),
       result_json TEXT,
       created_at TEXT NOT NULL,
@@ -114,6 +116,17 @@ export function initializeRunSchema(database: AppDatabase): void {
   ] as const;
   for (const [column, sql] of migrations) {
     if (!runColumns.has(column)) database.exec(sql);
+  }
+  const searchColumns = new Set(
+    (database.pragma("table_info(agent_searches)") as { readonly name: string }[]).map(
+      (column) => column.name,
+    ),
+  );
+  if (!searchColumns.has("policy_hash")) {
+    database.exec("ALTER TABLE agent_searches ADD COLUMN policy_hash TEXT");
+  }
+  if (!searchColumns.has("policy_json")) {
+    database.exec("ALTER TABLE agent_searches ADD COLUMN policy_json TEXT");
   }
   database.exec(`
     UPDATE runs

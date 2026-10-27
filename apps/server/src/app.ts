@@ -18,6 +18,10 @@ import {
   replayUnderPolicySchema,
   runIdSchema,
 } from "./runs/contracts.js";
+import {
+  LiveAttackServiceError,
+  type LiveAttackService,
+} from "./runs/live-attack-service.js";
 import { RunService, RunServiceError, type RunEvent, type RunStatus } from "./runs/service.js";
 
 const maxBodyBytes = 64 * 1024;
@@ -119,6 +123,7 @@ interface ServerOptions {
   readonly config: ServerConfig;
   readonly budget: BudgetService;
   readonly translator?: MetaPolicyTranslator;
+  readonly attacks?: LiveAttackService;
 }
 
 async function handle(
@@ -128,6 +133,7 @@ async function handle(
   config: ServerConfig,
   budget: BudgetService | undefined,
   translator: MetaPolicyTranslator | undefined,
+  attacks: LiveAttackService | undefined,
 ): Promise<void> {
   const method = request.method ?? "GET";
   const url = new URL(request.url ?? "/", "http://localhost");
@@ -166,6 +172,23 @@ async function handle(
       );
     }
     sendJson(response, 200, await translator.translate(inputResult.data.text, keyResult.data));
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/attacks") {
+    if (!config.liveAgent.isEnabled || !attacks) {
+      throw new RequestError(503, "LIVE_ATTACK_DISABLED", "Live Meta attacks are unavailable.");
+    }
+    const keyResult = idempotencyKeySchema.safeParse(request.headers["idempotency-key"]);
+    if (!keyResult.success) {
+      throw new RequestError(400, "INVALID_IDEMPOTENCY_KEY", "Idempotency-Key is required and invalid.");
+    }
+    const input = replayUnderPolicySchema.safeParse(await readJson(request));
+    if (!input.success) {
+      throw new RequestError(422, "VALIDATION_ERROR", "Attack request is invalid.", input.error.issues);
+    }
+    const result = await attacks.run(input.data.policy, keyResult.data);
+    sendJson(response, result.replayed ? 200 : 201, result);
     return;
   }
 
@@ -254,7 +277,15 @@ export function createRunServer(service = new RunService(), options?: ServerOpti
     response.setHeader("content-security-policy", "default-src 'none'; frame-ancestors 'none'");
     response.setHeader("x-content-type-options", "nosniff");
     response.setHeader("x-frame-options", "DENY");
-    void handle(request, response, service, config, options?.budget, options?.translator).catch((error: unknown) => {
+    void handle(
+      request,
+      response,
+      service,
+      config,
+      options?.budget,
+      options?.translator,
+      options?.attacks,
+    ).catch((error: unknown) => {
       if (error instanceof RequestError) {
         sendError(response, error.status, error.code, error.message, error.details);
       } else if (error instanceof RunServiceError) {
@@ -279,6 +310,14 @@ export function createRunServer(service = new RunService(), options?: ServerOpti
             : error.code === "BUDGET_EXCEEDED"
               ? 402
               : 422;
+        sendError(response, status, error.code, error.message);
+      } else if (error instanceof LiveAttackServiceError) {
+        const status =
+          error.code === "LIVE_DISABLED"
+            ? 503
+            : error.code === "PROVIDER_BUSY"
+              ? 429
+              : 409;
         sendError(response, status, error.code, error.message);
       } else {
         sendError(response, 500, "INTERNAL_ERROR", "Internal server error.");
