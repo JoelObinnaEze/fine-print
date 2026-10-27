@@ -226,11 +226,11 @@
 **Description:** Add the server-only Meta adapter and schema-constrained translation, preserving literal omissions and unrelated patch semantics.
 
 **Acceptance criteria:**
-- [ ] Manual and model output pass the identical strict validator.
-- [ ] Ambiguous/unsupported results cannot activate.
-- [ ] No credential, prompt injection, or executable code reaches engine logic.
+- [x] Manual and model output pass the identical strict validator.
+- [x] Ambiguous/unsupported results cannot activate.
+- [x] No credential, prompt injection, or executable code reaches engine logic.
 
-**Verification:** Recorded contract fixtures first; one bounded live smoke call only after user-confirmed credits and budget.
+**Verification:** Five fixture/route tests cover the documented Meta request, strict host validation, non-candidate refusal, paid-call idempotency, single-request concurrency, truncated output, and ambiguous timeout accounting. An authorized live `muse-spark-1.3` call produced the expected every-deposit candidate and host-validated it at $0.004982 actual cost; the ledger conservatively retains $0.004075 from the earlier unverifiable response, leaving at least $9.990943 of the $10 app cap. The 59-test suite, typecheck, build, high-severity audit, and activation review mutation passed on October 27, 2026.
 
 **Dependencies:** Task 12
 
@@ -292,6 +292,6 @@
 ## Checkpoint: Complete
 
 - [ ] Core flow works end to end with truthful provenance.
-- [ ] At least one authorized live Meta trace is independently verified or explicitly reported as not run/failed.
-- [ ] No secrets are tracked and no paid/public action occurred without authorization.
+- [x] At least one authorized live Meta trace is independently verified or explicitly reported as not run/failed.
+- [x] No secrets are tracked and no paid/public action occurred without authorization.
 

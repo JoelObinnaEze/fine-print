@@ -59,7 +59,7 @@ export function readMetaCompatibilityConfig(
   };
 }
 
-async function readBoundedJson(response: Response): Promise<unknown> {
+export async function readBoundedJsonResponse(response: Response): Promise<unknown> {
   const declaredLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(declaredLength) && declaredLength > MAX_RESPONSE_BYTES) {
     throw new Error("Meta Model API response exceeded 1 MB");
@@ -119,7 +119,7 @@ export async function checkMetaCompatibility(
     throw new Error("Meta Model API returned an unexpected content type");
   }
 
-  const catalog = modelListSchema.parse(await readBoundedJson(response));
+  const catalog = modelListSchema.parse(await readBoundedJsonResponse(response));
   return {
     endpoint: config.baseUrl,
     modelId: config.modelId,

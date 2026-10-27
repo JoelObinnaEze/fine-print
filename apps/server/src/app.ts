@@ -1,7 +1,16 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 
-import { emptyBudgetUsage, type BudgetService } from "./budget/service.js";
+import {
+  BudgetServiceError,
+  emptyBudgetUsage,
+  type BudgetService,
+} from "./budget/service.js";
 import { readServerConfig, type ServerConfig } from "./config.js";
+import {
+  MetaPolicyTranslatorError,
+  policyTranslationRequestSchema,
+  type MetaPolicyTranslator,
+} from "./providers/meta.js";
 import { createRunSchema, idempotencyKeySchema, runIdSchema } from "./runs/contracts.js";
 import { RunService, RunServiceError, type RunEvent, type RunStatus } from "./runs/service.js";
 
@@ -103,6 +112,7 @@ function streamEvents(request: IncomingMessage, response: ServerResponse, servic
 interface ServerOptions {
   readonly config: ServerConfig;
   readonly budget: BudgetService;
+  readonly translator?: MetaPolicyTranslator;
 }
 
 async function handle(
@@ -111,6 +121,7 @@ async function handle(
   service: RunService,
   config: ServerConfig,
   budget: BudgetService | undefined,
+  translator: MetaPolicyTranslator | undefined,
 ): Promise<void> {
   const method = request.method ?? "GET";
   const url = new URL(request.url ?? "/", "http://localhost");
@@ -128,6 +139,27 @@ async function handle(
 
   if (method === "GET" && url.pathname === "/api/usage") {
     sendJson(response, 200, budget?.getUsage() ?? emptyBudgetUsage(config));
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/policies/translate") {
+    if (!config.liveAgent.isEnabled || !translator) {
+      throw new RequestError(503, "LIVE_TRANSLATION_DISABLED", "Live translation is unavailable.");
+    }
+    const keyResult = idempotencyKeySchema.safeParse(request.headers["idempotency-key"]);
+    if (!keyResult.success) {
+      throw new RequestError(400, "INVALID_IDEMPOTENCY_KEY", "Idempotency-Key is required and invalid.");
+    }
+    const inputResult = policyTranslationRequestSchema.safeParse(await readJson(request));
+    if (!inputResult.success) {
+      throw new RequestError(
+        422,
+        "VALIDATION_ERROR",
+        "Translation request is invalid.",
+        inputResult.error.issues,
+      );
+    }
+    sendJson(response, 200, await translator.translate(inputResult.data.text, keyResult.data));
     return;
   }
 
@@ -172,11 +204,31 @@ export function createRunServer(service = new RunService(), options?: ServerOpti
     response.setHeader("content-security-policy", "default-src 'none'; frame-ancestors 'none'");
     response.setHeader("x-content-type-options", "nosniff");
     response.setHeader("x-frame-options", "DENY");
-    void handle(request, response, service, config, options?.budget).catch((error: unknown) => {
+    void handle(request, response, service, config, options?.budget, options?.translator).catch((error: unknown) => {
       if (error instanceof RequestError) {
         sendError(response, error.status, error.code, error.message, error.details);
       } else if (error instanceof RunServiceError) {
         const status = error.code === "RUN_NOT_FOUND" ? 404 : 422;
+        sendError(response, status, error.code, error.message);
+      } else if (error instanceof MetaPolicyTranslatorError) {
+        const status =
+          error.code === "TRANSLATION_ALREADY_ATTEMPTED"
+            ? 409
+            : error.code === "PROVIDER_BUSY"
+              ? 429
+              : error.code === "PROVIDER_REJECTED" ||
+                  error.code === "PROVIDER_OUTPUT_INVALID" ||
+                  error.code === "PROVIDER_OUTCOME_UNKNOWN"
+              ? 502
+              : 422;
+        sendError(response, status, error.code, error.message);
+      } else if (error instanceof BudgetServiceError) {
+        const status =
+          error.code === "LIVE_DISABLED"
+            ? 503
+            : error.code === "BUDGET_EXCEEDED"
+              ? 402
+              : 422;
         sendError(response, status, error.code, error.message);
       } else {
         sendError(response, 500, "INTERNAL_ERROR", "Internal server error.");

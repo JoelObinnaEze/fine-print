@@ -2,6 +2,7 @@ import { createRunServer } from "./app.js";
 import { BudgetService } from "./budget/service.js";
 import { readServerConfig } from "./config.js";
 import { openDatabase } from "./persistence/database.js";
+import { MetaPolicyTranslator } from "./providers/meta.js";
 import { RunService } from "./runs/service.js";
 
 const host = "127.0.0.1";
@@ -10,7 +11,8 @@ const config = readServerConfig(process.env);
 const database = openDatabase(config.databasePath);
 const service = new RunService(database);
 const budget = new BudgetService(database, config);
-const server = createRunServer(service, { config, budget });
+const translator = new MetaPolicyTranslator(database, config, budget);
+const server = createRunServer(service, { config, budget, translator });
 
 server.listen(port, host, () => {
   console.log(`Fine Print server listening on http://${host}:${port}`);

@@ -62,6 +62,17 @@ export function initializeRunSchema(database: Database.Database): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS policy_translations (
+      id TEXT PRIMARY KEY,
+      idempotency_key TEXT NOT NULL UNIQUE,
+      request_hash TEXT NOT NULL,
+      state TEXT NOT NULL CHECK (state IN ('claimed', 'succeeded', 'failed', 'ambiguous')),
+      reservation_id TEXT REFERENCES usage_reservations(id),
+      result_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 }
 
