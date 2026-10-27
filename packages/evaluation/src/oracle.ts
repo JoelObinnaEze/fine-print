@@ -1,8 +1,4 @@
-import type {
-  EngineEvent,
-  OutcomeLedger,
-  WorldState,
-} from "../../engine/src/index.js";
+import type { EngineEvent, OutcomeLedger, WorldState } from "../../engine/src/types.js";
 
 export function evaluateOutcome(
   stateBefore: WorldState,

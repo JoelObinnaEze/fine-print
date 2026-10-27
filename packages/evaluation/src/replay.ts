@@ -1,16 +1,9 @@
-import {
-  canonicalHash,
-  ENGINE_VERSION,
-  step,
-  type Action,
-  type EngineEvent,
-  type WorldState,
-} from "../../engine/src/index.js";
-import {
-  evaluatePayouts,
-  type Payout,
-  type Policy,
-} from "../../policy/src/index.js";
+import type { Action } from "../../engine/src/actions.js";
+import { step } from "../../engine/src/step.js";
+import type { EngineEvent, WorldState } from "../../engine/src/types.js";
+import { evaluatePayouts } from "../../policy/src/receipts.js";
+import type { Payout } from "../../policy/src/receipts.js";
+import type { Policy } from "../../policy/src/schema.js";
 
 import { evaluateOutcome } from "./oracle.js";
 
@@ -18,10 +11,6 @@ export interface ReplayResult {
   readonly state: WorldState;
   readonly events: readonly EngineEvent[];
   readonly payouts: readonly Payout[];
-}
-
-export function hashReplay(replay: ReplayResult): string {
-  return canonicalHash({ engineVersion: ENGINE_VERSION, replay });
 }
 
 export function replayActions(

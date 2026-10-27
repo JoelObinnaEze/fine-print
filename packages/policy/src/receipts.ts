@@ -2,7 +2,7 @@ import type {
   EngineEvent,
   RewardLedger,
   WorldState,
-} from "../../engine/src/index.js";
+} from "../../engine/src/types.js";
 
 import type { Policy } from "./schema.js";
 

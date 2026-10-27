@@ -136,11 +136,11 @@
 **Description:** Render the depot, worker/items, payout/useful counters, and an accessible event timeline from replay state.
 
 **Acceptance criteria:**
-- [ ] The exploit is visually understandable without reading technical internals.
-- [ ] Play/pause, step, scrub, speed, jump-to-payout, keyboard controls, and text events work.
-- [ ] Reduced-motion disables cosmetic interpolation without changing results.
+- [x] The exploit is visually understandable without reading technical internals.
+- [x] Play/pause, step, scrub, speed, jump-to-payout, keyboard controls, and text events work.
+- [x] Reduced-motion disables cosmetic interpolation without changing results.
 
-**Verification:** Component tests, build, and real-browser console/accessibility/visual check.
+**Verification:** Three component tests pass. A real browser showed tick 7 at 10 paid points versus zero recycled, a clean console/accessibility tree, and no horizontal overflow at 320px or 1440px on October 26, 2026.
 
 **Dependencies:** Task 7
 

@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { MATERIALS } from "../../engine/src/index.js";
+import { MATERIALS } from "../../engine/src/types.js";
 
 const clauseSchema = z.strictObject({
   id: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/),

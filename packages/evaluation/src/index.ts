@@ -4,6 +4,7 @@ export {
   calculateTestedPolicyScore,
 } from "./metrics.js";
 export { evaluateOutcome } from "./oracle.js";
-export { hashReplay, replayActions } from "./replay.js";
+export { hashReplay } from "./replay-hash.js";
+export { replayActions } from "./replay.js";
 export type { CompletedReplayMetrics } from "./metrics.js";
 export type { ReplayResult } from "./replay.js";
