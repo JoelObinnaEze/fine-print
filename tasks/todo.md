@@ -26,7 +26,7 @@
 - [x] Worker, station, capacity, tick, horizon, and terminal state match the specification.
 - [x] Action decoding rejects unknown/invalid shapes at the boundary.
 
-**Verification:** Red test failed on missing exports, then `npm ci --ignore-scripts`, 3 focused/full tests, typecheck, build, and high-severity audit passed on October 26, 2026.
+**Verification:** Red test failed on missing exports, then a clean `npm ci`, focused/full tests, typecheck, build, and high-severity audit passed on the pinned Node 22.18.0 runtime.
 
 **Dependencies:** Task 1
 
@@ -75,8 +75,8 @@
 
 ## Checkpoint: Runtime compatibility
 
-- [x] Node 22.23.4 runs the full suite and strict typecheck; Node 24.14.1 remains supported.
-- [x] `better-sqlite3` 13.0.3 persists a file database, rolls back failed transactions, and enables foreign keys on both verified runtimes.
+- [x] Node 22.18.0 and Node 24.14.1 run clean installs, the full suite, strict typecheck, and build; `.nvmrc` pins the oldest verified runtime without requiring Node 24.
+- [x] Node's built-in synchronous SQLite persists a file database, rolls back failed transactions, and enables foreign keys without a native compiler on both verified runtimes.
 - [x] The Meta probe is server-only, host-allowlisted, bounded, timed out, and makes only `GET /v1/models`.
 - [x] The configured Meta key authenticated against the official model catalog and exposed `muse-spark-1.3` on October 26, 2026.
 
@@ -189,14 +189,14 @@
 
 ## Task 11: Persist runs and recover safely
 
-**Description:** Use the verified Node 22/24-compatible `better-sqlite3` driver to persist policies, runs, events, payouts, actions, and idempotency claims transactionally.
+**Description:** Use Node's built-in synchronous SQLite API to persist policies, runs, events, payouts, actions, and idempotency claims transactionally.
 
 **Acceptance criteria:**
 - [x] Unique run/sequence and idempotency constraints are enforced atomically.
 - [x] Restart marks unfinished inference interrupted and never repeats a paid request.
 - [x] Foreign keys and transactions preserve complete replay evidence.
 
-**Verification:** Two file-database integration tests persist a complete 7-action/11-event/1-payout trace, reject duplicate sequences and orphan actions, replay one atomic idempotency claim, and recover unfinished work as `interrupted` without restarting it. The 50-test suite, typecheck, build, and recovery review mutation passed on October 27, 2026; the pinned driver remains covered by the Node 22/24 clean-install smoke test.
+**Verification:** Two file-database integration tests persist a complete 7-action/11-event/1-payout trace, reject duplicate sequences and orphan actions, replay one atomic idempotency claim, and recover unfinished work as `interrupted` without restarting it. The full suite, typecheck, build, and recovery review mutation pass after clean installs on Node 22.18.0 and Node 24.14.1.
 
 **Dependencies:** Task 10
 
@@ -277,11 +277,11 @@
 **Description:** Run offline families/seeds/baselines, record honest results, finish accessibility/usability checks, and prepare README/demo/submission artifacts.
 
 **Acceptance criteria:**
-- [ ] Required commands work from a clean clone and incomplete results say “not run.”
-- [ ] Evaluation reports raw numerators/denominators, costs, limits, and replay agreement.
-- [ ] Three-minute script, attribution, setup, license decision, and judge-access checklist are reviewable.
+- [x] Required commands work from a clean clone and incomplete results say “not run.”
+- [x] Evaluation reports raw numerators/denominators, costs, limits, and replay agreement.
+- [x] Three-minute script, attribution, setup, license decision, and judge-access checklist are reviewable.
 
-**Verification:** `npm ci`, full test/typecheck/build/E2E/evaluation, export replay, and incognito access rehearsal.
+**Verification:** Clean `npm ci`, 71 tests, strict typecheck, production build, offline evaluation, and high-severity audit pass on Node 22.18.0 and Node 24.14.1. The generated scorecard records three honest orders, two adversarial families, raw 0/6–6/6 coverage, 0/60–30/60 excess, deterministic replay agreement, and exact live limits/tokens/cost. README, attribution, explicit no-license decision, three-minute script, and judge checklist are reviewable. Volunteer usability, public deployment, incognito access, video recording, publication, and submission remain explicitly “not run” or “not performed.”
 
 **Dependencies:** Task 15
 

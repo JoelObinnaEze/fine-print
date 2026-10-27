@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import type Database from "better-sqlite3";
 import * as z from "zod";
 
 import type { BudgetService, UsageReservation } from "../budget/service.js";
 import type { ServerConfig } from "../config.js";
+import type { AppDatabase } from "../persistence/database.js";
 import { initializeRunSchema } from "../persistence/schema.js";
 import {
   parsePolicyInterpretation,
@@ -86,14 +86,14 @@ Return candidate only when the schema expresses the request. Otherwise return am
 For ambiguous or unsupported results, return an empty clauses array. Never emit executable code.`;
 
 export class MetaPolicyTranslator {
-  readonly #database: Database.Database;
+  readonly #database: AppDatabase;
   readonly #config: ServerConfig;
   readonly #budget: BudgetService;
   readonly #fetchImplementation: typeof fetch;
   #inFlight = false;
 
   constructor(
-    database: Database.Database,
+    database: AppDatabase,
     config: ServerConfig,
     budget: BudgetService,
     fetchImplementation: typeof fetch = fetch,

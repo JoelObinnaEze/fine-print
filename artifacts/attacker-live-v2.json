@@ -14,6 +14,13 @@
     "requestTimeoutMs": 30000,
     "maxActionsPerBatch": 16
   },
+  "usage": {
+    "requests": 10,
+    "promptTokens": 47584,
+    "completionTokens": 2536,
+    "totalTokens": 50120,
+    "actualUsd": 0.070258
+  },
   "policy": {
     "schemaVersion": 1,
     "clauses": [
@@ -86,5 +93,5 @@
   ],
   "initialStateHash": "9502330680e4077b1df4d56fe4883ea73cd958b8a7251be93620f5974912354a",
   "replayHash": "26722928cdb22c639e81ba19bbe99c265e3d126fff2505371460f09c79f69323",
-  "integrityHash": "ec0d2bb6564fde400d6a6b3b3bca7682c8f333127150f8e8fdcea6c232e3f47d"
+  "integrityHash": "9b655c629fd69ca79ccd33b8e701e040be023466820f1a2b92b8db6a91f0b699"
 }

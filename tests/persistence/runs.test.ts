@@ -3,7 +3,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setImmediate as yieldToEventLoop } from "node:timers/promises";
 
-import type Database from "better-sqlite3";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { openDatabase } from "../../apps/server/src/persistence/database.js";
@@ -26,7 +25,7 @@ const policy: Policy = {
   ],
 };
 
-const databases: Database.Database[] = [];
+const databases: ReturnType<typeof openDatabase>[] = [];
 const temporaryDirectories: string[] = [];
 
 afterEach(() => {

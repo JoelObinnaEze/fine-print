@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 
-import type Database from "better-sqlite3";
-
 import type { ServerConfig } from "../config.js";
+import type { AppDatabase } from "../persistence/database.js";
 import { initializeRunSchema } from "../persistence/schema.js";
 
 type ReservationState = "reserved" | "settled" | "ambiguous" | "released";
@@ -83,12 +82,12 @@ export function emptyBudgetUsage(config: ServerConfig): BudgetUsage {
 }
 
 export class BudgetService {
-  readonly #database: Database.Database;
+  readonly #database: AppDatabase;
   readonly #config: ServerConfig;
   readonly #sessionId: string;
 
   constructor(
-    database: Database.Database,
+    database: AppDatabase,
     config: ServerConfig,
     sessionId: string = randomUUID(),
   ) {

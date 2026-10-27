@@ -29,6 +29,15 @@ const exportSchema = z.strictObject({
   provenance: runProvenanceSchema,
   modelId: z.string().min(1).max(128).nullable(),
   limits: runLimitsSchema,
+  usage: z
+    .strictObject({
+      requests: z.number().int().nonnegative(),
+      promptTokens: z.number().int().nonnegative(),
+      completionTokens: z.number().int().nonnegative(),
+      totalTokens: z.number().int().nonnegative(),
+      actualUsd: z.number().finite().nonnegative(),
+    })
+    .nullable(),
   policy: policySchema,
   actions: z.array(actionSchema).max(120),
   initialStateHash: z.string().regex(/^[a-f0-9]{64}$/),
@@ -47,6 +56,7 @@ interface CreateRunExportInput {
   readonly provenance: RunProvenance;
   readonly modelId: string | null;
   readonly limits: RunLimits;
+  readonly usage: RunExport["usage"];
   readonly policy: Policy;
   readonly actions: RunExport["actions"];
 }
@@ -63,6 +73,7 @@ export function createRunExport(input: CreateRunExportInput): RunExport {
     provenance: input.provenance,
     modelId: input.modelId,
     limits: input.limits,
+    usage: input.usage,
     policy: input.policy,
     actions: input.actions,
     initialStateHash: canonicalHash({ engineVersion: ENGINE_VERSION, state: initialState }),

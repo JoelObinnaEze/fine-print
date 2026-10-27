@@ -1,15 +1,13 @@
 import { createHash, randomUUID } from "node:crypto";
 import { setImmediate as yieldToEventLoop } from "node:timers/promises";
 
-import type Database from "better-sqlite3";
-
 import { parseAction, type Action } from "../../../../packages/engine/src/actions.js";
 import { createBottleReturnState } from "../../../../packages/engine/src/scenario.js";
 import type { EngineEvent, WorldState } from "../../../../packages/engine/src/types.js";
 import { replayActions, type ReplayResult } from "../../../../packages/evaluation/src/replay.js";
 import type { Payout } from "../../../../packages/policy/src/receipts.js";
 import { parsePolicy, type Policy } from "../../../../packages/policy/src/schema.js";
-import { openDatabase } from "../persistence/database.js";
+import { openDatabase, type AppDatabase } from "../persistence/database.js";
 import { initializeRunSchema, recoverUnfinishedRuns } from "../persistence/schema.js";
 import type { CreateRunInput } from "./contracts.js";
 import {
@@ -127,12 +125,12 @@ export interface BranchRunInput {
 }
 
 export class RunService {
-  readonly #database: Database.Database;
+  readonly #database: AppDatabase;
   readonly #runs = new Map<string, StoredRun>();
   readonly #listeners = new Map<string, Set<EventListener>>();
   #isShutDown = false;
 
-  constructor(database: Database.Database = openDatabase(":memory:")) {
+  constructor(database: AppDatabase = openDatabase(":memory:")) {
     this.#database = database;
     initializeRunSchema(database);
     recoverUnfinishedRuns(database, new Date().toISOString());
@@ -301,6 +299,24 @@ export class RunService {
     if (run.status !== "completed") {
       throw new RunServiceError("RUN_NOT_TERMINAL", "Only completed runs can be exported.");
     }
+    const usage = this.#database
+      .prepare(`
+        SELECT count(agent_turns.sequence) AS requests,
+               COALESCE(sum(json_extract(agent_turns.usage_json, '$.promptTokens')), 0) AS prompt_tokens,
+               COALESCE(sum(json_extract(agent_turns.usage_json, '$.completionTokens')), 0) AS completion_tokens,
+               COALESCE(sum(json_extract(agent_turns.usage_json, '$.totalTokens')), 0) AS total_tokens,
+               COALESCE(sum(json_extract(agent_turns.usage_json, '$.actualUsd')), 0) AS actual_usd
+        FROM agent_searches
+        LEFT JOIN agent_turns ON agent_turns.search_id = agent_searches.id
+        WHERE agent_searches.run_id = ?
+      `)
+      .get(run.id) as {
+        readonly requests: number;
+        readonly prompt_tokens: number;
+        readonly completion_tokens: number;
+        readonly total_tokens: number;
+        readonly actual_usd: number;
+      };
     return createRunExport({
       runId: run.id,
       parentRunId: run.parentRunId,
@@ -308,6 +324,16 @@ export class RunService {
       provenance: run.provenance,
       modelId: run.modelId,
       limits: run.limits,
+      usage:
+        usage.requests === 0
+          ? null
+          : {
+              requests: usage.requests,
+              promptTokens: usage.prompt_tokens,
+              completionTokens: usage.completion_tokens,
+              totalTokens: usage.total_tokens,
+              actualUsd: Number(usage.actual_usd.toFixed(6)),
+            },
       policy: run.policy,
       actions: [...run.actions.slice(0, run.state.tick)],
     });

@@ -119,6 +119,7 @@ describe("run branches and export", () => {
       runId: created.run.id,
       provenance: "recorded_model_replay",
       limits: { maxInferenceRequests: 12, maxTicksPerTrial: 120, maxTrials: 4 },
+      usage: null,
     });
     expect(verified.state.rewardLedger.totalPoints).toBe(20);
 

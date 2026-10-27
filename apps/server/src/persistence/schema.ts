@@ -1,6 +1,6 @@
-import type Database from "better-sqlite3";
+import type { AppDatabase } from "./database.js";
 
-export function initializeRunSchema(database: Database.Database): void {
+export function initializeRunSchema(database: AppDatabase): void {
   database.exec(`
     CREATE TABLE IF NOT EXISTS policy_versions (
       id TEXT PRIMARY KEY,
@@ -133,7 +133,7 @@ export function initializeRunSchema(database: Database.Database): void {
   `);
 }
 
-export function recoverUnfinishedRuns(database: Database.Database, timestamp: string): void {
+export function recoverUnfinishedRuns(database: AppDatabase, timestamp: string): void {
   const unfinished = database
     .prepare(`
       SELECT runs.id, COALESCE(MAX(events.sequence), 0) AS last_sequence
