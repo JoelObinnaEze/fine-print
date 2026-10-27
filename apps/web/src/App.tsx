@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Depot } from "./depot/Depot.js";
+import {
+  RedTeamArena,
+  scriptedEvidence,
+  type RunEvidence,
+} from "./arena/RedTeamArena.js";
 import { PolicyCard } from "./policy/PolicyCard.js";
+import { PolicyGauntlet } from "./policy/PolicyGauntlet.js";
 import { PolicyLab } from "./policy/PolicyLab.js";
 import { EventTimeline } from "./replay/EventTimeline.js";
 import { ReplayControls } from "./replay/ReplayControls.js";
@@ -9,50 +15,63 @@ import {
   createReplayFrames,
   patchPolicies,
   exploitActions,
-  replayFrames,
   startingPolicy,
   type PatchId,
 } from "./replay-data.js";
+import type { Policy } from "../../../packages/policy/src/index.js";
+
+const initialSourceText = "Pay 10 points whenever an item is deposited.";
 
 export function App() {
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [activePatch, setActivePatch] = useState<PatchId | null>(null);
-  const frame = replayFrames[frameIndex]!;
+  const [traceActions, setTraceActions] = useState(exploitActions);
+  const [evidence, setEvidence] = useState<RunEvidence>(scriptedEvidence);
+  const [activePolicy, setActivePolicy] = useState<Policy>(startingPolicy);
+  const [sourceText, setSourceText] = useState(initialSourceText);
+  const activeFrames = useMemo(
+    () => createReplayFrames(activePolicy, traceActions),
+    [activePolicy, traceActions],
+  );
+  const frame = activeFrames[frameIndex]!;
   const patchedFrames = useMemo(
-    () => (activePatch ? createReplayFrames(patchPolicies[activePatch]) : null),
-    [activePatch],
+    () =>
+      activePatch
+        ? createReplayFrames(patchPolicies[activePatch], traceActions)
+        : null,
+    [activePatch, traceActions],
   );
   const patchedFrame = patchedFrames?.[frameIndex];
   const nextPayoutFrame = useMemo(
     () =>
-      replayFrames.findIndex(
+      activeFrames.findIndex(
         (candidate, index) =>
           index > frameIndex && candidate.payouts.length > frame.payouts.length,
       ),
-    [frame.payouts.length, frameIndex],
+    [activeFrames, frame.payouts.length, frameIndex],
   );
 
   useEffect(() => {
     if (!isPlaying) return;
-    if (frameIndex === replayFrames.length - 1) {
+    if (frameIndex === activeFrames.length - 1) {
       setIsPlaying(false);
       return;
     }
     const timeout = window.setTimeout(
       () =>
-        setFrameIndex((current) => Math.min(current + 1, replayFrames.length - 1)),
+        setFrameIndex((current) => Math.min(current + 1, activeFrames.length - 1)),
       650 / speed,
     );
     return () => window.clearTimeout(timeout);
-  }, [frameIndex, isPlaying, speed]);
+  }, [activeFrames.length, frameIndex, isPlaying, speed]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement) return;
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
       if (event.key === "ArrowRight") {
-        setFrameIndex((current) => Math.min(current + 1, replayFrames.length - 1));
+        setFrameIndex((current) => Math.min(current + 1, activeFrames.length - 1));
       }
       if (event.key === "ArrowLeft") {
         setFrameIndex((current) => Math.max(0, current - 1));
@@ -64,7 +83,7 @@ export function App() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [activeFrames.length]);
 
   const selectFrame = (index: number) => {
     setIsPlaying(false);
@@ -75,17 +94,40 @@ export function App() {
     <div className="app-shell">
       <header className="site-header">
         <div>
-          <p className="eyebrow">Executable incentive test · scripted fixture</p>
+          <p className="eyebrow">Executable incentive test · {evidence.provenance.replaceAll("_", " ")}</p>
           <h1>Fine Print</h1>
         </div>
         <p className="tagline">You write the rules. The AI finds what you forgot.</p>
       </header>
 
+      <RedTeamArena
+        evidence={evidence}
+        policy={activePolicy}
+        sourceText={sourceText}
+        onActivatePolicy={(policy, text) => {
+          setActivePolicy(policy);
+          setSourceText(text);
+          setIsPlaying(false);
+          setFrameIndex(0);
+          setActivePatch(null);
+          setTraceActions(exploitActions);
+          setEvidence(scriptedEvidence);
+        }}
+        onLoadTrace={(actions, nextEvidence) => {
+          setIsPlaying(false);
+          setFrameIndex(0);
+          setActivePatch(null);
+          setTraceActions(actions);
+          setEvidence(nextEvidence);
+        }}
+      />
+
       <main className="game-layout">
         <PolicyCard
-          policy={startingPolicy}
+          policy={activePolicy}
           activePatch={activePatch}
           onTestPatch={setActivePatch}
+          sourceText={sourceText}
         />
         <Depot state={frame.state} />
         <aside className="evidence-panel" aria-label="Run evidence">
@@ -146,7 +188,7 @@ export function App() {
 
       <ReplayControls
         frame={frameIndex}
-        frameCount={replayFrames.length}
+        frameCount={activeFrames.length}
         isPlaying={isPlaying}
         speed={speed}
         canJumpToPayout={nextPayoutFrame >= 0}
@@ -156,16 +198,21 @@ export function App() {
         onJumpToPayout={() => nextPayoutFrame >= 0 && selectFrame(nextPayoutFrame)}
       />
       <EventTimeline
-        frames={replayFrames}
+        frames={activeFrames}
         activeFrame={frameIndex}
         onSelect={selectFrame}
       />
+      <PolicyGauntlet
+        policy={activePolicy}
+        patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
+      />
       <PolicyLab
-        originalPolicy={startingPolicy}
+        originalPolicy={activePolicy}
         patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
         frame={frame}
         patchedFrame={patchedFrame ?? null}
-        actionCount={exploitActions.length}
+        actionCount={traceActions.length}
+        evidence={evidence}
       />
     </div>
   );

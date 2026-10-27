@@ -1,0 +1,208 @@
+import { useEffect, useState } from "react";
+
+import { parseAction, type Action } from "../../../../packages/engine/src/actions.js";
+import type { Policy } from "../../../../packages/policy/src/index.js";
+import { recordedMuseActions } from "../replay-data.js";
+import { PolicyComposer } from "./PolicyComposer.js";
+
+export interface RunEvidence {
+  readonly provenance: "scripted_fixture" | "recorded_model_replay" | "live_model";
+  readonly modelId: string | null;
+  readonly requests: number;
+  readonly totalTokens: number;
+  readonly actualUsd: number;
+  readonly runId: string | null;
+  readonly verdict: string;
+  readonly summary: string;
+}
+
+export const scriptedEvidence: RunEvidence = {
+  provenance: "scripted_fixture",
+  modelId: null,
+  requests: 0,
+  totalTokens: 0,
+  actualUsd: 0,
+  runId: null,
+  verdict: "Deterministic teaching trace",
+  summary: "A known repeated-deposit loophole demonstrates the audit workflow without inference.",
+};
+
+const recordedEvidence: RunEvidence = {
+  provenance: "recorded_model_replay",
+  modelId: "muse-spark-1.3",
+  requests: 10,
+  totalTokens: 50_120,
+  actualUsd: 0.070258,
+  runId: "74e918a0-786b-4046-b415-9de2e665a6df",
+  verdict: "Exploit independently verified",
+  summary: "Muse found a 30-point trace with zero useful recycling; the host preserved two rejected actions.",
+};
+
+export function RedTeamArena({
+  evidence,
+  policy,
+  sourceText,
+  onActivatePolicy,
+  onLoadTrace,
+}: {
+  readonly evidence: RunEvidence;
+  readonly policy: Policy;
+  readonly sourceText: string;
+  readonly onActivatePolicy: (policy: Policy, sourceText: string) => void;
+  readonly onLoadTrace: (actions: readonly Action[], evidence: RunEvidence) => void;
+}) {
+  const [connection, setConnection] = useState<"checking" | "ready" | "offline">("checking");
+  const [availableBudget, setAvailableBudget] = useState<number | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [strategies, setStrategies] = useState<readonly string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all([fetch("/api/health"), fetch("/api/usage")])
+      .then(async ([healthResponse, usageResponse]) => {
+        if (!healthResponse.ok || !usageResponse.ok) throw new Error("Server unavailable.");
+        const health = (await healthResponse.json()) as {
+          readonly liveAgent?: { readonly isEnabled?: boolean };
+        };
+        const usage = (await usageResponse.json()) as { readonly availableAppUsd?: number };
+        if (!active) return;
+        setConnection(health.liveAgent?.isEnabled ? "ready" : "offline");
+        setAvailableBudget(
+          typeof usage.availableAppUsd === "number" ? usage.availableAppUsd : null,
+        );
+      })
+      .catch(() => active && setConnection("offline"));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const runLiveAttack = async () => {
+    setIsRunning(true);
+    setMessage("Muse is testing hypotheses through bounded tools. This can take up to two minutes.");
+    setStrategies([]);
+    try {
+      const response = await fetch("/api/attacks", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "idempotency-key": `arena-${crypto.randomUUID()}`,
+        },
+        body: JSON.stringify({ policy }),
+      });
+      const result = (await response.json()) as {
+        readonly error?: { readonly message?: string };
+        readonly runId?: string | null;
+        readonly modelId?: string;
+        readonly verification?: {
+          readonly status?: string;
+          readonly totalReward?: number;
+          readonly usefulItems?: number;
+          readonly requestsUsed?: number;
+        };
+        readonly turns?: readonly { readonly strategySummary?: string }[];
+        readonly usage?: {
+          readonly requests?: number;
+          readonly totalTokens?: number;
+          readonly actualUsd?: number;
+        };
+      };
+      if (!response.ok || !result.runId || !result.verification || !result.usage) {
+        throw new Error(result.error?.message ?? "The live search did not return a verified trace.");
+      }
+      const exportResponse = await fetch(`/api/runs/${result.runId}/export`);
+      if (!exportResponse.ok) throw new Error("The verified replay export was unavailable.");
+      const exported = (await exportResponse.json()) as { readonly actions?: readonly unknown[] };
+      if (!Array.isArray(exported.actions)) throw new Error("The replay export was invalid.");
+      const actions = exported.actions.map(parseAction);
+      const strategySummaries = (result.turns ?? [])
+        .map((turn) => turn.strategySummary?.trim())
+        .filter((summary): summary is string => Boolean(summary));
+      setStrategies(strategySummaries);
+      onLoadTrace(actions, {
+        provenance: "live_model",
+        modelId: result.modelId ?? "Meta model",
+        requests: result.usage.requests ?? result.verification.requestsUsed ?? 0,
+        totalTokens: result.usage.totalTokens ?? 0,
+        actualUsd: result.usage.actualUsd ?? 0,
+        runId: result.runId,
+        verdict:
+          result.verification.status === "exploit_verified"
+            ? "Exploit independently verified"
+            : "Bounded search completed",
+        summary: `${result.verification.totalReward ?? 0} reward points versus ${result.verification.usefulItems ?? 0} useful items.`,
+      });
+      setMessage("The exact model trace is loaded below. Every reward was recomputed by the host.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The live attack failed.");
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  return (
+    <section className="arena" aria-labelledby="arena-title">
+      <div className="arena__intro">
+        <p className="eyebrow">Judge mode · adversarial policy audit</p>
+        <h2 id="arena-title">Red-team arena</h2>
+        <p>
+          Turn plain-language incentives into executable rules, let Muse search for loopholes,
+          then replay every claim through a deterministic verifier.
+        </p>
+      </div>
+
+      <ol className="arena__steps" aria-label="Audit workflow">
+        <li><b>01</b><span>Write a policy</span></li>
+        <li><b>02</b><span>Muse attacks</span></li>
+        <li><b>03</b><span>Host verifies</span></li>
+        <li><b>04</b><span>Patch & replay</span></li>
+      </ol>
+
+      <PolicyComposer
+        connection={connection}
+        sourceText={sourceText}
+        onActivate={onActivatePolicy}
+      />
+
+      <div className="arena__proof">
+        <div>
+          <p className="eyebrow">Current evidence</p>
+          <strong>{evidence.verdict}</strong>
+          <p>{evidence.summary}</p>
+          <p className={`arena__status arena__status--${connection}`} role="status">
+            {connection === "ready"
+              ? "Meta connected"
+              : connection === "checking"
+                ? "Checking Meta connection"
+                : "Offline replay mode"}
+            {availableBudget !== null ? ` · $${availableBudget.toFixed(2)} budget left` : ""}
+          </p>
+        </div>
+        <button
+          className="arena__primary"
+          type="button"
+          disabled={connection !== "ready" || isRunning}
+          onClick={() => void runLiveAttack()}
+        >
+          {isRunning ? "Muse is searching…" : "Run live Muse attack"}
+        </button>
+        <button
+          className="arena__secondary"
+          type="button"
+          onClick={() => onLoadTrace(recordedMuseActions, recordedEvidence)}
+        >
+          Load verified Muse run
+        </button>
+      </div>
+      {(message || strategies.length > 0) && (
+        <div className="arena__activity" aria-live="polite">
+          {message && <p>{message}</p>}
+          {strategies.map((strategy, index) => (
+            <p key={`${index}-${strategy}`}><b>Turn {index + 1}</b> {strategy}</p>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}

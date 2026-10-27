@@ -291,7 +291,23 @@
 
 ## Checkpoint: Complete
 
-- [ ] Core flow works end to end with truthful provenance.
+- [x] Core flow works end to end with truthful provenance.
 - [x] At least one authorized live Meta trace is independently verified or explicitly reported as not run/failed.
 - [x] No secrets are tracked and no paid/public action occurred without authorization.
+
+## Task 17: Expand into a judge-facing red-team arena
+
+**Description:** Connect the existing translation, attacker, replay, patch, and evaluation systems into one browser workflow with an offline evidence fallback.
+
+**Acceptance criteria:**
+- [x] A user can submit plain English, review Meta's bounded candidate, and explicitly activate it.
+- [x] A live Muse attack is idempotent, durable, host-verified, and loadable as an exact replay.
+- [x] The active and patched policies show honest coverage, adversarial leakage, and a scoped tested-policy score.
+- [x] Recorded live evidence remains demoable without making a paid request.
+
+**Verification:** Route/service tests cover durable attack creation and idempotent replay. UI tests cover translation/activation, the live attack/export flow, exact recorded evidence, patch comparison, and the deterministic policy gauntlet. In Opera GX, the vague rule was refused, an explicit candidate required activation, and a browser-launched `muse-spark-1.3` search used 11 requests/$0.082180 to produce a 17-action host-verified trace worth 20 reward and zero useful items; the eligible-processing patch paid zero and scored 100/100 in the disclosed gauntlet. The portable export is `artifacts/attacker-live-arena.json`. The 77-test suite, strict typecheck, production build, high-severity audit, and post-fix browser console check pass on October 27, 2026.
+
+**Dependencies:** Tasks 13–16
+
+**Files likely touched:** `apps/server/src/runs/live-attack-service.ts`, `apps/server/src/app.ts`, `apps/web/src/arena/`, `apps/web/src/policy/PolicyGauntlet.tsx`, `tests/server/live-attacks.test.ts`, `tests/web/replay.test.tsx`
 

@@ -1,11 +1,7 @@
-import {
-  isAdjacent,
-  isWalkable,
-  step,
-  type Action,
-  type Position,
-  type WorldState,
-} from "../../engine/src/index.js";
+import type { Action } from "../../engine/src/actions.js";
+import { isAdjacent, isWalkable } from "../../engine/src/legal-actions.js";
+import { step } from "../../engine/src/step.js";
+import type { Position, WorldState } from "../../engine/src/types.js";
 
 const directions = [
   ["up", 0, -1],

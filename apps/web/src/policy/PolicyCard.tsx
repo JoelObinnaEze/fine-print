@@ -5,25 +5,33 @@ export function PolicyCard({
   policy,
   activePatch,
   onTestPatch,
+  sourceText,
 }: {
   readonly policy: Policy;
   readonly activePatch: PatchId | null;
   readonly onTestPatch: (patch: PatchId) => void;
+  readonly sourceText: string;
 }) {
-  const clause = policy.clauses[0]!;
+  const clause = policy.clauses[0];
   return (
     <section className="paper-card policy-card" aria-labelledby="policy-title">
       <p className="eyebrow">Active policy · v1</p>
       <h2 id="policy-title">The fine print</h2>
-      <blockquote>Pay 10 points whenever an item is deposited.</blockquote>
-      <dl className="clause-grid">
-        <div><dt>When</dt><dd>{clause.trigger}</dd></div>
-        <div><dt>Which</dt><dd>any item</dd></div>
-        <div><dt>How often</dt><dd>every event</dd></div>
-        <div><dt>Points</dt><dd>+{clause.points}</dd></div>
-      </dl>
+      <blockquote>{sourceText}</blockquote>
+      {clause ? (
+        <dl className="clause-grid">
+          <div><dt>When</dt><dd>{clause.trigger}</dd></div>
+          <div><dt>Which</dt><dd>{clause.eligibleOnly ? "eligible items" : "any item"}</dd></div>
+          <div><dt>How often</dt><dd>{clause.repetition.replaceAll("_", " ")}</dd></div>
+          <div><dt>Points</dt><dd>+{clause.points}</dd></div>
+        </dl>
+      ) : (
+        <p className="empty-receipt">No reward clauses are active.</p>
+      )}
       <p className="policy-warning">
-        <span aria-hidden="true">!</span> Depositing is rewarded before recycling is proven.
+        <span aria-hidden="true">!</span> {clause?.trigger === "deposit"
+          ? "Depositing is rewarded before recycling is proven."
+          : "This policy only pays after processing is observed."}
       </p>
       <details className="policy-json">
         <summary>Inspect structured policy</summary>

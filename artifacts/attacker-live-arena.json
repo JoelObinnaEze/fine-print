@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "1",
+  "runId": "e746d12f-12d9-45fb-8cc4-53234cde1f14",
+  "parentRunId": null,
+  "branchTick": null,
+  "provenance": "live_model",
+  "modelId": "muse-spark-1.3",
+  "limits": {
+    "maxInferenceRequests": 12,
+    "maxTicksPerTrial": 120,
+    "maxTrials": 4,
+    "searchDeadlineMs": 120000,
+    "requestTimeoutMs": 30000,
+    "maxActionsPerBatch": 16
+  },
+  "usage": {
+    "requests": 11,
+    "promptTokens": 56129,
+    "completionTokens": 2828,
+    "totalTokens": 58957,
+    "actualUsd": 0.08218
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "clauses": [
+      {
+        "id": "deposit-all-10",
+        "enabled": true,
+        "trigger": "deposit",
+        "points": 10,
+        "eligibleOnly": false,
+        "materials": [
+          "plastic",
+          "aluminium",
+          "carton",
+          "rubbish"
+        ],
+        "repetition": "every_event"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "take",
+      "itemId": "X1"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "take",
+      "itemId": "R1"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    }
+  ],
+  "initialStateHash": "9502330680e4077b1df4d56fe4883ea73cd958b8a7251be93620f5974912354a",
+  "replayHash": "6044251b7eb6f0c5c974e737e37810451e08867aaa8f2be41fbf472c2091b7a2",
+  "integrityHash": "4fd46920b34931235a1b046564858886735dc092a581f3975e4d5d5a7a71acac"
+}

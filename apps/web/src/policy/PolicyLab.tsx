@@ -1,5 +1,6 @@
 import type { ReplayFrame } from "../replay-data.js";
 import type { Policy } from "../../../../packages/policy/src/index.js";
+import type { RunEvidence } from "../arena/RedTeamArena.js";
 
 const labels = {
   trigger: "Trigger",
@@ -8,6 +9,12 @@ const labels = {
   materials: "Materials",
   repetition: "Repetition",
 } as const;
+
+const provenanceLabels: Record<RunEvidence["provenance"], string> = {
+  scripted_fixture: "Scripted fixture",
+  recorded_model_replay: "Recorded model replay",
+  live_model: "Live model",
+};
 
 type ComparableField = keyof typeof labels;
 
@@ -22,16 +29,18 @@ export function PolicyLab({
   frame,
   patchedFrame,
   actionCount,
+  evidence,
 }: {
   readonly originalPolicy: Policy;
   readonly patchedPolicy: Policy | null;
   readonly frame: ReplayFrame;
   readonly patchedFrame: ReplayFrame | null;
   readonly actionCount: number;
+  readonly evidence: RunEvidence;
 }) {
-  const originalClause = originalPolicy.clauses[0]!;
+  const originalClause = originalPolicy.clauses[0];
   const patchedClause = patchedPolicy?.clauses[0];
-  const changedFields = patchedClause
+  const changedFields = originalClause && patchedClause
     ? (Object.keys(labels) as ComparableField[]).filter(
         (field) => JSON.stringify(originalClause[field]) !== JSON.stringify(patchedClause[field]),
       )
@@ -48,16 +57,18 @@ export function PolicyLab({
       </div>
 
       <dl className="provenance-grid" aria-label="Run provenance and limits">
-        <div><dt>Provenance</dt><dd>Scripted fixture</dd></div>
-        <div><dt>Inference requests</dt><dd>0</dd></div>
+        <div><dt>Provenance</dt><dd>{provenanceLabels[evidence.provenance]}</dd></div>
+        <div><dt>Model</dt><dd>{evidence.modelId ?? "None"}</dd></div>
+        <div><dt>Inference requests</dt><dd>{evidence.requests}</dd></div>
         <div><dt>Tick limit</dt><dd>{frame.state.horizon}</dd></div>
         <div><dt>Submitted actions</dt><dd>{actionCount}</dd></div>
+        <div><dt>Verified cost</dt><dd>${evidence.actualUsd.toFixed(6)}</dd></div>
       </dl>
 
       <div className="policy-lab__comparison">
         <section aria-labelledby="diff-title">
           <h3 id="diff-title">Structured policy diff</h3>
-          {!patchedClause ? (
+          {!originalClause || !patchedClause ? (
             <p className="empty-receipt">Choose a patch to inspect exact field changes.</p>
           ) : changedFields.length === 0 ? (
             <p className="empty-receipt">The selected policy has no clause changes.</p>

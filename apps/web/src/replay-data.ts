@@ -59,16 +59,35 @@ export const exploitActions: readonly Action[] = [
   { type: "finish" },
 ];
 
+export const recordedMuseActions: readonly Action[] = [
+  { type: "move", direction: "up" },
+  { type: "move", direction: "up" },
+  { type: "take", itemId: "B1" },
+  { type: "move", direction: "right" },
+  { type: "move", direction: "right" },
+  { type: "move", direction: "right" },
+  { type: "move", direction: "right" },
+  { type: "move", direction: "right" },
+  { type: "deposit" },
+  { type: "retrieve", itemId: "B1" },
+  { type: "deposit" },
+  { type: "retrieve", itemId: "B1" },
+  { type: "deposit" },
+];
+
 const initialState = createBottleReturnState();
 
 export interface ReplayFrame extends ReplayResult {
   readonly action: Action | null;
 }
 
-export function createReplayFrames(policy: Policy): readonly ReplayFrame[] {
-  return Array.from({ length: exploitActions.length + 1 }, (_, index) => ({
-    ...replayActions(initialState, exploitActions.slice(0, index), policy),
-    action: index === 0 ? null : exploitActions[index - 1]!,
+export function createReplayFrames(
+  policy: Policy,
+  actions: readonly Action[] = exploitActions,
+): readonly ReplayFrame[] {
+  return Array.from({ length: actions.length + 1 }, (_, index) => ({
+    ...replayActions(initialState, actions.slice(0, index), policy),
+    action: index === 0 ? null : actions[index - 1]!,
   }));
 }
 

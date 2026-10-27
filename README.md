@@ -2,14 +2,14 @@
 
 Fine Print is a bounded recycling-depot game about specification gaming. A policy can pay exactly what it says while rewarding behavior its author did not intend. Meta translates plain language and searches for candidate traces; deterministic host code validates every policy, action, payout, and final claim.
 
-The current local build demonstrates the core loop: inspect a flawed deposit rule, replay a repeated-deposit exploit, compare immutable policy patches, inspect exact receipts, and audit a separately recorded live Meta search.
+The current local build demonstrates the full red-team loop: write a reward rule in plain English, review and activate Meta's bounded interpretation, launch a durable live Muse attack, replay its exact host-verified trace, compare immutable patches, and run the result through an honest/adversarial policy gauntlet.
 
 ## Verified result
 
 - The scripted trace pays 30 points for one bottle deposited three times while recycling zero items.
-- The persisted live `muse-spark-1.3` trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts.
-- That live search used 10 requests, 47,584 input tokens, 2,536 output tokens, and $0.070258 in raw token cost.
-- The portable live trace is [artifacts/attacker-live-v2.json](artifacts/attacker-live-v2.json); [artifacts/evaluation.json](artifacts/evaluation.json) contains the reproducible offline scorecard.
+- A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
+- An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
+- The newest portable trace is [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json); [artifacts/attacker-live-v2.json](artifacts/attacker-live-v2.json) preserves the repeated-deposit search, and [artifacts/evaluation.json](artifacts/evaluation.json) contains the reproducible offline scorecard.
 
 These are observations from bounded traces, not a proof that a policy is safe.
 
@@ -28,7 +28,7 @@ npm run dev
 
 Node 22 and Node 24 are both verified. Persistence uses Node's built-in synchronous SQLite API, so a clean install does not require a native compiler or Visual Studio C++ tools.
 
-Open `http://127.0.0.1:5173`. On PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
+Open `http://127.0.0.1:5173`. On PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Start the API in a second terminal before using live translation or attack buttons; the Vite development server proxies `/api` to port 8787.
 
 The local API runs at `http://127.0.0.1:8787`:
 
@@ -69,6 +69,7 @@ The model never receives credentials, filesystem access, database handles, hidde
 
 - [Evaluation report](docs/evaluation.md)
 - [Three-minute demo script](docs/demo-script.md)
+- [Competition expansion brief](docs/ideas/red-team-arena.md)
 - [Submission and judge-access checklist](docs/submission-checklist.md)
 - [Implementation ledger](tasks/todo.md)
 - [Original build brief](creation.md)
