@@ -175,11 +175,11 @@
 **Description:** Serve validated run creation/status/cancellation and ordered SSE events on localhost using the shared engine.
 
 **Acceptance criteria:**
-- [ ] Live state is backend-owned and event IDs resume correctly after reconnect.
-- [ ] IDs and payload sizes are validated with one consistent error shape.
-- [ ] State-changing starts honor idempotency keys.
+- [x] Live state is backend-owned and event IDs resume correctly after reconnect.
+- [x] IDs and payload sizes are validated with one consistent error shape.
+- [x] State-changing starts honor idempotency keys.
 
-**Verification:** Route integration tests and a localhost SSE reconnect test.
+**Verification:** Three route integration tests cover identical/conflicting idempotent starts, cancellation without late actions, strict IDs, a 64 KiB body limit, and ordered SSE resume after `Last-Event-ID`. The 48-test suite, typecheck, production build, review mutation, and compiled localhost entry-point smoke test passed on October 27, 2026.
 
 **Dependencies:** Task 7
 
