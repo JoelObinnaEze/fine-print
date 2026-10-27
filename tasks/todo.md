@@ -78,18 +78,18 @@
 - [x] Node 22.23.4 runs the full suite and strict typecheck; Node 24.14.1 remains supported.
 - [x] `better-sqlite3` 13.0.3 persists a file database, rolls back failed transactions, and enables foreign keys on both verified runtimes.
 - [x] The Meta probe is server-only, host-allowlisted, bounded, timed out, and makes only `GET /v1/models`.
-- [ ] Replace or reactivate the configured Meta key: both the project probe and an independent request returned HTTP 401 on October 26, 2026.
+- [x] The configured Meta key authenticated against the official model catalog and exposed `muse-spark-1.3` on October 26, 2026.
 
 ## Task 5: Add strict policy validation and payout receipts
 
 **Description:** Implement the bounded additive clause schema and deterministic receipt evaluation against successful engine events.
 
 **Acceptance criteria:**
-- [ ] Unknown fields, duplicate IDs, invalid enums, arrays, numbers, and unsupported semantics are rejected.
-- [ ] Matching clauses pay independently in stable clause order.
-- [ ] Once-per-item history is tracked per clause and run.
+- [x] Unknown fields, duplicate IDs, invalid enums, arrays, numbers, and unsupported semantics are rejected.
+- [x] Matching clauses pay independently in stable clause order.
+- [x] Once-per-item history is tracked per clause and run.
 
-**Verification:** Policy validation and receipt unit tests.
+**Verification:** Red import failure preceded implementation; then 12 policy validation/receipt tests, the full suite, typecheck, and build passed on October 26, 2026.
 
 **Dependencies:** Task 4
 
