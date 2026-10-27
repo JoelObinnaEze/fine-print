@@ -77,12 +77,25 @@ export class MetaAttackerProviderError extends Error {
   }
 }
 
+export interface MetaAttackerTurnRecord {
+  readonly sequence: number;
+  readonly strategySummary: string;
+  readonly toolCalls: readonly AttackerToolCall[];
+  readonly usage: {
+    readonly promptTokens: number;
+    readonly completionTokens: number;
+    readonly totalTokens: number;
+    readonly actualUsd: number;
+  };
+}
+
 export class MetaAttackerProvider implements AttackerProvider {
   readonly #config: ServerConfig;
   readonly #budget: BudgetService;
   readonly #searchId: string;
   readonly #fetchImplementation: typeof fetch;
   readonly #messages: ChatMessage[] = [];
+  readonly #turns: MetaAttackerTurnRecord[] = [];
   #lastToolCallIds: readonly string[] = [];
   #inFlight = false;
 
@@ -97,6 +110,10 @@ export class MetaAttackerProvider implements AttackerProvider {
     this.#budget = budget;
     this.#searchId = searchId;
     this.#fetchImplementation = fetchImplementation;
+  }
+
+  get turns(): readonly MetaAttackerTurnRecord[] {
+    return structuredClone(this.#turns);
   }
 
   async next(
@@ -257,25 +274,38 @@ export class MetaAttackerProvider implements AttackerProvider {
       });
       this.#lastToolCallIds = toolCalls.map((call) => call.id);
 
+      const strategySummary =
+        message.content?.trim().slice(0, 1_000) ||
+        (toolCalls.length > 0
+          ? `Requested ${toolCalls.map((call) => call.function.name).join(", ")}.`
+          : "No tool call returned.");
+      const parsedToolCalls = toolCalls.map((call): AttackerToolCall => {
+        let argumentsValue: unknown = call.function.arguments;
+        try {
+          argumentsValue = JSON.parse(call.function.arguments);
+        } catch {
+          // The host returns INVALID_TOOL_ARGUMENTS without executing malformed JSON.
+        }
+        return {
+          id: call.id,
+          name: call.function.name,
+          arguments: argumentsValue,
+        };
+      });
+      this.#turns.push({
+        sequence: input.requestNumber,
+        strategySummary,
+        toolCalls: parsedToolCalls,
+        usage: {
+          promptTokens: usage.data.prompt_tokens,
+          completionTokens: usage.data.completion_tokens,
+          totalTokens: usage.data.total_tokens,
+          actualUsd,
+        },
+      });
       return {
-        strategySummary:
-          message.content?.trim().slice(0, 1_000) ||
-          (toolCalls.length > 0
-            ? `Requested ${toolCalls.map((call) => call.function.name).join(", ")}.`
-            : "No tool call returned."),
-        toolCalls: toolCalls.map((call): AttackerToolCall => {
-          let argumentsValue: unknown = call.function.arguments;
-          try {
-            argumentsValue = JSON.parse(call.function.arguments);
-          } catch {
-            // The host returns INVALID_TOOL_ARGUMENTS without executing malformed JSON.
-          }
-          return {
-            id: call.id,
-            name: call.function.name,
-            arguments: argumentsValue,
-          };
-        }),
+        strategySummary,
+        toolCalls: parsedToolCalls,
       };
     } finally {
       this.#inFlight = false;

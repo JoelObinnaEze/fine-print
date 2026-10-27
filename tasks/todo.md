@@ -243,11 +243,11 @@
 **Description:** Expose only inspect/act/reset/submit/conclude tools, enforce all host limits, and replay submitted actions from the immutable root.
 
 **Acceptance criteria:**
-- [ ] Unknown/duplicate/late/over-limit tool calls are rejected.
-- [ ] Narrative without actions cannot verify an exploit.
-- [ ] Final status and evidence come only from host replay.
+- [x] Unknown/duplicate/late/over-limit tool calls are rejected.
+- [x] Narrative without actions cannot verify an exploit.
+- [x] Final status and evidence come only from host replay.
 
-**Verification:** Adversarial tool tests, recorded model fixture, then bounded live run when authorized.
+**Verification:** Five adversarial host tests reject unknown, duplicate, late, oversized, excess-trial, timed-out, and post-cancellation work; a recorded two-turn Meta fixture verifies the documented Chat Completions tool loop and durable budget settlement. An authorized live `muse-spark-1.3` search used 10 bounded requests and $0.070258 in raw token cost ($0.070261 conservatively rounded in the ledger), submitted 13 actions, and was independently replayed as 30 excess points, zero recycled items, two rejected actions, and three payout receipts. Search `attacker-live-v2`, all 10 turns, run `74e918a0-786b-4046-b415-9de2e665a6df`, exact actions, 19 ordered events, and three payouts were persisted on October 27, 2026. The full 66-test suite, typecheck, build, high-severity audit, and durable row-count audit passed.
 
 **Dependencies:** Task 13
 

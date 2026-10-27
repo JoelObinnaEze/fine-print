@@ -1,4 +1,4 @@
-import { actionSchema } from "../../../../packages/engine/src/actions.js";
+import { actionSchema, type Action } from "../../../../packages/engine/src/actions.js";
 import { canonicalHash } from "../../../../packages/engine/src/canonical-hash.js";
 import { ENGINE_VERSION } from "../../../../packages/engine/src/index.js";
 import type { WorldState } from "../../../../packages/engine/src/types.js";
@@ -17,6 +17,7 @@ export type VerificationStatus =
 
 export interface VerificationResult {
   readonly status: VerificationStatus;
+  readonly actions: readonly Action[];
   readonly verifiedActionCount: number;
   readonly invalidActionCount: number;
   readonly totalReward: number;
@@ -30,6 +31,7 @@ export interface VerificationResult {
 export function emptyVerification(status: Extract<VerificationStatus, "no_exploit_found_within_budget" | "candidate_invalid" | "run_incomplete">): VerificationResult {
   return {
     status,
+    actions: [],
     verifiedActionCount: 0,
     invalidActionCount: 0,
     totalReward: 0,
@@ -71,6 +73,7 @@ export function verifyCandidate(
 
   return {
     status: excessReward > 0 ? "exploit_verified" : "no_exploit_in_submitted_trace",
+    actions: parsed.data,
     verifiedActionCount: parsed.data.length,
     invalidActionCount: replay.events.filter((event) => event.kind === "action_rejected").length,
     totalReward: replay.state.rewardLedger.totalPoints,

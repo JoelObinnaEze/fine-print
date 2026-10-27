@@ -73,6 +73,28 @@ export function initializeRunSchema(database: Database.Database): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS agent_searches (
+      id TEXT PRIMARY KEY,
+      run_id TEXT UNIQUE REFERENCES runs(id),
+      model_id TEXT NOT NULL,
+      provenance TEXT NOT NULL CHECK (provenance IN ('live_model', 'recorded_model_replay')),
+      prompt_version TEXT NOT NULL,
+      limits_json TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('claimed', 'completed', 'incomplete')),
+      result_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS agent_turns (
+      search_id TEXT NOT NULL REFERENCES agent_searches(id) ON DELETE CASCADE,
+      sequence INTEGER NOT NULL,
+      strategy_summary TEXT NOT NULL,
+      tool_calls_json TEXT NOT NULL,
+      usage_json TEXT NOT NULL,
+      PRIMARY KEY (search_id, sequence)
+    );
   `);
 }
 

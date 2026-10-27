@@ -143,6 +143,7 @@ describe("bounded attacker host", () => {
 
     expect(result).toMatchObject({
       status: "exploit_verified",
+      actions: exploitActions,
       verifiedActionCount: exploitActions.length,
       invalidActionCount: 0,
       totalReward: 30,
@@ -154,6 +155,28 @@ describe("bounded attacker host", () => {
     expect(result.stateHash).toBe(
       canonicalHash({ engineVersion: ENGINE_VERSION, state: independentReplay.state }),
     );
+  });
+
+  it("does not verify a valid submitted trace with zero excess reward", () => {
+    const session = new BoundedAttackerSession(createBottleReturnState(), policy);
+    const result = session.execute(
+      call("submit-honest", "submit_candidate", {
+        actions: [{ type: "finish" }],
+        summary: "No payout observed.",
+        evidenceEventIds: [],
+      }),
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: {
+        status: "no_exploit_in_submitted_trace",
+        actions: [{ type: "finish" }],
+        totalReward: 0,
+        excessReward: 0,
+        evidenceEventIds: [],
+      },
+    });
   });
 
   it("does not execute a provider response that arrives after cancellation", async () => {
