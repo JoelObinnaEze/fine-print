@@ -4,7 +4,12 @@ import { createRunSchema, idempotencyKeySchema, runIdSchema } from "./runs/contr
 import { RunService, RunServiceError, type RunEvent, type RunStatus } from "./runs/service.js";
 
 const maxBodyBytes = 64 * 1024;
-const terminalStatuses = new Set<RunStatus>(["completed", "cancelled", "infrastructure_error"]);
+const terminalStatuses = new Set<RunStatus>([
+  "completed",
+  "cancelled",
+  "interrupted",
+  "infrastructure_error",
+]);
 
 class RequestError extends Error {
   constructor(

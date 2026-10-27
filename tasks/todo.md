@@ -192,11 +192,11 @@
 **Description:** Use the verified Node 22/24-compatible `better-sqlite3` driver to persist policies, runs, events, payouts, actions, and idempotency claims transactionally.
 
 **Acceptance criteria:**
-- [ ] Unique run/sequence and idempotency constraints are enforced atomically.
-- [ ] Restart marks unfinished inference interrupted and never repeats a paid request.
-- [ ] Foreign keys and transactions preserve complete replay evidence.
+- [x] Unique run/sequence and idempotency constraints are enforced atomically.
+- [x] Restart marks unfinished inference interrupted and never repeats a paid request.
+- [x] Foreign keys and transactions preserve complete replay evidence.
 
-**Verification:** Clean-install driver smoke test plus persistence/restart integration tests.
+**Verification:** Two file-database integration tests persist a complete 7-action/11-event/1-payout trace, reject duplicate sequences and orphan actions, replay one atomic idempotency claim, and recover unfinished work as `interrupted` without restarting it. The 50-test suite, typecheck, build, and recovery review mutation passed on October 27, 2026; the pinned driver remains covered by the Node 22/24 clean-install smoke test.
 
 **Dependencies:** Task 10
 
