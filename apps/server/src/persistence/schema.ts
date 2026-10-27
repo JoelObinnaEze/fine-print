@@ -11,6 +11,11 @@ export function initializeRunSchema(database: Database.Database): void {
     CREATE TABLE IF NOT EXISTS runs (
       id TEXT PRIMARY KEY,
       policy_id TEXT NOT NULL REFERENCES policy_versions(id),
+      parent_run_id TEXT REFERENCES runs(id),
+      branch_tick INTEGER,
+      provenance TEXT NOT NULL DEFAULT 'manual',
+      model_id TEXT,
+      limits_json TEXT NOT NULL DEFAULT '{}',
       status TEXT NOT NULL,
       initial_state_json TEXT NOT NULL,
       state_json TEXT NOT NULL,
@@ -95,6 +100,36 @@ export function initializeRunSchema(database: Database.Database): void {
       usage_json TEXT NOT NULL,
       PRIMARY KEY (search_id, sequence)
     );
+  `);
+
+  const runColumns = new Set(
+    (database.pragma("table_info(runs)") as { readonly name: string }[]).map((column) => column.name),
+  );
+  const migrations = [
+    ["parent_run_id", "ALTER TABLE runs ADD COLUMN parent_run_id TEXT REFERENCES runs(id)"],
+    ["branch_tick", "ALTER TABLE runs ADD COLUMN branch_tick INTEGER"],
+    ["provenance", "ALTER TABLE runs ADD COLUMN provenance TEXT NOT NULL DEFAULT 'manual'"],
+    ["model_id", "ALTER TABLE runs ADD COLUMN model_id TEXT"],
+    ["limits_json", "ALTER TABLE runs ADD COLUMN limits_json TEXT NOT NULL DEFAULT '{}'"],
+  ] as const;
+  for (const [column, sql] of migrations) {
+    if (!runColumns.has(column)) database.exec(sql);
+  }
+  database.exec(`
+    UPDATE runs
+    SET provenance = COALESCE(
+          (SELECT provenance FROM agent_searches WHERE agent_searches.run_id = runs.id),
+          provenance
+        ),
+        model_id = COALESCE(
+          (SELECT model_id FROM agent_searches WHERE agent_searches.run_id = runs.id),
+          model_id
+        ),
+        limits_json = COALESCE(
+          (SELECT limits_json FROM agent_searches WHERE agent_searches.run_id = runs.id),
+          limits_json
+        )
+    WHERE EXISTS (SELECT 1 FROM agent_searches WHERE agent_searches.run_id = runs.id);
   `);
 }
 

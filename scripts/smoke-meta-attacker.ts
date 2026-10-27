@@ -62,6 +62,11 @@ try {
     const created = service.create(
       { policy, actions: [...result.actions] },
       `attacker-${canonicalHash(result.actions).slice(0, 32)}`,
+      {
+        provenance: "live_model",
+        modelId: config.provider!.modelId,
+        limits: ATTACKER_LIMITS,
+      },
     );
     let run = created.run;
     while (run.status === "queued" || run.status === "running") {

@@ -11,7 +11,13 @@ import {
   policyTranslationRequestSchema,
   type MetaPolicyTranslator,
 } from "./providers/meta.js";
-import { createRunSchema, idempotencyKeySchema, runIdSchema } from "./runs/contracts.js";
+import {
+  branchRunSchema,
+  createRunSchema,
+  idempotencyKeySchema,
+  replayUnderPolicySchema,
+  runIdSchema,
+} from "./runs/contracts.js";
 import { RunService, RunServiceError, type RunEvent, type RunStatus } from "./runs/service.js";
 
 const maxBodyBytes = 64 * 1024;
@@ -186,6 +192,50 @@ async function handle(
   const cancelMatch = /^\/api\/runs\/([^/]+)\/cancel$/.exec(url.pathname);
   if (method === "POST" && cancelMatch) {
     sendJson(response, 200, service.cancel(validatedRunId(cancelMatch[1]!)));
+    return;
+  }
+
+  const replayMatch = /^\/api\/runs\/([^/]+)\/replay-under-policy$/.exec(url.pathname);
+  if (method === "POST" && replayMatch) {
+    const keyResult = idempotencyKeySchema.safeParse(request.headers["idempotency-key"]);
+    if (!keyResult.success) {
+      throw new RequestError(400, "INVALID_IDEMPOTENCY_KEY", "Idempotency-Key is required and invalid.");
+    }
+    const input = replayUnderPolicySchema.safeParse(await readJson(request));
+    if (!input.success) {
+      throw new RequestError(422, "VALIDATION_ERROR", "Replay request is invalid.", input.error.issues);
+    }
+    const result = service.replayUnderPolicy(
+      validatedRunId(replayMatch[1]!),
+      input.data.policy,
+      keyResult.data,
+    );
+    sendJson(response, result.replayed ? 200 : 201, result.run);
+    return;
+  }
+
+  const branchMatch = /^\/api\/runs\/([^/]+)\/branch$/.exec(url.pathname);
+  if (method === "POST" && branchMatch) {
+    const keyResult = idempotencyKeySchema.safeParse(request.headers["idempotency-key"]);
+    if (!keyResult.success) {
+      throw new RequestError(400, "INVALID_IDEMPOTENCY_KEY", "Idempotency-Key is required and invalid.");
+    }
+    const input = branchRunSchema.safeParse(await readJson(request));
+    if (!input.success) {
+      throw new RequestError(422, "VALIDATION_ERROR", "Branch request is invalid.", input.error.issues);
+    }
+    const result = service.branch(
+      validatedRunId(branchMatch[1]!),
+      input.data,
+      keyResult.data,
+    );
+    sendJson(response, result.replayed ? 200 : 201, result.run);
+    return;
+  }
+
+  const exportMatch = /^\/api\/runs\/([^/]+)\/export$/.exec(url.pathname);
+  if (method === "GET" && exportMatch) {
+    sendJson(response, 200, service.export(validatedRunId(exportMatch[1]!)));
     return;
   }
 

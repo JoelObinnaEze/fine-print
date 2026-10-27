@@ -12,6 +12,14 @@ import { parsePolicy, type Policy } from "../../../../packages/policy/src/schema
 import { openDatabase } from "../persistence/database.js";
 import { initializeRunSchema, recoverUnfinishedRuns } from "../persistence/schema.js";
 import type { CreateRunInput } from "./contracts.js";
+import {
+  createRunExport,
+  runLimitsSchema,
+  runProvenanceSchema,
+  type RunExport,
+  type RunLimits,
+  type RunProvenance,
+} from "./export.js";
 
 export type RunStatus =
   | "queued"
@@ -23,6 +31,11 @@ export type RunStatus =
 
 export interface RunView {
   readonly id: string;
+  readonly parentRunId: string | null;
+  readonly branchTick: number | null;
+  readonly provenance: RunProvenance;
+  readonly modelId: string | null;
+  readonly limits: RunLimits;
   readonly status: RunStatus;
   readonly state: WorldState;
   readonly eventCount: number;
@@ -43,7 +56,13 @@ export type RunEvent =
 
 interface StoredRun {
   readonly id: string;
+  readonly parentRunId: string | null;
+  readonly branchTick: number | null;
+  readonly provenance: RunProvenance;
+  readonly modelId: string | null;
+  readonly limits: RunLimits;
   status: RunStatus;
+  readonly initialState: WorldState;
   state: WorldState;
   readonly policy: Policy;
   readonly actions: readonly Action[];
@@ -55,7 +74,13 @@ interface StoredRun {
 
 interface StoredRunRow {
   readonly id: string;
+  readonly parent_run_id: string | null;
+  readonly branch_tick: number | null;
+  readonly provenance: RunProvenance;
+  readonly model_id: string | null;
+  readonly limits_json: string;
   readonly status: RunStatus;
+  readonly initial_state_json: string;
   readonly state_json: string;
   readonly policy_json: string;
   readonly created_at: string;
@@ -79,12 +104,26 @@ const terminalStatuses = new Set<RunStatus>([
 
 export class RunServiceError extends Error {
   constructor(
-    readonly code: "RUN_NOT_FOUND" | "IDEMPOTENCY_KEY_REUSED",
+    readonly code: "RUN_NOT_FOUND" | "IDEMPOTENCY_KEY_REUSED" | "INVALID_BRANCH" | "RUN_NOT_TERMINAL",
     message: string,
   ) {
     super(message);
     this.name = "RunServiceError";
   }
+}
+
+export interface RunCreateMetadata {
+  readonly parentRunId?: string | null;
+  readonly branchTick?: number | null;
+  readonly provenance?: RunProvenance;
+  readonly modelId?: string | null;
+  readonly limits?: RunLimits;
+}
+
+export interface BranchRunInput {
+  readonly branchTick: number;
+  readonly policy: Policy;
+  readonly actions: readonly Action[];
 }
 
 export class RunService {
@@ -103,13 +142,24 @@ export class RunService {
     this.#isShutDown = true;
   }
 
-  create(input: CreateRunInput, idempotencyKey: string): { readonly run: RunView; readonly replayed: boolean } {
+  create(
+    input: CreateRunInput,
+    idempotencyKey: string,
+    metadata: RunCreateMetadata = {},
+  ): { readonly run: RunView; readonly replayed: boolean } {
     if (this.#isShutDown) throw new Error("Run service is shut down.");
-    const requestHash = createHash("sha256").update(JSON.stringify(input)).digest("hex");
+    const initialState = createBottleReturnState();
+    const provenance = runProvenanceSchema.parse(metadata.provenance ?? "manual");
+    const limits = this.#parseLimits(metadata.limits ?? { maxTicksPerTrial: initialState.horizon });
+    const parentRunId = metadata.parentRunId ?? null;
+    const branchTick = metadata.branchTick ?? null;
+    const modelId = metadata.modelId ?? null;
+    const requestHash = createHash("sha256")
+      .update(JSON.stringify({ input, parentRunId, branchTick, provenance, modelId, limits }))
+      .digest("hex");
     const policyJson = JSON.stringify(input.policy);
     const policyId = createHash("sha256").update(policyJson).digest("hex");
     const now = new Date().toISOString();
-    const initialState = createBottleReturnState();
     const queuedEvent: RunEvent = {
       sequence: 1,
       type: "run.queued",
@@ -117,7 +167,13 @@ export class RunService {
     };
     const run: StoredRun = {
       id: randomUUID(),
+      parentRunId,
+      branchTick,
+      provenance,
+      modelId,
+      limits,
       status: "queued",
+      initialState,
       state: initialState,
       policy: input.policy,
       actions: input.actions,
@@ -134,10 +190,24 @@ export class RunService {
       this.#database
         .prepare(`
           INSERT INTO runs
-            (id, policy_id, status, initial_state_json, state_json, error, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, NULL, ?, ?)
+            (id, policy_id, parent_run_id, branch_tick, provenance, model_id, limits_json,
+             status, initial_state_json, state_json, error, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
         `)
-        .run(run.id, policyId, run.status, JSON.stringify(initialState), JSON.stringify(run.state), now, now);
+        .run(
+          run.id,
+          policyId,
+          parentRunId,
+          branchTick,
+          provenance,
+          modelId,
+          JSON.stringify(limits),
+          run.status,
+          JSON.stringify(initialState),
+          JSON.stringify(run.state),
+          now,
+          now,
+        );
       const insertAction = this.#database.prepare(
         "INSERT INTO actions (run_id, sequence, action_json) VALUES (?, ?, ?)",
       );
@@ -171,6 +241,76 @@ export class RunService {
     this.#runs.set(run.id, run);
     setImmediate(() => void this.#execute(run.id));
     return { run: this.#view(run), replayed: false };
+  }
+
+  branch(
+    sourceRunId: string,
+    input: BranchRunInput,
+    idempotencyKey: string,
+  ): { readonly run: RunView; readonly replayed: boolean } {
+    const source = this.#require(sourceRunId);
+    if (source.status !== "completed") {
+      throw new RunServiceError("RUN_NOT_TERMINAL", "Only completed runs can be branched.");
+    }
+    if (
+      !Number.isInteger(input.branchTick) ||
+      input.branchTick < 0 ||
+      input.branchTick > source.state.tick
+    ) {
+      throw new RunServiceError("INVALID_BRANCH", "Branch tick is outside the completed trace.");
+    }
+    const actions = [...source.actions.slice(0, input.branchTick), ...input.actions];
+    if (actions.length > source.initialState.horizon) {
+      throw new RunServiceError("INVALID_BRANCH", "Branch exceeds the scenario tick limit.");
+    }
+    return this.create(
+      { policy: parsePolicy(input.policy), actions },
+      idempotencyKey,
+      {
+        parentRunId: source.id,
+        branchTick: input.branchTick,
+        provenance: "manual",
+        limits: { maxTicksPerTrial: source.initialState.horizon },
+      },
+    );
+  }
+
+  replayUnderPolicy(
+    sourceRunId: string,
+    policy: Policy,
+    idempotencyKey: string,
+  ): { readonly run: RunView; readonly replayed: boolean } {
+    const source = this.#require(sourceRunId);
+    if (source.status !== "completed") {
+      throw new RunServiceError("RUN_NOT_TERMINAL", "Only completed runs can be replayed.");
+    }
+    return this.create(
+      { policy: parsePolicy(policy), actions: [...source.actions.slice(0, source.state.tick)] },
+      idempotencyKey,
+      {
+        parentRunId: source.id,
+        branchTick: 0,
+        provenance: "manual",
+        limits: { maxTicksPerTrial: source.initialState.horizon },
+      },
+    );
+  }
+
+  export(runId: string): RunExport {
+    const run = this.#require(runId);
+    if (run.status !== "completed") {
+      throw new RunServiceError("RUN_NOT_TERMINAL", "Only completed runs can be exported.");
+    }
+    return createRunExport({
+      runId: run.id,
+      parentRunId: run.parentRunId,
+      branchTick: run.branchTick,
+      provenance: run.provenance,
+      modelId: run.modelId,
+      limits: run.limits,
+      policy: run.policy,
+      actions: [...run.actions.slice(0, run.state.tick)],
+    });
   }
 
   get(runId: string): RunView {
@@ -316,7 +456,9 @@ export class RunService {
     if (cached) return cached;
     const row = this.#database
       .prepare(`
-        SELECT runs.id, runs.status, runs.state_json, runs.created_at, runs.updated_at, runs.error,
+        SELECT runs.id, runs.parent_run_id, runs.branch_tick, runs.provenance, runs.model_id,
+               runs.limits_json, runs.status, runs.initial_state_json, runs.state_json,
+               runs.created_at, runs.updated_at, runs.error,
                policy_versions.policy_json
         FROM runs
         JOIN policy_versions ON policy_versions.id = runs.policy_id
@@ -332,7 +474,13 @@ export class RunService {
       .all(runId) as { readonly sequence: number; readonly type: RunEvent["type"]; readonly data_json: string }[];
     const run: StoredRun = {
       id: row.id,
+      parentRunId: row.parent_run_id,
+      branchTick: row.branch_tick,
+      provenance: runProvenanceSchema.parse(row.provenance),
+      modelId: row.model_id,
+      limits: this.#parseLimits(JSON.parse(row.limits_json)),
       status: row.status,
+      initialState: JSON.parse(row.initial_state_json) as WorldState,
       state: JSON.parse(row.state_json) as WorldState,
       policy: parsePolicy(JSON.parse(row.policy_json)),
       actions: actions.map((action) => parseAction(JSON.parse(action.action_json))),
@@ -350,6 +498,11 @@ export class RunService {
   #view(run: StoredRun): RunView {
     return {
       id: run.id,
+      parentRunId: run.parentRunId,
+      branchTick: run.branchTick,
+      provenance: run.provenance,
+      modelId: run.modelId,
+      limits: run.limits,
       status: run.status,
       state: run.state,
       eventCount: run.events.length,
@@ -357,6 +510,10 @@ export class RunService {
       updatedAt: run.updatedAt,
       error: run.error,
     };
+  }
+
+  #parseLimits(value: unknown): RunLimits {
+    return runLimitsSchema.parse(value);
   }
 
   #publish(run: StoredRun, event: RunEvent): void {

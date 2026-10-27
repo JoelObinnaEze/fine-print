@@ -15,4 +15,12 @@ export const createRunSchema = z.strictObject({
   actions: z.array(actionSchema).max(120),
 });
 
+export const replayUnderPolicySchema = z.strictObject({ policy: policySchema });
+
+export const branchRunSchema = z.strictObject({
+  branchTick: z.number().int().min(0).max(120),
+  policy: policySchema,
+  actions: z.array(actionSchema).max(120),
+});
+
 export type CreateRunInput = z.infer<typeof createRunSchema>;

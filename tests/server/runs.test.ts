@@ -150,4 +150,51 @@ describe("local run API", () => {
     expect(ids).toEqual([...ids].sort((left, right) => left - right));
     expect(text).toContain("event: run.completed");
   });
+
+  it("branches, replays under a policy, and exports through validated routes", async () => {
+    const { baseUrl } = await startServer();
+    const actions = [
+      { type: "move", direction: "up" },
+      { type: "take", itemId: "B1" },
+      { type: "move", direction: "right" },
+      { type: "move", direction: "right" },
+      { type: "move", direction: "right" },
+      { type: "move", direction: "right" },
+      { type: "deposit" },
+      { type: "finish" },
+    ];
+    const created = await postRun(baseUrl, "route-source", { policy, actions });
+    const source = (await created.json()) as { readonly id: string };
+    await waitForTerminal(baseUrl, source.id);
+
+    const branch = await fetch(`${baseUrl}/api/runs/${source.id}/branch`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": "route-branch" },
+      body: JSON.stringify({
+        branchTick: 7,
+        policy,
+        actions: [{ type: "retrieve", itemId: "B1" }, { type: "finish" }],
+      }),
+    });
+    expect(branch.status).toBe(201);
+    await expect(branch.json()).resolves.toMatchObject({ parentRunId: source.id, branchTick: 7 });
+
+    const replay = await fetch(`${baseUrl}/api/runs/${source.id}/replay-under-policy`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "idempotency-key": "route-replay" },
+      body: JSON.stringify({ policy: { ...policy, clauses: [] } }),
+    });
+    expect(replay.status).toBe(201);
+    const replayed = (await replay.json()) as { readonly id: string };
+    await waitForTerminal(baseUrl, replayed.id);
+
+    const exported = await fetch(`${baseUrl}/api/runs/${source.id}/export`);
+    expect(exported.status).toBe(200);
+    await expect(exported.json()).resolves.toMatchObject({
+      schemaVersion: 1,
+      runId: source.id,
+      provenance: "manual",
+      actions,
+    });
+  });
 });
