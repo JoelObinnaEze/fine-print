@@ -36,7 +36,7 @@ export function Depot({ state }: { readonly state: WorldState }) {
     <section className="depot-panel" aria-label="Bottle Return depot">
       <div className="depot-heading">
         <div>
-          <p className="eyebrow">Live evidence</p>
+          <p className="eyebrow">3D live evidence</p>
           <h2>Bottle Return depot</h2>
         </div>
         <p className="tick-stamp">
@@ -47,35 +47,37 @@ export function Depot({ state }: { readonly state: WorldState }) {
         Worker at column {state.worker.position.x + 1}, row {state.worker.position.y + 1}.
         {carriedItem ? ` Carrying ${itemLabel(carriedItem)}.` : " Inventory empty."}
       </p>
-      <div className="depot-grid" aria-hidden="true">
-        {Array.from({ length: state.width * state.height }, (_, index) => {
-          const x = index % state.width;
-          const y = Math.floor(index / state.width);
-          const station = stationAt(x, y);
-          const items = visibleItemsAt(state, x, y);
-          const hasWorker = state.worker.position.x === x && state.worker.position.y === y;
-          return (
-            <div
-              className={`depot-cell${station ? " depot-cell--station" : ""}`}
-              key={`${x}-${y}`}
-            >
-              {station && <span className={`station station--${station}`}>{station}</span>}
-              <div className="item-stack">
-                {items.map((item) => (
-                  <span className={`item item--${item.material}`} key={item.id}>
-                    {item.id}
+      <div className="depot-stage" aria-hidden="true">
+        <div className="depot-grid">
+          {Array.from({ length: state.width * state.height }, (_, index) => {
+            const x = index % state.width;
+            const y = Math.floor(index / state.width);
+            const station = stationAt(x, y);
+            const items = visibleItemsAt(state, x, y);
+            const hasWorker = state.worker.position.x === x && state.worker.position.y === y;
+            return (
+              <div
+                className={`depot-cell${station ? " depot-cell--station" : ""}`}
+                key={`${x}-${y}`}
+              >
+                {station && <span className={`station station--${station}`}>{station}</span>}
+                <div className="item-stack">
+                  {items.map((item) => (
+                    <span className={`item item--${item.material}`} key={item.id}>
+                      {item.id}
+                    </span>
+                  ))}
+                </div>
+                {hasWorker && (
+                  <span className="worker">
+                    <span>agent</span>
+                    {carriedItem && <b>{carriedItem.id}</b>}
                   </span>
-                ))}
+                )}
               </div>
-              {hasWorker && (
-                <span className="worker">
-                  <span>agent</span>
-                  {carriedItem && <b>{carriedItem.id}</b>}
-                </span>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
       <div className="depot-legend" aria-label="Depot legend">
         <span><i className="legend-dot legend-dot--worker" />Agent</span>
