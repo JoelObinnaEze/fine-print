@@ -126,6 +126,7 @@ describe("Meta commerce investigation", () => {
       });
       expect(JSON.stringify(body)).toContain(request.sourceText);
       expect(JSON.stringify(body)).toContain(commerceGoal.description);
+      expect(JSON.stringify(body)).toContain("Self-referral is invalid");
       return completion(modelOutput);
     });
     const { budget, commerce } = createServices(fetchMock);

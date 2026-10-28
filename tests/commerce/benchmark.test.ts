@@ -100,4 +100,34 @@ describe("commerce referral/refund benchmark", () => {
       expect(result.knownAttackBlocked, candidate.id).toBe(true);
     }
   });
+
+  it("scores the accepted attack prefix when a repair rejects a later action", () => {
+    const invalidTail = [
+      ...refundAttackActions,
+      {
+        type: "purchase",
+        accountId: "B",
+        purchaseId: "P2",
+        priceUsd: 20,
+        promoCreditUsd: 20,
+      } as const,
+    ];
+
+    const vulnerable = evaluateCommerceDesign(
+      vulnerableCommercePolicy,
+      commerceGoal,
+      invalidTail,
+      honestCustomerActions,
+    );
+    const repaired = evaluateCommerceDesign(
+      commerceRepairCandidates[1]!.policy,
+      commerceGoal,
+      invalidTail,
+      honestCustomerActions,
+    );
+
+    expect(vulnerable.attack.verifiedUnintendedPayoutUsd).toBe(20);
+    expect(repaired.attack.verifiedUnintendedPayoutUsd).toBe(0);
+    expect(repaired.knownAttackBlocked).toBe(true);
+  });
 });

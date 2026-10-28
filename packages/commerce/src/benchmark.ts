@@ -235,8 +235,17 @@ export function evaluateCommerceDesign(
   attackActions: readonly CommerceAction[],
   honestActions: readonly CommerceAction[],
 ): CommerceDesignEvaluation {
+  let attackReplay = replayCommerce(createCommerceState(), [], policy);
+  for (let length = 1; length <= attackActions.length; length += 1) {
+    try {
+      attackReplay = replayCommerce(createCommerceState(), attackActions.slice(0, length), policy);
+    } catch (error) {
+      if (!(error instanceof CommerceSimulationError)) throw error;
+      break;
+    }
+  }
   const attack = calculateCommerceStrategyMetrics(
-    replayCommerce(createCommerceState(), attackActions, policy),
+    attackReplay,
     goal,
   );
   const honest = calculateCommerceStrategyMetrics(
