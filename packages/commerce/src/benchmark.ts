@@ -191,7 +191,10 @@ export interface CommerceDesignEvaluation {
   readonly honestRewardsPreserved: boolean;
 }
 
-function metrics(replay: CommerceReplay, goal: CommerceGoal): CommerceStrategyMetrics {
+export function calculateCommerceStrategyMetrics(
+  replay: CommerceReplay,
+  goal: CommerceGoal,
+): CommerceStrategyMetrics {
   const verification = verifyCommerceExploit(replay, goal);
   const rewards = replay.state.rewards;
   const availableRewards = rewards.filter((reward) => reward.status === "available");
@@ -221,8 +224,14 @@ export function evaluateCommerceDesign(
   attackActions: readonly CommerceAction[],
   honestActions: readonly CommerceAction[],
 ): CommerceDesignEvaluation {
-  const attack = metrics(replayCommerce(createCommerceState(), attackActions, policy), goal);
-  const honest = metrics(replayCommerce(createCommerceState(), honestActions, policy), goal);
+  const attack = calculateCommerceStrategyMetrics(
+    replayCommerce(createCommerceState(), attackActions, policy),
+    goal,
+  );
+  const honest = calculateCommerceStrategyMetrics(
+    replayCommerce(createCommerceState(), honestActions, policy),
+    goal,
+  );
   return {
     attack,
     honest,

@@ -469,11 +469,11 @@
 **Description:** Run visible populations of ordinary customers, bargain hunters, and coordinated adversaries with distinct objectives and constraints, then aggregate host-computed outcomes without presenting them as fraud forecasts.
 
 **Acceptance criteria:**
-- [ ] Each strategy has disclosed assumptions, participant count, objective, and deterministic transaction traces.
-- [ ] Results separate legitimate rewards, verified unintended payouts, retained revenue, and reward delay by strategy and in aggregate.
-- [ ] Repeated accounts and promotional-credit-funded purchases can interact in the same environment without bypassing ledger validation.
+- [x] Each strategy has disclosed assumptions, participant count, objective, and deterministic transaction traces.
+- [x] Results separate legitimate rewards, verified unintended payouts, retained revenue, and reward delay by strategy and in aggregate.
+- [x] Repeated accounts and promotional-credit-funded purchases can interact in the same environment without bypassing ledger validation.
 
-**Verification:** Focused population tests cover strategy objectives, account coordination, aggregate metrics, and deterministic repeated runs.
+**Verification:** Three population tests cover disclosed objectives and assumptions, two kept purchases with `$10` promotional credit funding the second, a coordinated referral/refund trace, per-strategy isolation, aggregate metrics, all repair candidates, and deterministic repeatability. Ten focused commerce tests and strict typecheck pass.
 
 **Dependencies:** Task 26
 

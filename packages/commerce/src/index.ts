@@ -14,6 +14,7 @@ export {
 export {
   commerceGoal,
   commerceRepairCandidates,
+  calculateCommerceStrategyMetrics,
   evaluateCommerceDesign,
   honestCustomerActions,
   minimizeCommerceExploit,
@@ -21,6 +22,7 @@ export {
   verifyCommerceExploit,
   vulnerableCommercePolicy,
 } from "./benchmark.js";
+export { evaluateCommercePopulation } from "./population.js";
 export type {
   CommerceAction,
   CommerceGoal,
@@ -41,3 +43,8 @@ export type {
   CommerceRepairCandidate,
   CommerceStrategyMetrics,
 } from "./benchmark.js";
+export type {
+  CommerceParticipantStrategy,
+  CommercePopulationResult,
+  CommercePopulationStrategyResult,
+} from "./population.js";
