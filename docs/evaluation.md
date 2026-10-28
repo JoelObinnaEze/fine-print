@@ -35,7 +35,24 @@ The persisted `muse-spark-1.3` search is labelled `live_model` and used the Stan
 | Excess reward | 30 points |
 | Leakage | 30 / 60 = 0.5 |
 
-The per-request ledger rounds cost upward to microdollars, so this trace consumed $0.070261 against the cap. Across the successful live translation, two bounded attacker searches (the first preceded durable turn storage), and one ambiguous earlier translation response, the ledger conservatively counts $0.149575 and leaves at least $9.850425 of the authorized $10 app cap.
+The per-request ledger rounds cost upward to microdollars, so this trace consumed $0.070261 against the cap. At this original checkpoint, the ledger conservatively counted $0.149575 and left at least $9.850425 of the authorized $10 app cap; the current total appears below.
+
+## Frozen discovery benchmark
+
+The suite was frozen under hash `ba56f2d7b5a25acb4cf0100fd2235252f70f9b6b71d9653f67a15aa7f7e9bbf1` before the eight live attempts below. It contains two deliberately flawed policies and their blocked counterparts. Every attempt is reported; no best run was selected.
+
+The simple baseline is a deterministic beam search with seeds 17, 29, and 43, a 30,000-state budget, 40-action depth, and beam width 256. Muse receives at most 12 requests, four trials, 120 ticks per trial, and two minutes.
+
+| Frozen policy | Expected | Simple search | Muse attempt 1 | Muse attempt 2 | Honest reward |
+| --- | --- | ---: | --- | --- | ---: |
+| Eligible deposit before processing | flawed | 3 / 3 found | verified · 9 requests · 17 actions | verified · 8 requests · 18 actions | 60 / 60 |
+| Eligible processing receipt | blocked | 0 / 3 found | completed, no exploit · 12 requests · 19 actions | completed, no exploit · 12 requests · 14 actions | 60 / 60 |
+| Hopper-count batch bonus | flawed | 3 / 3 found | completed, no exploit · 12 requests · 31 actions | verified · 12 requests · 76 actions | 70 / 70 |
+| Processed-receipt batch bonus | blocked | 0 / 3 found | completed, no exploit · 12 requests · 12 actions | completed, no exploit · 12 requests · 13 actions | 70 / 70 |
+
+Muse found the simple premature-payment flaw reliably and the interacting batch flaw in one of two attempts. The baseline found both more reliably on this small deterministic world. That comparison is intentionally retained: Muse's value here is an inspectable natural-language hypothesis/tool workflow, not a claim that it beats search on a tiny state space. Independent verification rejected no submitted candidates in these eight runs.
+
+The eight live benchmark attempts cost $0.700546 in raw token usage. After all project activity, the durable ledger records $1.443446 settled, $0.004075 ambiguous, and $8.552479 still available from the authorized $10 cap.
 
 ## Not run
 

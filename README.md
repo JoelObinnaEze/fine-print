@@ -10,8 +10,11 @@ The current local build demonstrates the full red-team loop: write a reward rule
 - A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
 - The once-per-item patch removes repeat rewards but still fails on eligibility and completion: the disclosed gauntlet preserves 3/3 honest workflows while blocking only 1/3 known failures. A fresh Muse search verified an ineligible-item payout of 10 points with zero useful recycling in 8 requests at $0.052854.
 - The eligible-processing patch preserves 3/3 honest workflows and blocks all 3 disclosed failures. A separate 12-request Muse search found no exploit within its bounded budget at $0.098851; that is evidence from one search, not a proof of safety.
+- The designed batch benchmark pays 15 points for cycling a transient three-item hopper while doing zero useful processing. Its receipt-backed patch pays zero on that trace while preserving 35 points for one honest batch and 70 for two.
+- In the frozen discovery suite, Muse found the premature-deposit flaw 2/2 and the interacting batch flaw 1/2, with no verified exploit in 4/4 blocked-control runs. The simple beam-search baseline found both flaws 3/3 and both controls 0/3; every attempt remains in the report.
 - An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
-- [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json) preserves the fresh first-patch exploit; [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserves the starting-policy search, and [artifacts/evaluation.json](artifacts/evaluation.json) contains the reproducible offline evaluation.
+- Verified attacks can be saved as durable SQLite regression cases and are replayed automatically against the selected policy.
+- [artifacts/attacker-batch-bonus.json](artifacts/attacker-batch-bonus.json) preserves the interacting-rule exploit, [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json) preserves the fresh first-patch exploit, [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserves the starting-policy search, and [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
 
 These are observations from bounded traces, not a proof that a policy is safe.
 
@@ -48,6 +51,7 @@ Live calls are disabled in `.env.example`. To enable them, add your Meta key to 
 | `npm run typecheck` | Run strict TypeScript checks. |
 | `npm run build` | Build server scripts and the production web bundle. |
 | `npm run evaluate` | Regenerate the offline scorecard without inference. |
+| `npm run benchmark:discovery` | Replay or, when absent, run the eight idempotent paid Muse attempts in the frozen suite. Requires explicit authorization and enabled budgets. |
 | `npm run check:meta` | Verify the configured Meta account/model catalog without inference. |
 | `npm run smoke:meta-translation` | Run the idempotent paid translation smoke test when authorized. |
 | `npm run smoke:meta-attacker` | Run the one-shot bounded paid attacker search when authorized. The checked-in search ID cannot be sent twice. |

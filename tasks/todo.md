@@ -396,3 +396,37 @@
 - [x] Unsuccessful live searches are understandable without developer tools.
 - [x] One interacting-rule failure and its receipt-backed patch are deterministic, replayable, and honest-work preserving.
 
+## Task 23: Turn verified discoveries into regression cases
+
+**Description:** Save a verified run's policy, initial state, actions, and expected excess reward, then replay it automatically against the next target policy.
+
+**Acceptance criteria:**
+- [x] Only host-verified exploits can be saved, and saving the same run is idempotent.
+- [x] Saved cases survive restart in SQLite with their exact initial state and action trace.
+- [x] The arena shows whether each saved case still earns unintended reward under the selected policy.
+
+**Verification:** Route/persistence tests cover save, duplicate save, restart, and patched replay; the component test covers the save control and automatic target-policy result. A verified five-point hopper exploit was saved from run `5d8be41e-9238-4fc8-9de7-f2ccc0e23f97`; Opera GX showed “Still pays · now 5” under the vulnerable rule and “Blocked · now 0” under the receipt-backed patch.
+
+**Dependencies:** Task 21
+
+**Files likely touched:** `apps/server/src/persistence/schema.ts`, `apps/server/src/runs/service.ts`, `apps/server/src/app.ts`, `apps/web/src/arena/RedTeamArena.tsx`, `tests/server/live-attacks.test.ts`, `tests/web/replay.test.tsx`
+
+**Estimated scope:** Medium
+
+## Task 24: Freeze a discovery benchmark against a simple baseline
+
+**Description:** Add a disclosed, repeatable policy suite and compare every Muse attempt with a deterministic action-search baseline under explicit budgets.
+
+**Acceptance criteria:**
+- [x] Flawed and blocked policies are frozen before live attempts are recorded.
+- [x] The report includes verified finds, rejected claims, actions/requests to first find, every repeated run, and honest rewards after patching.
+- [x] Missing live runs remain labelled not run; no best-run cherry-picking is possible.
+
+**Verification:** The suite was frozen under hash `ba56f2d7b5a25acb4cf0100fd2235252f70f9b6b71d9653f67a15aa7f7e9bbf1`. Three deterministic baseline seeds found both flaws 3/3 and both controls 0/3. Eight persisted Muse attempts found premature deposit 2/2, the interacting batch flaw 1/2, and both controls 0/4, while preserving 60/60 and 70/70 honest rewards. Every attempt, request/action count, outcome, reason, cost, and run ID remains in `artifacts/evaluation.json`; the live attempts cost $0.700546.
+
+**Dependencies:** Tasks 22 and 23
+
+**Files likely touched:** `scripts/evaluate.ts`, `artifacts/evaluation.json`, `docs/evaluation.md`, `tests/evaluation/`
+
+**Estimated scope:** Medium
+

@@ -3,10 +3,14 @@ import { resolve } from "node:path";
 
 import { verifyRunExport, type RunExport } from "../apps/server/src/runs/export.js";
 import {
+  canonicalHash,
   createBottleReturnState,
   ENGINE_VERSION,
   type Action,
 } from "../packages/engine/src/index.js";
+import { openDatabase } from "../apps/server/src/persistence/database.js";
+import { runSimpleActionSearch } from "../apps/server/src/runs/baseline.js";
+import type { LiveAttackResult } from "../apps/server/src/runs/live-attack-service.js";
 import {
   calculateCompletedMetrics,
   calculateTestedPolicyScore,
@@ -15,6 +19,7 @@ import {
   replayActions,
 } from "../packages/evaluation/src/index.js";
 import type { Policy, PolicyClause } from "../packages/policy/src/index.js";
+import { discoveryBaseline, discoverySuite } from "./discovery-suite.js";
 
 const initialState = createBottleReturnState();
 const depositClause: PolicyClause = {
@@ -143,6 +148,116 @@ if (existsSync(livePath)) {
   };
 }
 
+interface SearchResultRow {
+  readonly id: string;
+  readonly status: string;
+  readonly result_json: string;
+}
+
+const databasePath = resolve("fine-print.db");
+const persistedSearches = new Map<string, readonly SearchResultRow[]>();
+if (existsSync(databasePath)) {
+  const database = openDatabase(databasePath);
+  try {
+    for (const benchmark of discoverySuite) {
+      const policyHash = canonicalHash(benchmark.policy);
+      persistedSearches.set(
+        benchmark.id,
+        database
+          .prepare(`
+            SELECT id, status, result_json
+            FROM agent_searches
+            WHERE policy_hash = ? AND result_json IS NOT NULL
+            ORDER BY created_at, id
+          `)
+          .all(policyHash) as SearchResultRow[],
+      );
+    }
+  } finally {
+    database.close();
+  }
+}
+
+const discoveryBenchmark = {
+  status: "completed",
+  frozenSuiteHash: canonicalHash(
+    discoverySuite.map(({ id, expected, policy, expectedHonestReward }) => ({
+      id,
+      expected,
+      policy,
+      expectedHonestReward,
+    })),
+  ),
+  baselineLimits: discoveryBaseline,
+  museLimits: {
+    maxInferenceRequests: 12,
+    maxTrials: 4,
+    maxTicksPerTrial: 120,
+    searchDeadlineMs: 120_000,
+  },
+  policies: discoverySuite.map((benchmark) => {
+    const baselineAttempts = discoveryBaseline.seeds.map((seed) => {
+      const result = runSimpleActionSearch(initialState, benchmark.policy, {
+        seed,
+        maxExpandedStates: discoveryBaseline.maxExpandedStates,
+        maxActions: discoveryBaseline.maxActions,
+        beamWidth: discoveryBaseline.beamWidth,
+      });
+      return {
+        seed,
+        status: result.status,
+        expandedStates: result.expandedStates,
+        actionsToFirstExploit: result.actionsToFirstExploit,
+        verifiedExcessReward: result.verification.excessReward,
+        rejectedClaims: result.rejectedClaims,
+      };
+    });
+    const museAttempts = (persistedSearches.get(benchmark.id) ?? []).map((row) => {
+      const result = JSON.parse(row.result_json) as LiveAttackResult;
+      return {
+        searchId: row.id,
+        runId: result.runId,
+        persistedStatus: row.status,
+        outcome: result.report.outcome,
+        reason: result.report.reason,
+        requestsUsed: result.report.requestsUsed,
+        trialsCompleted: result.report.trialsCompleted,
+        actionsTested: result.report.actionsTested,
+        verificationStatus: result.verification.status,
+        totalReward: result.verification.totalReward,
+        usefulItems: result.verification.usefulItems,
+        verifiedExcessReward: result.verification.excessReward,
+        actualUsd: result.usage.actualUsd,
+      };
+    });
+    const honestReplay = replayActions(initialState, benchmark.honestActions, benchmark.policy);
+    return {
+      id: benchmark.id,
+      expected: benchmark.expected,
+      policyHash: canonicalHash(benchmark.policy),
+      honestReward: {
+        expected: benchmark.expectedHonestReward,
+        actual: honestReplay.state.rewardLedger.totalPoints,
+        usefulItems: honestReplay.state.outcomeLedger.processedEligibleItemIds.length,
+        preserved: honestReplay.state.rewardLedger.totalPoints === benchmark.expectedHonestReward,
+      },
+      simpleActionSearch: {
+        verifiedExploitsFound: baselineAttempts.filter(({ status }) => status === "exploit_verified").length,
+        repeatedRuns: baselineAttempts.length,
+        rejectedClaims: baselineAttempts.reduce((total, attempt) => total + attempt.rejectedClaims, 0),
+        attempts: baselineAttempts,
+      },
+      muse: {
+        status: museAttempts.length > 0 ? "completed" : "not_run",
+        verifiedExploitsFound: museAttempts.filter(({ outcome }) => outcome === "verified_exploit").length,
+        repeatedRuns: museAttempts.length,
+        rejectedClaims: museAttempts.filter(({ outcome }) => outcome === "candidate_rejected").length,
+        attempts: museAttempts,
+      },
+    };
+  }),
+};
+
 const report = {
   schemaVersion: 1,
   status: "completed",
@@ -151,6 +266,7 @@ const report = {
   offlineUsage: { inferenceRequests: 0, providerCostUsd: 0 },
   policyResults,
   liveEvidence,
+  discoveryBenchmark,
   usabilityStudy: { status: "not_run", participants: 0 },
 };
 

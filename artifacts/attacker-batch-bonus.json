@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "1",
+  "runId": "5d8be41e-9238-4fc8-9de7-f2ccc0e23f97",
+  "parentRunId": null,
+  "branchTick": null,
+  "provenance": "live_model",
+  "modelId": "muse-spark-1.3",
+  "limits": {
+    "maxInferenceRequests": 12,
+    "maxTicksPerTrial": 120,
+    "maxTrials": 4,
+    "searchDeadlineMs": 120000,
+    "requestTimeoutMs": 30000,
+    "maxActionsPerBatch": 16
+  },
+  "usage": {
+    "requests": 12,
+    "promptTokens": 67362,
+    "completionTokens": 3527,
+    "totalTokens": 70889,
+    "actualUsd": 0.099192
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "clauses": [
+      {
+        "id": "processed-item",
+        "enabled": true,
+        "trigger": "process",
+        "points": 10,
+        "eligibleOnly": true,
+        "materials": [
+          "plastic",
+          "aluminium"
+        ],
+        "repetition": "once_per_item"
+      },
+      {
+        "id": "hopper-batch",
+        "enabled": true,
+        "trigger": "hopper_threshold",
+        "points": 5,
+        "eligibleOnly": true,
+        "materials": [
+          "plastic",
+          "aluminium"
+        ],
+        "repetition": "every_event",
+        "batchSize": 3
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "take",
+      "itemId": "B1"
+    },
+    {
+      "type": "take",
+      "itemId": "B2"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "retrieve",
+      "itemId": "B1"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "retrieve",
+      "itemId": "B1"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "retrieve",
+      "itemId": "B1"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "retrieve",
+      "itemId": "B1"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "take",
+      "itemId": "B2"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "move",
+      "direction": "left"
+    },
+    {
+      "type": "take",
+      "itemId": "B3"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    }
+  ],
+  "initialStateHash": "9502330680e4077b1df4d56fe4883ea73cd958b8a7251be93620f5974912354a",
+  "replayHash": "467acabd122bd1e6ac1f009054ac86f6e61fa76cc8e04db234a0bdc53ef4efbf",
+  "integrityHash": "1579e528e129af4cab8ecf94b1e00ae52aa4d890394f732b027a9e9886fbac34"
+}

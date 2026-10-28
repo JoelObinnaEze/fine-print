@@ -367,6 +367,348 @@
     "legitimateCoverage": 0,
     "replayHash": "26722928cdb22c639e81ba19bbe99c265e3d126fff2505371460f09c79f69323"
   },
+  "discoveryBenchmark": {
+    "status": "completed",
+    "frozenSuiteHash": "ba56f2d7b5a25acb4cf0100fd2235252f70f9b6b71d9653f67a15aa7f7e9bbf1",
+    "baselineLimits": {
+      "seeds": [
+        17,
+        29,
+        43
+      ],
+      "maxExpandedStates": 30000,
+      "maxActions": 40,
+      "beamWidth": 256
+    },
+    "museLimits": {
+      "maxInferenceRequests": 12,
+      "maxTrials": 4,
+      "maxTicksPerTrial": 120,
+      "searchDeadlineMs": 120000
+    },
+    "policies": [
+      {
+        "id": "eligible-deposit-premature",
+        "expected": "flawed",
+        "policyHash": "06b96b272d60a5170f8a755328bc1ed2eff2e4328d42eb30b88315db15b77207",
+        "honestReward": {
+          "expected": 60,
+          "actual": 60,
+          "usefulItems": 6,
+          "preserved": true
+        },
+        "simpleActionSearch": {
+          "verifiedExploitsFound": 3,
+          "repeatedRuns": 3,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "seed": 17,
+              "status": "exploit_verified",
+              "expandedStates": 645,
+              "actionsToFirstExploit": 7,
+              "verifiedExcessReward": 10,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 29,
+              "status": "exploit_verified",
+              "expandedStates": 645,
+              "actionsToFirstExploit": 7,
+              "verifiedExcessReward": 10,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 43,
+              "status": "exploit_verified",
+              "expandedStates": 649,
+              "actionsToFirstExploit": 7,
+              "verifiedExcessReward": 10,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "verifiedExploitsFound": 2,
+          "repeatedRuns": 2,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "searchId": "benchmark-v1-eligible-deposit-premature-1",
+              "runId": "defad5d4-d8d6-41c5-ac2e-bc16bc4d6fee",
+              "persistedStatus": "completed",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 10 unintended reward points across 7 actions.",
+              "requestsUsed": 9,
+              "trialsCompleted": 1,
+              "actionsTested": 17,
+              "verificationStatus": "exploit_verified",
+              "totalReward": 10,
+              "usefulItems": 0,
+              "verifiedExcessReward": 10,
+              "actualUsd": 0.060695
+            },
+            {
+              "searchId": "benchmark-v1-eligible-deposit-premature-2",
+              "runId": "3d57e660-5131-4fe2-a3b0-b37f29ca598c",
+              "persistedStatus": "completed",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 10 unintended reward points across 9 actions.",
+              "requestsUsed": 8,
+              "trialsCompleted": 1,
+              "actionsTested": 18,
+              "verificationStatus": "exploit_verified",
+              "totalReward": 10,
+              "usefulItems": 0,
+              "verifiedExcessReward": 10,
+              "actualUsd": 0.05188
+            }
+          ]
+        }
+      },
+      {
+        "id": "eligible-processing-receipt",
+        "expected": "blocked",
+        "policyHash": "2804894662d1cff1686b9cdb0604b3b80a48f75c13fd35760e8a76aaeac6c68a",
+        "honestReward": {
+          "expected": 60,
+          "actual": 60,
+          "usefulItems": 6,
+          "preserved": true
+        },
+        "simpleActionSearch": {
+          "verifiedExploitsFound": 0,
+          "repeatedRuns": 3,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "seed": 17,
+              "status": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstExploit": null,
+              "verifiedExcessReward": 0,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 29,
+              "status": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstExploit": null,
+              "verifiedExcessReward": 0,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 43,
+              "status": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstExploit": null,
+              "verifiedExcessReward": 0,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "verifiedExploitsFound": 0,
+          "repeatedRuns": 2,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "searchId": "benchmark-v1-eligible-processing-receipt-1",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 19,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.093316
+            },
+            {
+              "searchId": "benchmark-v1-eligible-processing-receipt-2",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 14,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.096092
+            }
+          ]
+        }
+      },
+      {
+        "id": "hopper-count-batch",
+        "expected": "flawed",
+        "policyHash": "259cd52ec61f3bf562692727ba7ae5d9271486e00b4030025c372f11f4f08347",
+        "honestReward": {
+          "expected": 70,
+          "actual": 70,
+          "usefulItems": 6,
+          "preserved": true
+        },
+        "simpleActionSearch": {
+          "verifiedExploitsFound": 3,
+          "repeatedRuns": 3,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "seed": 17,
+              "status": "exploit_verified",
+              "expandedStates": 16753,
+              "actionsToFirstExploit": 27,
+              "verifiedExcessReward": 5,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 29,
+              "status": "exploit_verified",
+              "expandedStates": 16747,
+              "actionsToFirstExploit": 27,
+              "verifiedExcessReward": 5,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 43,
+              "status": "exploit_verified",
+              "expandedStates": 16725,
+              "actionsToFirstExploit": 27,
+              "verifiedExcessReward": 5,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "verifiedExploitsFound": 1,
+          "repeatedRuns": 2,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "searchId": "benchmark-v1-hopper-count-batch-1",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 31,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.099919
+            },
+            {
+              "searchId": "benchmark-v1-hopper-count-batch-2",
+              "runId": "5d8be41e-9238-4fc8-9de7-f2ccc0e23f97",
+              "persistedStatus": "completed",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 5 unintended reward points across 38 actions.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 76,
+              "verificationStatus": "exploit_verified",
+              "totalReward": 5,
+              "usefulItems": 0,
+              "verifiedExcessReward": 5,
+              "actualUsd": 0.099192
+            }
+          ]
+        }
+      },
+      {
+        "id": "processed-receipt-batch",
+        "expected": "blocked",
+        "policyHash": "5bdde1e816e75ec480a9553448466ced921f17958516c6bb8ffab8444da6628f",
+        "honestReward": {
+          "expected": 70,
+          "actual": 70,
+          "usefulItems": 6,
+          "preserved": true
+        },
+        "simpleActionSearch": {
+          "verifiedExploitsFound": 0,
+          "repeatedRuns": 3,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "seed": 17,
+              "status": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstExploit": null,
+              "verifiedExcessReward": 0,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 29,
+              "status": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstExploit": null,
+              "verifiedExcessReward": 0,
+              "rejectedClaims": 0
+            },
+            {
+              "seed": 43,
+              "status": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstExploit": null,
+              "verifiedExcessReward": 0,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "verifiedExploitsFound": 0,
+          "repeatedRuns": 2,
+          "rejectedClaims": 0,
+          "attempts": [
+            {
+              "searchId": "benchmark-v1-processed-receipt-batch-1",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 12,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.100602
+            },
+            {
+              "searchId": "benchmark-v1-processed-receipt-batch-2",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 13,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.09885
+            }
+          ]
+        }
+      }
+    ]
+  },
   "usabilityStudy": {
     "status": "not_run",
     "participants": 0
