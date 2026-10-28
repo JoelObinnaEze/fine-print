@@ -503,11 +503,11 @@
 **Description:** Add a judge-facing commerce workbench where a policy owner edits rules and intended outcome separately, inspects the supported mapping, runs the verified referral/refund investigation, compares candidate designs by priority, and fresh-tests a selected repair.
 
 **Acceptance criteria:**
-- [ ] The opening view states the business question and shows dollars, retained revenue, and assumptions without implying fraud forecasts.
-- [ ] The minimized counterexample connects each transaction to a policy clause and host ledger effect.
-- [ ] Candidate repair cards expose leakage, honest reward, delay, complexity, and a fresh-test action; the Bottle Return domain remains one click away.
+- [x] The opening view states the business question and shows dollars, retained revenue, and assumptions without implying fraud forecasts.
+- [x] The minimized counterexample connects each transaction to a policy clause and host ledger effect.
+- [x] Candidate repair cards expose leakage, honest reward, delay, complexity, and a fresh-test action; the Bottle Return domain remains one click away.
 
-**Verification:** Component tests cover editing, priority selection, trace explanation, repair selection, and honest/attack metrics at mobile and desktop layouts.
+**Verification:** Four component tests cover the complete recorded investigation, separate policy/intent submission, unsupported-condition reporting, priority selection, deterministic retest, and correct fresh-policy population metrics. Opera GX rendered the live workbench at 1474×768 with a clean console; a 320×800 computed-layout check confirmed one-column reflow and no horizontal overflow.
 
 **Dependencies:** Task 28
 
@@ -520,11 +520,11 @@
 **Description:** Run one budgeted Muse investigation, preserve its verified evidence, exercise the complete sequence in Opera GX, and document the bounded claims and repeatable demo path.
 
 **Acceptance criteria:**
-- [ ] A live or clearly labelled recorded Muse result contains a host-verified multi-clause or multi-account commerce trace.
-- [ ] The selected repair is fresh-tested and the result is distinguishable from the original evidence.
-- [ ] Full tests, typecheck, production build, audit, secret scan, and responsive browser checks pass.
+- [x] A live or clearly labelled recorded Muse result contains a host-verified multi-clause or multi-account commerce trace.
+- [x] The selected repair is fresh-tested and the result is distinguishable from the original evidence.
+- [x] Full tests, typecheck, production build, audit, secret scan, and responsive browser checks pass.
 
-**Verification:** Record the run ID, usage, host verdict, browser observations, and final commands in this ledger.
+**Verification:** Live run `243986a6-b49a-4b16-9930-bee96912b6e4` cost `$0.013197`; Muse proposed four actions and the host minimized them to referral → `$20` purchase → refund, verifying `$20` spendable credit at `$0` retained revenue. The selected zero-delay reversal repair was fresh-attacked in run `c7191265-4e4c-41ca-8940-52b724211a8d` for `$0.010456`; five actions produced no verified unintended payout while the ordinary-customer trace preserved `$20` honest reward. Opera GX showed the fresh result separately as **Fresh Muse attempt · host verified** with no console warnings or errors. `npm test` passed 117 tests in 27 files; typecheck, production build, `npm audit --audit-level=high`, `git diff --check`, exact-key secret scan, 1474×768 rendering, and 320×800 responsive layout checks all passed.
 
 **Dependencies:** Task 29
 

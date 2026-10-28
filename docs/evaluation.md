@@ -2,6 +2,19 @@
 
 Status: completed locally on October 27, 2026. The machine-readable source is [`artifacts/evaluation.json`](../artifacts/evaluation.json).
 
+## Commerce incentive investigation
+
+The commerce workbench accepts the payout policy, intended retained-revenue outcome, and protected restrictions as separate inputs. Model prose remains labelled as an unverified hypothesis; only deterministic host replay can emit a verified verdict.
+
+| Attempt | Muse proposal | Host result | Honest customer result | Model cost |
+| --- | ---: | --- | --- | ---: |
+| Referral/refund policy | 4 actions → 3 required | `$20` unintended spendable credit, `$0` retained revenue | `$20` reward on `$20` retained revenue, 0-day delay | `$0.013197` |
+| Reverse-credit repair | 5 actions | `$0` unintended payout observed | `$20` reward on `$20` retained revenue, 0-day delay | `$0.010456` |
+
+The original durable investigation ID is `243986a6-b49a-4b16-9930-bee96912b6e4`; the fresh repair attempt is `c7191265-4e4c-41ca-8940-52b724211a8d`. Exact structured results are preserved in [`commerce-investigation-live.json`](../artifacts/commerce-investigation-live.json) and [`commerce-repair-live.json`](../artifacts/commerce-repair-live.json).
+
+Population traces are deliberately small and deterministic: ordinary customers keep a wanted purchase, bargain hunters spend earned promotional credit on another kept purchase, and two coordinated accounts purchase then refund. Their results describe these disclosed traces, not real-world fraud prevalence. A repair that rejects a later attack action is scored on every accepted prefix, so leakage before rejection is still counted.
+
 ## Offline matrix
 
 One deterministic Bottle Return seed was evaluated with three complete honest-worker orders and two adversarial trace families per policy. Offline evaluation made zero inference requests and cost $0.
@@ -52,7 +65,7 @@ The simple baseline is a deterministic beam search with seeds 17, 29, and 43, a 
 
 Muse found the simple premature-payment flaw reliably and the interacting batch flaw in one of two attempts. The baseline found both more reliably on this small deterministic world. That comparison is intentionally retained: Muse's value here is an inspectable natural-language hypothesis/tool workflow, not a claim that it beats search on a tiny state space. Independent verification rejected no submitted candidates in these eight runs.
 
-The eight live benchmark attempts cost $0.700546 in raw token usage. After all project activity, the durable ledger records $1.443446 settled, $0.004075 ambiguous, and $8.552479 still available from the authorized $10 cap.
+The eight live Bottle Return benchmark attempts cost $0.700546 in raw token usage. After the commerce investigation and browser verification, the durable ledger records $1.694354 settled, $0.004075 ambiguous, no active reservations, and $8.301571 still available from the authorized $10 cap.
 
 ## Not run
 

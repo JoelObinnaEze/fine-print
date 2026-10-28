@@ -1,0 +1,1540 @@
+{
+  "id": "243986a6-b49a-4b16-9930-bee96912b6e4",
+  "replayed": false,
+  "modelId": "muse-spark-1.3",
+  "mapping": {
+    "status": "candidate",
+    "reason": "All payout clauses map directly: $10 both sides, $20 threshold on gross including promo, immediate issuance, keep on refund, 30-day window. Preserves $10/$10 reward and $20 acquisition intent.",
+    "policy": {
+      "schemaVersion": 1,
+      "name": "both-10-on-20-keep-promo-counts",
+      "referral": {
+        "rewardUsd": 10,
+        "qualifyingPurchaseUsd": 20,
+        "qualificationBasis": "gross_purchase",
+        "issuance": "immediate",
+        "refundHandling": "keep",
+        "returnWindowDays": 30,
+        "promoCreditCountsTowardThreshold": true
+      }
+    },
+    "supportedClauses": [
+      "$10 credit to both referrer and referred",
+      "$20 qualifying purchase",
+      "immediate issuance on completion",
+      "30-day return window",
+      "keep issued credit after refund",
+      "promotional credit counts toward threshold"
+    ],
+    "unsupportedConditions": []
+  },
+  "attack": {
+    "hypothesis": "Referral issues $10 to both immediately on $20 gross purchase, credit is kept after refund, and promo counts toward threshold. An attacker self-refers, pays $20, triggers $20 total credit, then refunds to $0 retained revenue while keeping credit, which can fund further qualifying purchases.",
+    "proposedActionCount": 4,
+    "minimizedActions": [
+      {
+        "type": "refer",
+        "referrerId": "A",
+        "customerId": "B"
+      },
+      {
+        "type": "purchase",
+        "accountId": "B",
+        "purchaseId": "p1",
+        "priceUsd": 20,
+        "promoCreditUsd": 0
+      },
+      {
+        "type": "refund",
+        "accountId": "B",
+        "purchaseId": "p1"
+      }
+    ],
+    "verification": {
+      "status": "exploit_verified",
+      "availableRewardUsd": 20,
+      "retainedRevenueUsd": 0,
+      "unintendedPayoutUsd": 20,
+      "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome."
+    },
+    "events": [
+      {
+        "sequence": 1,
+        "day": 0,
+        "action": "refer",
+        "clause": "referral relationship",
+        "summary": "A referred B.",
+        "ledgerEffect": "Referral relationship recorded"
+      },
+      {
+        "sequence": 2,
+        "day": 0,
+        "action": "purchase",
+        "clause": "purchase qualification + credit issuance",
+        "summary": "B bought p1 for $20.",
+        "ledgerEffect": "2 referral credits created; $20 retained"
+      },
+      {
+        "sequence": 3,
+        "day": 0,
+        "action": "refund",
+        "clause": "refund handling keeps issued credit",
+        "summary": "B refunded p1.",
+        "ledgerEffect": "$20 retained revenue removed"
+      }
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "label": "Reverse credit on refund",
+      "tradeoff": "Preserves immediate $10/$10 experience; requires ability to claw back issued credit on refund.",
+      "complexity": 1,
+      "policy": {
+        "schemaVersion": 1,
+        "name": "both-10-on-20-reverse",
+        "referral": {
+          "rewardUsd": 10,
+          "qualifyingPurchaseUsd": 20,
+          "qualificationBasis": "gross_purchase",
+          "issuance": "immediate",
+          "refundHandling": "reverse",
+          "returnWindowDays": 30,
+          "promoCreditCountsTowardThreshold": true
+        }
+      },
+      "evaluation": {
+        "attack": {
+          "availableRewardUsd": 0,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 20,
+          "retainedRevenueUsd": 0,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": null
+        },
+        "honest": {
+          "availableRewardUsd": 20,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 0,
+          "retainedRevenueUsd": 20,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": 0
+        },
+        "knownAttackBlocked": true,
+        "honestRewardsPreserved": true
+      },
+      "population": {
+        "assumption": "Simulation under stated assumptions; these deterministic traces are not forecasts of real fraud rates.",
+        "strategies": [
+          {
+            "id": "ordinary",
+            "label": "Ordinary customers",
+            "objective": "Complete a wanted purchase and keep it after the return window.",
+            "participants": 2,
+            "assumptions": [
+              "One genuine referral",
+              "$20 wanted purchase",
+              "No refund"
+            ],
+            "accountIds": [
+              "O1",
+              "O2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "O1",
+                "customerId": "O2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "O2",
+                "purchaseId": "OP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "advance_days",
+                "days": 30
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 20,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 0,
+              "retainedRevenueUsd": 20,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": 0
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 30,
+              "accounts": [
+                {
+                  "id": "O1",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "O2",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "O1->O2",
+                  "referrerId": "O1",
+                  "customerId": "O2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "OP1",
+                  "accountId": "O2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "active"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "O1->O2:OP1:O1",
+                  "referralId": "O1->O2",
+                  "purchaseId": "OP1",
+                  "accountId": "O1",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                },
+                {
+                  "id": "O1->O2:OP1:O2",
+                  "referralId": "O1->O2",
+                  "purchaseId": "OP1",
+                  "accountId": "O2",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                }
+              ],
+              "retainedRevenueUsd": 20
+            }
+          },
+          {
+            "id": "bargain_hunter",
+            "label": "Bargain hunters",
+            "objective": "Use earned promotional credit while still buying and keeping wanted goods.",
+            "participants": 2,
+            "assumptions": [
+              "One genuine referral",
+              "Two kept purchases",
+              "$10 credit funds part of purchase two"
+            ],
+            "accountIds": [
+              "H1",
+              "H2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "H1",
+                "customerId": "H2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "H2",
+                "purchaseId": "HP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "advance_days",
+                "days": 30
+              },
+              {
+                "type": "purchase",
+                "accountId": "H2",
+                "purchaseId": "HP2",
+                "priceUsd": 20,
+                "promoCreditUsd": 10
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 20,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 0,
+              "retainedRevenueUsd": 30,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": 0
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 30,
+              "accounts": [
+                {
+                  "id": "H1",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "H2",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "H1->H2",
+                  "referrerId": "H1",
+                  "customerId": "H2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "HP1",
+                  "accountId": "H2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "active"
+                },
+                {
+                  "id": "HP2",
+                  "accountId": "H2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 10,
+                  "cashPaidUsd": 10,
+                  "purchasedDay": 30,
+                  "status": "active"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "H1->H2:HP1:H1",
+                  "referralId": "H1->H2",
+                  "purchaseId": "HP1",
+                  "accountId": "H1",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                },
+                {
+                  "id": "H1->H2:HP1:H2",
+                  "referralId": "H1->H2",
+                  "purchaseId": "HP1",
+                  "accountId": "H2",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                }
+              ],
+              "retainedRevenueUsd": 30
+            }
+          },
+          {
+            "id": "coordinated_adversary",
+            "label": "Coordinated adversaries",
+            "objective": "Maximize spendable promotional credit while minimizing retained spending.",
+            "participants": 2,
+            "assumptions": [
+              "Two coordinated accounts",
+              "Full refund inside 30 days",
+              "No identity bypass"
+            ],
+            "accountIds": [
+              "A1",
+              "A2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "A1",
+                "customerId": "A2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "A2",
+                "purchaseId": "AP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "refund",
+                "accountId": "A2",
+                "purchaseId": "AP1"
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 0,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 20,
+              "retainedRevenueUsd": 0,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": null
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 0,
+              "accounts": [
+                {
+                  "id": "A1",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "A2",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "A1->A2",
+                  "referrerId": "A1",
+                  "customerId": "A2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "AP1",
+                  "accountId": "A2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "refunded"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "A1->A2:AP1:A1",
+                  "referralId": "A1->A2",
+                  "purchaseId": "AP1",
+                  "accountId": "A1",
+                  "amountUsd": 10,
+                  "status": "reversed",
+                  "createdDay": 0,
+                  "availableDay": 0
+                },
+                {
+                  "id": "A1->A2:AP1:A2",
+                  "referralId": "A1->A2",
+                  "purchaseId": "AP1",
+                  "accountId": "A2",
+                  "amountUsd": 10,
+                  "status": "reversed",
+                  "createdDay": 0,
+                  "availableDay": 0
+                }
+              ],
+              "retainedRevenueUsd": 0
+            }
+          }
+        ],
+        "aggregate": {
+          "participants": 6,
+          "legitimateRewardUsd": 40,
+          "verifiedUnintendedPayoutUsd": 0,
+          "retainedRevenueUsd": 50,
+          "maximumRewardDelayDays": 0
+        }
+      }
+    },
+    {
+      "id": "c2",
+      "label": "Pay after return window",
+      "tradeoff": "Delays legitimate $10/$10 reward by 30 days to ensure retention before payout.",
+      "complexity": 2,
+      "policy": {
+        "schemaVersion": 1,
+        "name": "both-10-on-20-after-window",
+        "referral": {
+          "rewardUsd": 10,
+          "qualifyingPurchaseUsd": 20,
+          "qualificationBasis": "gross_purchase",
+          "issuance": "after_return_window",
+          "refundHandling": "reverse",
+          "returnWindowDays": 30,
+          "promoCreditCountsTowardThreshold": true
+        }
+      },
+      "evaluation": {
+        "attack": {
+          "availableRewardUsd": 0,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 20,
+          "retainedRevenueUsd": 0,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": null
+        },
+        "honest": {
+          "availableRewardUsd": 20,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 0,
+          "retainedRevenueUsd": 20,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": 30
+        },
+        "knownAttackBlocked": true,
+        "honestRewardsPreserved": true
+      },
+      "population": {
+        "assumption": "Simulation under stated assumptions; these deterministic traces are not forecasts of real fraud rates.",
+        "strategies": [
+          {
+            "id": "ordinary",
+            "label": "Ordinary customers",
+            "objective": "Complete a wanted purchase and keep it after the return window.",
+            "participants": 2,
+            "assumptions": [
+              "One genuine referral",
+              "$20 wanted purchase",
+              "No refund"
+            ],
+            "accountIds": [
+              "O1",
+              "O2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "O1",
+                "customerId": "O2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "O2",
+                "purchaseId": "OP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "advance_days",
+                "days": 30
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 20,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 0,
+              "retainedRevenueUsd": 20,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": 30
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 30,
+              "accounts": [
+                {
+                  "id": "O1",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "O2",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "O1->O2",
+                  "referrerId": "O1",
+                  "customerId": "O2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "OP1",
+                  "accountId": "O2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "active"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "O1->O2:OP1:O1",
+                  "referralId": "O1->O2",
+                  "purchaseId": "OP1",
+                  "accountId": "O1",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 30
+                },
+                {
+                  "id": "O1->O2:OP1:O2",
+                  "referralId": "O1->O2",
+                  "purchaseId": "OP1",
+                  "accountId": "O2",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 30
+                }
+              ],
+              "retainedRevenueUsd": 20
+            }
+          },
+          {
+            "id": "bargain_hunter",
+            "label": "Bargain hunters",
+            "objective": "Use earned promotional credit while still buying and keeping wanted goods.",
+            "participants": 2,
+            "assumptions": [
+              "One genuine referral",
+              "Two kept purchases",
+              "$10 credit funds part of purchase two"
+            ],
+            "accountIds": [
+              "H1",
+              "H2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "H1",
+                "customerId": "H2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "H2",
+                "purchaseId": "HP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "advance_days",
+                "days": 30
+              },
+              {
+                "type": "purchase",
+                "accountId": "H2",
+                "purchaseId": "HP2",
+                "priceUsd": 20,
+                "promoCreditUsd": 10
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 20,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 0,
+              "retainedRevenueUsd": 30,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": 30
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 30,
+              "accounts": [
+                {
+                  "id": "H1",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "H2",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "H1->H2",
+                  "referrerId": "H1",
+                  "customerId": "H2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "HP1",
+                  "accountId": "H2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "active"
+                },
+                {
+                  "id": "HP2",
+                  "accountId": "H2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 10,
+                  "cashPaidUsd": 10,
+                  "purchasedDay": 30,
+                  "status": "active"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "H1->H2:HP1:H1",
+                  "referralId": "H1->H2",
+                  "purchaseId": "HP1",
+                  "accountId": "H1",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 30
+                },
+                {
+                  "id": "H1->H2:HP1:H2",
+                  "referralId": "H1->H2",
+                  "purchaseId": "HP1",
+                  "accountId": "H2",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 30
+                }
+              ],
+              "retainedRevenueUsd": 30
+            }
+          },
+          {
+            "id": "coordinated_adversary",
+            "label": "Coordinated adversaries",
+            "objective": "Maximize spendable promotional credit while minimizing retained spending.",
+            "participants": 2,
+            "assumptions": [
+              "Two coordinated accounts",
+              "Full refund inside 30 days",
+              "No identity bypass"
+            ],
+            "accountIds": [
+              "A1",
+              "A2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "A1",
+                "customerId": "A2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "A2",
+                "purchaseId": "AP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "refund",
+                "accountId": "A2",
+                "purchaseId": "AP1"
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 0,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 20,
+              "retainedRevenueUsd": 0,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": null
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 0,
+              "accounts": [
+                {
+                  "id": "A1",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "A2",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "A1->A2",
+                  "referrerId": "A1",
+                  "customerId": "A2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "AP1",
+                  "accountId": "A2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "refunded"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "A1->A2:AP1:A1",
+                  "referralId": "A1->A2",
+                  "purchaseId": "AP1",
+                  "accountId": "A1",
+                  "amountUsd": 10,
+                  "status": "reversed",
+                  "createdDay": 0,
+                  "availableDay": 30
+                },
+                {
+                  "id": "A1->A2:AP1:A2",
+                  "referralId": "A1->A2",
+                  "purchaseId": "AP1",
+                  "accountId": "A2",
+                  "amountUsd": 10,
+                  "status": "reversed",
+                  "createdDay": 0,
+                  "availableDay": 30
+                }
+              ],
+              "retainedRevenueUsd": 0
+            }
+          }
+        ],
+        "aggregate": {
+          "participants": 6,
+          "legitimateRewardUsd": 40,
+          "verifiedUnintendedPayoutUsd": 0,
+          "retainedRevenueUsd": 50,
+          "maximumRewardDelayDays": 30
+        }
+      }
+    },
+    {
+      "id": "c3",
+      "label": "Cash retained-spend qualification",
+      "tradeoff": "Requires $20 cash retained spend excluding promo, blocking promo-stacking and refund farming; legitimate users cannot use promo toward threshold.",
+      "complexity": 2,
+      "policy": {
+        "schemaVersion": 1,
+        "name": "both-10-on-20-cash-retained",
+        "referral": {
+          "rewardUsd": 10,
+          "qualifyingPurchaseUsd": 20,
+          "qualificationBasis": "net_retained_spend",
+          "issuance": "immediate",
+          "refundHandling": "reverse",
+          "returnWindowDays": 30,
+          "promoCreditCountsTowardThreshold": false
+        }
+      },
+      "evaluation": {
+        "attack": {
+          "availableRewardUsd": 0,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 20,
+          "retainedRevenueUsd": 0,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": null
+        },
+        "honest": {
+          "availableRewardUsd": 20,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 0,
+          "retainedRevenueUsd": 20,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": 0
+        },
+        "knownAttackBlocked": true,
+        "honestRewardsPreserved": true
+      },
+      "population": {
+        "assumption": "Simulation under stated assumptions; these deterministic traces are not forecasts of real fraud rates.",
+        "strategies": [
+          {
+            "id": "ordinary",
+            "label": "Ordinary customers",
+            "objective": "Complete a wanted purchase and keep it after the return window.",
+            "participants": 2,
+            "assumptions": [
+              "One genuine referral",
+              "$20 wanted purchase",
+              "No refund"
+            ],
+            "accountIds": [
+              "O1",
+              "O2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "O1",
+                "customerId": "O2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "O2",
+                "purchaseId": "OP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "advance_days",
+                "days": 30
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 20,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 0,
+              "retainedRevenueUsd": 20,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": 0
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 30,
+              "accounts": [
+                {
+                  "id": "O1",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "O2",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "O1->O2",
+                  "referrerId": "O1",
+                  "customerId": "O2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "OP1",
+                  "accountId": "O2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "active"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "O1->O2:OP1:O1",
+                  "referralId": "O1->O2",
+                  "purchaseId": "OP1",
+                  "accountId": "O1",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                },
+                {
+                  "id": "O1->O2:OP1:O2",
+                  "referralId": "O1->O2",
+                  "purchaseId": "OP1",
+                  "accountId": "O2",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                }
+              ],
+              "retainedRevenueUsd": 20
+            }
+          },
+          {
+            "id": "bargain_hunter",
+            "label": "Bargain hunters",
+            "objective": "Use earned promotional credit while still buying and keeping wanted goods.",
+            "participants": 2,
+            "assumptions": [
+              "One genuine referral",
+              "Two kept purchases",
+              "$10 credit funds part of purchase two"
+            ],
+            "accountIds": [
+              "H1",
+              "H2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "H1",
+                "customerId": "H2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "H2",
+                "purchaseId": "HP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "advance_days",
+                "days": 30
+              },
+              {
+                "type": "purchase",
+                "accountId": "H2",
+                "purchaseId": "HP2",
+                "priceUsd": 20,
+                "promoCreditUsd": 10
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 20,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 0,
+              "retainedRevenueUsd": 30,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": 0
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 30,
+              "accounts": [
+                {
+                  "id": "H1",
+                  "availableCreditUsd": 10,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "H2",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "H1->H2",
+                  "referrerId": "H1",
+                  "customerId": "H2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "HP1",
+                  "accountId": "H2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "active"
+                },
+                {
+                  "id": "HP2",
+                  "accountId": "H2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 10,
+                  "cashPaidUsd": 10,
+                  "purchasedDay": 30,
+                  "status": "active"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "H1->H2:HP1:H1",
+                  "referralId": "H1->H2",
+                  "purchaseId": "HP1",
+                  "accountId": "H1",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                },
+                {
+                  "id": "H1->H2:HP1:H2",
+                  "referralId": "H1->H2",
+                  "purchaseId": "HP1",
+                  "accountId": "H2",
+                  "amountUsd": 10,
+                  "status": "available",
+                  "createdDay": 0,
+                  "availableDay": 0
+                }
+              ],
+              "retainedRevenueUsd": 30
+            }
+          },
+          {
+            "id": "coordinated_adversary",
+            "label": "Coordinated adversaries",
+            "objective": "Maximize spendable promotional credit while minimizing retained spending.",
+            "participants": 2,
+            "assumptions": [
+              "Two coordinated accounts",
+              "Full refund inside 30 days",
+              "No identity bypass"
+            ],
+            "accountIds": [
+              "A1",
+              "A2"
+            ],
+            "actions": [
+              {
+                "type": "refer",
+                "referrerId": "A1",
+                "customerId": "A2"
+              },
+              {
+                "type": "purchase",
+                "accountId": "A2",
+                "purchaseId": "AP1",
+                "priceUsd": 20,
+                "promoCreditUsd": 0
+              },
+              {
+                "type": "refund",
+                "accountId": "A2",
+                "purchaseId": "AP1"
+              }
+            ],
+            "metrics": {
+              "availableRewardUsd": 0,
+              "pendingRewardUsd": 0,
+              "reversedRewardUsd": 20,
+              "retainedRevenueUsd": 0,
+              "verifiedUnintendedPayoutUsd": 0,
+              "rewardDelayDays": null
+            },
+            "finalState": {
+              "schemaVersion": 1,
+              "day": 0,
+              "accounts": [
+                {
+                  "id": "A1",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                },
+                {
+                  "id": "A2",
+                  "availableCreditUsd": 0,
+                  "pendingCreditUsd": 0,
+                  "reversalDebtUsd": 0
+                }
+              ],
+              "referrals": [
+                {
+                  "id": "A1->A2",
+                  "referrerId": "A1",
+                  "customerId": "A2",
+                  "createdDay": 0
+                }
+              ],
+              "purchases": [
+                {
+                  "id": "AP1",
+                  "accountId": "A2",
+                  "priceUsd": 20,
+                  "promoCreditUsd": 0,
+                  "cashPaidUsd": 20,
+                  "purchasedDay": 0,
+                  "status": "refunded"
+                }
+              ],
+              "rewards": [
+                {
+                  "id": "A1->A2:AP1:A1",
+                  "referralId": "A1->A2",
+                  "purchaseId": "AP1",
+                  "accountId": "A1",
+                  "amountUsd": 10,
+                  "status": "reversed",
+                  "createdDay": 0,
+                  "availableDay": 0
+                },
+                {
+                  "id": "A1->A2:AP1:A2",
+                  "referralId": "A1->A2",
+                  "purchaseId": "AP1",
+                  "accountId": "A2",
+                  "amountUsd": 10,
+                  "status": "reversed",
+                  "createdDay": 0,
+                  "availableDay": 0
+                }
+              ],
+              "retainedRevenueUsd": 0
+            }
+          }
+        ],
+        "aggregate": {
+          "participants": 6,
+          "legitimateRewardUsd": 40,
+          "verifiedUnintendedPayoutUsd": 0,
+          "retainedRevenueUsd": 50,
+          "maximumRewardDelayDays": 0
+        }
+      }
+    }
+  ],
+  "population": {
+    "assumption": "Simulation under stated assumptions; these deterministic traces are not forecasts of real fraud rates.",
+    "strategies": [
+      {
+        "id": "ordinary",
+        "label": "Ordinary customers",
+        "objective": "Complete a wanted purchase and keep it after the return window.",
+        "participants": 2,
+        "assumptions": [
+          "One genuine referral",
+          "$20 wanted purchase",
+          "No refund"
+        ],
+        "accountIds": [
+          "O1",
+          "O2"
+        ],
+        "actions": [
+          {
+            "type": "refer",
+            "referrerId": "O1",
+            "customerId": "O2"
+          },
+          {
+            "type": "purchase",
+            "accountId": "O2",
+            "purchaseId": "OP1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "advance_days",
+            "days": 30
+          }
+        ],
+        "metrics": {
+          "availableRewardUsd": 20,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 0,
+          "retainedRevenueUsd": 20,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": 0
+        },
+        "finalState": {
+          "schemaVersion": 1,
+          "day": 30,
+          "accounts": [
+            {
+              "id": "O1",
+              "availableCreditUsd": 10,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "O2",
+              "availableCreditUsd": 10,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [
+            {
+              "id": "O1->O2",
+              "referrerId": "O1",
+              "customerId": "O2",
+              "createdDay": 0
+            }
+          ],
+          "purchases": [
+            {
+              "id": "OP1",
+              "accountId": "O2",
+              "priceUsd": 20,
+              "promoCreditUsd": 0,
+              "cashPaidUsd": 20,
+              "purchasedDay": 0,
+              "status": "active"
+            }
+          ],
+          "rewards": [
+            {
+              "id": "O1->O2:OP1:O1",
+              "referralId": "O1->O2",
+              "purchaseId": "OP1",
+              "accountId": "O1",
+              "amountUsd": 10,
+              "status": "available",
+              "createdDay": 0,
+              "availableDay": 0
+            },
+            {
+              "id": "O1->O2:OP1:O2",
+              "referralId": "O1->O2",
+              "purchaseId": "OP1",
+              "accountId": "O2",
+              "amountUsd": 10,
+              "status": "available",
+              "createdDay": 0,
+              "availableDay": 0
+            }
+          ],
+          "retainedRevenueUsd": 20
+        }
+      },
+      {
+        "id": "bargain_hunter",
+        "label": "Bargain hunters",
+        "objective": "Use earned promotional credit while still buying and keeping wanted goods.",
+        "participants": 2,
+        "assumptions": [
+          "One genuine referral",
+          "Two kept purchases",
+          "$10 credit funds part of purchase two"
+        ],
+        "accountIds": [
+          "H1",
+          "H2"
+        ],
+        "actions": [
+          {
+            "type": "refer",
+            "referrerId": "H1",
+            "customerId": "H2"
+          },
+          {
+            "type": "purchase",
+            "accountId": "H2",
+            "purchaseId": "HP1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "advance_days",
+            "days": 30
+          },
+          {
+            "type": "purchase",
+            "accountId": "H2",
+            "purchaseId": "HP2",
+            "priceUsd": 20,
+            "promoCreditUsd": 10
+          }
+        ],
+        "metrics": {
+          "availableRewardUsd": 20,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 0,
+          "retainedRevenueUsd": 30,
+          "verifiedUnintendedPayoutUsd": 0,
+          "rewardDelayDays": 0
+        },
+        "finalState": {
+          "schemaVersion": 1,
+          "day": 30,
+          "accounts": [
+            {
+              "id": "H1",
+              "availableCreditUsd": 10,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "H2",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [
+            {
+              "id": "H1->H2",
+              "referrerId": "H1",
+              "customerId": "H2",
+              "createdDay": 0
+            }
+          ],
+          "purchases": [
+            {
+              "id": "HP1",
+              "accountId": "H2",
+              "priceUsd": 20,
+              "promoCreditUsd": 0,
+              "cashPaidUsd": 20,
+              "purchasedDay": 0,
+              "status": "active"
+            },
+            {
+              "id": "HP2",
+              "accountId": "H2",
+              "priceUsd": 20,
+              "promoCreditUsd": 10,
+              "cashPaidUsd": 10,
+              "purchasedDay": 30,
+              "status": "active"
+            }
+          ],
+          "rewards": [
+            {
+              "id": "H1->H2:HP1:H1",
+              "referralId": "H1->H2",
+              "purchaseId": "HP1",
+              "accountId": "H1",
+              "amountUsd": 10,
+              "status": "available",
+              "createdDay": 0,
+              "availableDay": 0
+            },
+            {
+              "id": "H1->H2:HP1:H2",
+              "referralId": "H1->H2",
+              "purchaseId": "HP1",
+              "accountId": "H2",
+              "amountUsd": 10,
+              "status": "available",
+              "createdDay": 0,
+              "availableDay": 0
+            }
+          ],
+          "retainedRevenueUsd": 30
+        }
+      },
+      {
+        "id": "coordinated_adversary",
+        "label": "Coordinated adversaries",
+        "objective": "Maximize spendable promotional credit while minimizing retained spending.",
+        "participants": 2,
+        "assumptions": [
+          "Two coordinated accounts",
+          "Full refund inside 30 days",
+          "No identity bypass"
+        ],
+        "accountIds": [
+          "A1",
+          "A2"
+        ],
+        "actions": [
+          {
+            "type": "refer",
+            "referrerId": "A1",
+            "customerId": "A2"
+          },
+          {
+            "type": "purchase",
+            "accountId": "A2",
+            "purchaseId": "AP1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "refund",
+            "accountId": "A2",
+            "purchaseId": "AP1"
+          }
+        ],
+        "metrics": {
+          "availableRewardUsd": 20,
+          "pendingRewardUsd": 0,
+          "reversedRewardUsd": 0,
+          "retainedRevenueUsd": 0,
+          "verifiedUnintendedPayoutUsd": 20,
+          "rewardDelayDays": 0
+        },
+        "finalState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A1",
+              "availableCreditUsd": 10,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "A2",
+              "availableCreditUsd": 10,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [
+            {
+              "id": "A1->A2",
+              "referrerId": "A1",
+              "customerId": "A2",
+              "createdDay": 0
+            }
+          ],
+          "purchases": [
+            {
+              "id": "AP1",
+              "accountId": "A2",
+              "priceUsd": 20,
+              "promoCreditUsd": 0,
+              "cashPaidUsd": 20,
+              "purchasedDay": 0,
+              "status": "refunded"
+            }
+          ],
+          "rewards": [
+            {
+              "id": "A1->A2:AP1:A1",
+              "referralId": "A1->A2",
+              "purchaseId": "AP1",
+              "accountId": "A1",
+              "amountUsd": 10,
+              "status": "available",
+              "createdDay": 0,
+              "availableDay": 0
+            },
+            {
+              "id": "A1->A2:AP1:A2",
+              "referralId": "A1->A2",
+              "purchaseId": "AP1",
+              "accountId": "A2",
+              "amountUsd": 10,
+              "status": "available",
+              "createdDay": 0,
+              "availableDay": 0
+            }
+          ],
+          "retainedRevenueUsd": 0
+        }
+      }
+    ],
+    "aggregate": {
+      "participants": 6,
+      "legitimateRewardUsd": 40,
+      "verifiedUnintendedPayoutUsd": 20,
+      "retainedRevenueUsd": 50,
+      "maximumRewardDelayDays": 0
+    }
+  },
+  "usage": {
+    "promptTokens": 1000,
+    "completionTokens": 2811,
+    "totalTokens": 3811,
+    "actualUsd": 0.013197
+  }
+}

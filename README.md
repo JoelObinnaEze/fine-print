@@ -1,11 +1,14 @@
 # Fine Print
 
-Fine Print is a bounded recycling-depot game about specification gaming. A policy can pay exactly what it says while rewarding behavior its author did not intend. Meta translates plain language and searches for candidate traces; deterministic host code validates every policy, action, payout, and final claim.
+Fine Print is an incentive-system design and red-team workbench. A policy can pay exactly what it says while rewarding behavior its author did not intend. Meta translates plain language and searches for candidate traces; deterministic host code validates every policy, transaction, payout, and final claim.
 
-The current local build demonstrates the full red-team loop: write a reward rule in plain English, review Meta's bounded interpretation field by field, launch a durable live Muse attack, replay its exact host-verified trace, patch the rule, and fresh-attack the selected patch. Honest workflows, known failures, recorded replay, and fresh search are reported separately rather than collapsed into one safety score.
+The primary workbench investigates a referral-credit programme across purchases, promotional credit, returns, and refunds. It separates the actual policy from its intended business outcome, minimizes a host-verified exploit, compares ordinary customers, bargain hunters, and coordinated adversaries, ranks three tested repairs by owner priority, and fresh-attacks the selected repair. Bottle Return remains a second 3D domain using the same proposal-versus-verification boundary.
 
 ## Verified result
 
+- A live `muse-spark-1.3` commerce investigation proposed four transactions; the host reduced them to the three required steps and verified `$20` spendable referral credit against `$0` retained revenue. The call cost `$0.013197`.
+- Muse proposed three materially different repairs. With fast rewards prioritized, **Reverse credit on refund** preserves `$20` honest reward with zero-day delay. A separate fresh Muse attempt submitted five actions; host replay found `$0` unintended payout at `$0.010456`. This is a bounded result, not a proof of safety.
+- The commerce population view reports ordinary customers, bargain hunters, and coordinated adversaries under disclosed deterministic assumptions. It is not a forecast of real fraud rates.
 - The scripted trace pays 30 points for one bottle deposited three times while recycling zero items.
 - A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
 - The once-per-item patch removes repeat rewards but still fails on eligibility and completion: the disclosed gauntlet preserves 3/3 honest workflows while blocking only 1/3 known failures. A fresh Muse search verified an ineligible-item payout of 10 points with zero useful recycling in 8 requests at $0.052854.
@@ -14,7 +17,7 @@ The current local build demonstrates the full red-team loop: write a reward rule
 - In the frozen discovery suite, Muse found the premature-deposit flaw 2/2 and the interacting batch flaw 1/2, with no verified exploit in 4/4 blocked-control runs. The simple beam-search baseline found both flaws 3/3 and both controls 0/3; every attempt remains in the report.
 - An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
 - Verified attacks can be saved as durable SQLite regression cases and are replayed automatically against the selected policy.
-- [artifacts/attacker-batch-bonus.json](artifacts/attacker-batch-bonus.json) preserves the interacting-rule exploit, [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json) preserves the fresh first-patch exploit, [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserves the starting-policy search, and [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
+- [artifacts/commerce-investigation-live.json](artifacts/commerce-investigation-live.json) and [artifacts/commerce-repair-live.json](artifacts/commerce-repair-live.json) preserve the live commerce search and fresh repair test. [artifacts/attacker-batch-bonus.json](artifacts/attacker-batch-bonus.json), [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json), and [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserve the Bottle Return evidence; [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
 
 These are observations from bounded traces, not a proof that a policy is safe.
 
@@ -77,6 +80,8 @@ The model never receives credentials, filesystem access, database handles, hidde
 - [Three-minute demo script](docs/demo-script.md)
 - [Competition expansion brief](docs/ideas/red-team-arena.md)
 - [Opera GX verification capture](artifacts/opera-fine-print.png)
+- [Opera GX commerce workbench](artifacts/opera-commerce-workbench.png)
+- [Opera GX selected-repair verdict](artifacts/opera-commerce-repair.png)
 - [Submission and judge-access checklist](docs/submission-checklist.md)
 - [Implementation ledger](tasks/todo.md)
 - [Original build brief](creation.md)
