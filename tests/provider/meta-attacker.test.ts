@@ -159,10 +159,14 @@ describe("Meta attacker provider", () => {
       messages: [{ role: "developer" }, { role: "user" }],
     });
     expect((bodies[0] as { tools: unknown[] }).tools).toHaveLength(5);
+    expect(
+      (bodies[0] as { messages: Array<{ content: string }> }).messages[0]!.content,
+    ).toContain("submit the current trial immediately on the next turn");
     expect(bodies[1]).toMatchObject({
       messages: expect.arrayContaining([
         expect.objectContaining({ role: "assistant" }),
         expect.objectContaining({ role: "tool", tool_call_id: "call-inspect" }),
+        expect.objectContaining({ role: "user", content: expect.stringContaining("Search turn 2 of 12") }),
       ]),
     });
     expect(JSON.stringify({ result, bodies })).not.toContain("test-secret");
