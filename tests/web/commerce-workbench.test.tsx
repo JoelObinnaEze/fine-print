@@ -13,28 +13,31 @@ afterEach(() => {
 });
 
 describe("commerce incentive workbench", () => {
-  it("opens with a complete recorded policy-to-repair investigation", () => {
+  it("opens on the verified exploit and keeps the rest one tab away", async () => {
+    const user = userEvent.setup();
     render(<CommerceWorkbench />);
 
-    expect(
-      screen.getByRole("heading", { name: "What behaviour are you actually paying for?" }),
-    ).toBeTruthy();
-    expect(screen.getByLabelText("Proposed rewards programme")).toBeTruthy();
-    expect(screen.getByLabelText("Minimum retained revenue")).toBeTruthy();
-    expect(screen.getByLabelText("Restrictions that must remain")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Find where rewards detach from value." })).toBeTruthy();
     expect(screen.getByText("Recorded Muse investigation · host replayed")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Supported policy mapping" })).toBeTruthy();
-    expect(screen.getByText("$10 to each account")).toBeTruthy();
+    expect(screen.queryByLabelText("Actual reward rule")).toBeNull();
 
     const counterexample = screen.getByRole("region", { name: "Verified counterexample" });
-    expect(within(counterexample).getByText("Exploit verified")).toBeTruthy();
+    expect(within(counterexample).getByText("The reward survives after the value disappears.")).toBeTruthy();
     expect(within(counterexample).getByText("Model hypothesis · unverified wording")).toBeTruthy();
-    expect(within(counterexample).getByText("3 proposed → 3 required transactions")).toBeTruthy();
+    expect(within(counterexample).getByText("3 proposed → 3 required")).toBeTruthy();
     expect(within(counterexample).getByText("A referred B.")).toBeTruthy();
     expect(within(counterexample).getByText("B bought P1 for $20.")).toBeTruthy();
     expect(within(counterexample).getByText("B refunded P1.")).toBeTruthy();
     expect(within(counterexample).getByText(/\$20 became spendable/)).toBeTruthy();
 
+    await user.click(screen.getByRole("tab", { name: /Policy/ }));
+    expect(screen.getByLabelText("Actual reward rule")).toBeTruthy();
+    expect(screen.getByLabelText("Minimum retained revenue")).toBeTruthy();
+    expect(screen.getByLabelText("Customer promise to preserve")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "What the simulator can enforce" })).toBeTruthy();
+    expect(screen.getByText("$10 to each account")).toBeTruthy();
+
+    await user.click(screen.getByRole("tab", { name: /Audience/ }));
     const population = screen.getByRole("region", { name: "Participant population" });
     expect(within(population).getByText("Ordinary customers")).toBeTruthy();
     expect(within(population).getByText("Bargain hunters")).toBeTruthy();
@@ -46,18 +49,21 @@ describe("commerce incentive workbench", () => {
     const user = userEvent.setup();
     render(<CommerceWorkbench />);
 
-    await user.click(screen.getByRole("button", { name: "Prioritize simple operations" }));
+    await user.click(screen.getByRole("tab", { name: /Repairs/ }));
+    await user.click(screen.getByRole("button", { name: "simple operations" }));
     const recommendation = screen.getByRole("region", { name: "Recommended design" });
     expect(within(recommendation).getByText("Delay credit until returns close")).toBeTruthy();
 
-    await user.click(
-      screen.getByRole("button", { name: "Host-test Delay credit until returns close" }),
+    const candidate = screen.getAllByRole("article").find((article) =>
+      within(article).queryByRole("heading", { name: "Delay credit until returns close" }),
     );
+    expect(candidate).toBeTruthy();
+    await user.click(within(candidate!).getByRole("button", { name: "Replay known attack" }));
     const retest = screen.getByRole("status", { name: "Fresh repair test" });
     expect(within(retest).getByText("Known trace blocked")).toBeTruthy();
-    expect(within(retest).getByText("$0 unintended payout")).toBeTruthy();
+    expect(within(retest).getByText("$0 unintended")).toBeTruthy();
     expect(within(retest).getByText("$20 honest reward")).toBeTruthy();
-    expect(within(retest).getByText("30 day reward delay")).toBeTruthy();
+    expect(within(retest).getByText("30 day delay")).toBeTruthy();
   });
 
   it("sends user policy and intended outcome separately and exposes unsupported conditions", async () => {
@@ -98,16 +104,17 @@ describe("commerce incentive workbench", () => {
     const user = userEvent.setup();
     render(<CommerceWorkbench />);
 
-    expect(await screen.findByText("Live investigation ready · $8.50 budget left")).toBeTruthy();
-    await user.clear(screen.getByLabelText("Proposed rewards programme"));
+    await user.click(screen.getByRole("tab", { name: /Policy/ }));
+    expect(await screen.findByText("Live ready · $8.50 left")).toBeTruthy();
+    await user.clear(screen.getByLabelText("Actual reward rule"));
     await user.type(
-      screen.getByLabelText("Proposed rewards programme"),
+      screen.getByLabelText("Actual reward rule"),
       "Pay $10 only to customers in Canada using a unique device.",
     );
     await user.clear(screen.getByLabelText("Minimum retained revenue"));
     await user.type(screen.getByLabelText("Minimum retained revenue"), "30");
-    await user.clear(screen.getByLabelText("Restrictions that must remain"));
-    await user.type(screen.getByLabelText("Restrictions that must remain"), "Keep the $10 reward");
+    await user.clear(screen.getByLabelText("Customer promise to preserve"));
+    await user.type(screen.getByLabelText("Customer promise to preserve"), "Keep the $10 reward");
     await user.click(screen.getByRole("button", { name: "Investigate with Muse" }));
 
     expect(submitted).toEqual({
@@ -119,7 +126,7 @@ describe("commerce incentive workbench", () => {
       },
       restrictions: ["Keep the $10 reward"],
     });
-    expect(await screen.findByText("Needs a wider simulator")).toBeTruthy();
+    expect(await screen.findByText("Needs wider support")).toBeTruthy();
     expect(screen.getByText("country eligibility")).toBeTruthy();
     expect(screen.getByText("device fingerprinting")).toBeTruthy();
     expect(screen.queryByText("Exploit verified")).toBeNull();
@@ -170,12 +177,14 @@ describe("commerce incentive workbench", () => {
     const user = userEvent.setup();
     render(<CommerceWorkbench />);
 
-    await user.click(screen.getAllByRole("button", { name: "Fresh-attack with Muse" })[0]!);
+    await user.click(screen.getByRole("tab", { name: /Repairs/ }));
+    await user.click(screen.getAllByRole("button", { name: "Fresh Muse attack" })[0]!);
 
     const retest = await screen.findByRole("status", { name: "Fresh repair test" });
     expect(within(retest).getByText("$77 honest reward")).toBeTruthy();
-    expect(within(retest).getByText("9 day reward delay")).toBeTruthy();
+    expect(within(retest).getByText("9 day delay")).toBeTruthy();
     expect(within(retest).queryByText("$999 honest reward")).toBeNull();
-    expect(await screen.findByText("Live investigation ready · $8.25 budget left")).toBeTruthy();
+    await user.click(screen.getByRole("tab", { name: /Policy/ }));
+    expect(await screen.findByText("Live ready · $8.25 left")).toBeTruthy();
   });
 });
