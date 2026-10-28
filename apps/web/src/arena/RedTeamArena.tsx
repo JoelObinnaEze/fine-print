@@ -224,7 +224,7 @@ export function RedTeamArena({
             })
           }
         >
-          Load verified Muse run
+          Load recorded starting-policy run
         </button>
       </div>
       {(message || strategies.length > 0) && (

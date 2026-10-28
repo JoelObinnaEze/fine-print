@@ -2,14 +2,16 @@
 
 Fine Print is a bounded recycling-depot game about specification gaming. A policy can pay exactly what it says while rewarding behavior its author did not intend. Meta translates plain language and searches for candidate traces; deterministic host code validates every policy, action, payout, and final claim.
 
-The current local build demonstrates the full red-team loop: write a reward rule in plain English, review and activate Meta's bounded interpretation, launch a durable live Muse attack, replay its exact host-verified trace, compare immutable patches, and run the result through an honest/adversarial policy gauntlet.
+The current local build demonstrates the full red-team loop: write a reward rule in plain English, review Meta's bounded interpretation field by field, launch a durable live Muse attack, replay its exact host-verified trace, patch the rule, and fresh-attack the selected patch. Honest workflows, known failures, recorded replay, and fresh search are reported separately rather than collapsed into one safety score.
 
 ## Verified result
 
 - The scripted trace pays 30 points for one bottle deposited three times while recycling zero items.
 - A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
+- The once-per-item patch removes repeat rewards but still fails on eligibility and completion: the disclosed gauntlet preserves 3/3 honest workflows while blocking only 1/3 known failures. A fresh Muse search verified an ineligible-item payout of 10 points with zero useful recycling in 8 requests at $0.052854.
+- The eligible-processing patch preserves 3/3 honest workflows and blocks all 3 disclosed failures. A separate 12-request Muse search found no exploit within its bounded budget at $0.098851; that is evidence from one search, not a proof of safety.
 - An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
-- The newest portable trace is [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json); [artifacts/attacker-live-v2.json](artifacts/attacker-live-v2.json) preserves the repeated-deposit search, and [artifacts/evaluation.json](artifacts/evaluation.json) contains the reproducible offline scorecard.
+- [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json) preserves the fresh first-patch exploit; [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserves the starting-policy search, and [artifacts/evaluation.json](artifacts/evaluation.json) contains the reproducible offline evaluation.
 
 These are observations from bounded traces, not a proof that a policy is safe.
 
@@ -70,6 +72,7 @@ The model never receives credentials, filesystem access, database handles, hidde
 - [Evaluation report](docs/evaluation.md)
 - [Three-minute demo script](docs/demo-script.md)
 - [Competition expansion brief](docs/ideas/red-team-arena.md)
+- [Opera GX verification capture](artifacts/opera-fine-print.png)
 - [Submission and judge-access checklist](docs/submission-checklist.md)
 - [Implementation ledger](tasks/todo.md)
 - [Original build brief](creation.md)

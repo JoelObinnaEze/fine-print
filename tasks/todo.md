@@ -302,12 +302,28 @@
 **Acceptance criteria:**
 - [x] A user can submit plain English, review Meta's bounded candidate, and explicitly activate it.
 - [x] A live Muse attack is idempotent, durable, host-verified, and loadable as an exact replay.
-- [x] The active and patched policies show honest coverage, adversarial leakage, and a scoped tested-policy score.
+- [x] The active and patched policies show separate honest-workflow and known-failure counts without a composite safety score.
 - [x] Recorded live evidence remains demoable without making a paid request.
 
-**Verification:** Route/service tests cover durable attack creation and idempotent replay. UI tests cover translation/activation, the live attack/export flow, exact recorded evidence, patch comparison, and the deterministic policy gauntlet. In Opera GX, the vague rule was refused, an explicit candidate required activation, and a browser-launched `muse-spark-1.3` search used 11 requests/$0.082180 to produce a 17-action host-verified trace worth 20 reward and zero useful items; the eligible-processing patch paid zero and scored 100/100 in the disclosed gauntlet. The portable export is `artifacts/attacker-live-arena.json`. The 77-test suite, strict typecheck, production build, high-severity audit, and post-fix browser console check pass on October 27, 2026.
+**Verification:** Route/service tests cover durable attack creation and idempotent replay. UI tests cover translation/activation, the live attack/export flow, exact recorded evidence, patch comparison, and the deterministic policy gauntlet. In Opera GX, the vague rule was refused, an explicit candidate required activation, and a browser-launched `muse-spark-1.3` search used 11 requests/$0.082180 to produce a 17-action host-verified trace worth 20 reward and zero useful items; the eligible-processing patch paid zero on the replayed trace. The portable export is `artifacts/attacker-live-arena.json`. The 77-test suite, strict typecheck, production build, high-severity audit, and post-fix browser console check pass on October 27, 2026.
 
 **Dependencies:** Tasks 13–16
 
 **Files likely touched:** `apps/server/src/runs/live-attack-service.ts`, `apps/server/src/app.ts`, `apps/web/src/arena/`, `apps/web/src/policy/PolicyGauntlet.tsx`, `tests/server/live-attacks.test.ts`, `tests/web/replay.test.tsx`
+
+## Task 18: Prove the attack-patch-reattack loop
+
+**Description:** Make the central claim visible and testable: the first patch removes duplicate rewards but leaves eligibility/completion failures, while the stronger patch survives disclosed regression cases and a separate bounded search.
+
+**Acceptance criteria:**
+- [x] Original, once-per-item, and eligible-processing policies report 0/3, 1/3, and 3/3 known failures blocked while preserving 3/3 honest workflows.
+- [x] Selecting a patch makes that exact policy the next fresh Muse target and activates the attacked policy when its trace loads.
+- [x] Policy interpretation exposes trigger, eligibility, repetition, and completion assumptions before activation.
+- [x] Recorded replay, regression cases, and fresh searches remain distinctly labeled.
+
+**Verification:** A fresh `muse-spark-1.3` run against the once-per-item patch verified an ineligible-item payout of 10 points with zero useful recycling in 8 requests/$0.052854; run `21d24ea4-6cba-4481-a5f0-2698cf025841` is exported at `artifacts/attacker-once-per-item.json`. A separate 12-request/$0.098851 search against the eligible-processing patch concluded with no exploit found within budget. The first once-per-item attempt observed the reward but failed to submit before its 12-request/$0.092949 limit; the attacker now receives turn-budget reminders and the targeted provider test proves that instruction. Opera GX showed the 3/3→1/3→3/3 progression, patch-specific fresh-attack labels, recorded-run provenance, and a clean console. Graphify produced 528 nodes, 1,476 edges, 19 labeled communities, and a 21.8× token-reduction benchmark; its report preserves the edge-collapse health warning. The 79-test suite, strict typecheck, production build, and high-severity audit pass. Total settled Meta usage is $0.481384 with $9.514541 of the authorized app cap remaining.
+
+**Dependencies:** Task 17
+
+**Files likely touched:** `apps/web/src/arena/`, `apps/web/src/policy/PolicyGauntlet.tsx`, `apps/server/src/providers/meta-attacker.ts`, `tests/web/`, `tests/provider/meta-attacker.test.ts`, `docs/demo-script.md`
 

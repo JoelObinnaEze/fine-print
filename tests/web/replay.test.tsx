@@ -25,7 +25,7 @@ describe("offline replay game", () => {
     expect(screen.getByRole("heading", { name: "Can you earn rewards without recycling anything?" })).toBeTruthy();
     expect(screen.getByText("30 points paid. 0 items recycled.")).toBeTruthy();
     expect(screen.getByText(/Search budget: up to 12 requests/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Load verified Muse run" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Load recorded starting-policy run" })).toBeTruthy();
     expect(screen.getByRole("region", { name: "Bottle Return depot" })).toBeTruthy();
     expect(screen.getAllByText("Pay 10 points whenever an item is deposited.")).toHaveLength(2);
     expect(screen.getByLabelText("Paid points").textContent).toBe("0");

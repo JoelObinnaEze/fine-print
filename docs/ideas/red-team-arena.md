@@ -15,7 +15,7 @@ Fine Print is now a red-team arena:
 3. The user explicitly activates the reviewed candidate.
 4. Muse searches through bounded inspect/act/reset/submit tools.
 5. The host replays the exact trace, generates payout receipts, and records usage.
-6. A patch replays the same actions and runs through an honest/adversarial gauntlet.
+6. A patch replays the same actions, runs through separate honest/adversarial cases, and becomes the target of the next fresh search.
 
 This follows the strongest pattern in prior Meta hackathon winners: a legible real-world problem, a model-produced domain artifact, and an immediately visible result. It also makes specification gaming—the gap between a written objective and the intended outcome—the product experience rather than background theory.
 
@@ -28,7 +28,7 @@ This follows the strongest pattern in prior Meta hackathon winners: a legible re
 
 ## Scope and claims
 
-The implemented scope is one deterministic world, one bounded policy language, a live attacker, exact replay/export, manual patches, and a three-case gauntlet. It does not claim formal verification or universal policy safety. Scores describe only the disclosed honest workflow and adversarial traces.
+The implemented scope is one deterministic world, one bounded policy language, a live attacker, exact replay/export, manual patches, three honest workflows, and three disclosed failure mechanisms. It does not claim formal verification or universal policy safety. Replay, regression cases, and fresh searches remain visibly separate evidence.
 
 ## Research anchors
 

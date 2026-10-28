@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "1",
+  "runId": "21d24ea4-6cba-4481-a5f0-2698cf025841",
+  "parentRunId": null,
+  "branchTick": null,
+  "provenance": "live_model",
+  "modelId": "muse-spark-1.3",
+  "limits": {
+    "maxInferenceRequests": 12,
+    "maxTicksPerTrial": 120,
+    "maxTrials": 4,
+    "searchDeadlineMs": 120000,
+    "requestTimeoutMs": 30000,
+    "maxActionsPerBatch": 16
+  },
+  "usage": {
+    "requests": 8,
+    "promptTokens": 34783,
+    "completionTokens": 2206,
+    "totalTokens": 36989,
+    "actualUsd": 0.052854
+  },
+  "policy": {
+    "schemaVersion": 1,
+    "clauses": [
+      {
+        "id": "deposit-reward",
+        "enabled": true,
+        "trigger": "deposit",
+        "points": 10,
+        "eligibleOnly": false,
+        "materials": [
+          "plastic",
+          "aluminium",
+          "carton",
+          "rubbish"
+        ],
+        "repetition": "once_per_item"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "move",
+      "direction": "up"
+    },
+    {
+      "type": "take",
+      "itemId": "X1"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "move",
+      "direction": "right"
+    },
+    {
+      "type": "deposit"
+    }
+  ],
+  "initialStateHash": "9502330680e4077b1df4d56fe4883ea73cd958b8a7251be93620f5974912354a",
+  "replayHash": "be321b5509bcc61a9118d7bdd5e47986c5010227c2db470e4f48ecebc1fcbaaf",
+  "integrityHash": "4f9182e3c83f091250ab5551a4d18d22268a93149f268486dce2bf93faec7b5b"
+}
