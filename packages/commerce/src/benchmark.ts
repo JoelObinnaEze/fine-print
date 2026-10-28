@@ -1,0 +1,234 @@
+import type { CommerceAction, CommerceGoal, CommercePolicy } from "./contracts.js";
+import {
+  CommerceSimulationError,
+  createCommerceState,
+  replayCommerce,
+  type CommerceReplay,
+  type CommerceState,
+} from "./simulator.js";
+
+export const commerceGoal: CommerceGoal = {
+  metric: "retained_revenue",
+  minimumUsd: 20,
+  description: "Acquire a referred customer who contributes at least $20 in retained revenue.",
+};
+
+export const vulnerableCommercePolicy: CommercePolicy = {
+  schemaVersion: 1,
+  name: "Immediate referral credit",
+  referral: {
+    rewardUsd: 10,
+    qualifyingPurchaseUsd: 20,
+    qualificationBasis: "gross_purchase",
+    issuance: "immediate",
+    refundHandling: "keep",
+    returnWindowDays: 30,
+    promoCreditCountsTowardThreshold: true,
+  },
+};
+
+export const refundAttackActions: readonly CommerceAction[] = [
+  { type: "refer", referrerId: "A", customerId: "B" },
+  {
+    type: "purchase",
+    accountId: "B",
+    purchaseId: "P1",
+    priceUsd: 20,
+    promoCreditUsd: 0,
+  },
+  { type: "refund", accountId: "B", purchaseId: "P1" },
+];
+
+export const honestCustomerActions: readonly CommerceAction[] = [
+  { type: "refer", referrerId: "A", customerId: "B" },
+  {
+    type: "purchase",
+    accountId: "B",
+    purchaseId: "H1",
+    priceUsd: 20,
+    promoCreditUsd: 0,
+  },
+  { type: "advance_days", days: 30 },
+];
+
+export interface CommerceRepairCandidate {
+  readonly id: "delay" | "pending_reversal" | "net_retained";
+  readonly label: string;
+  readonly tradeoff: string;
+  readonly complexity: 1 | 2 | 3;
+  readonly policy: CommercePolicy;
+}
+
+export const commerceRepairCandidates: readonly CommerceRepairCandidate[] = [
+  {
+    id: "delay",
+    label: "Delay credit until returns close",
+    tradeoff: "Simple evidence rule; customers wait through the full return window.",
+    complexity: 1,
+    policy: {
+      ...vulnerableCommercePolicy,
+      name: "Return-window delayed credit",
+      referral: {
+        ...vulnerableCommercePolicy.referral,
+        issuance: "after_return_window",
+        refundHandling: "reverse",
+      },
+    },
+  },
+  {
+    id: "pending_reversal",
+    label: "Show pending credit and reverse refunds",
+    tradeoff: "Faster feedback, but pending and reversal states add accounting complexity.",
+    complexity: 3,
+    policy: {
+      ...vulnerableCommercePolicy,
+      name: "Pending reversible referral credit",
+      referral: {
+        ...vulnerableCommercePolicy.referral,
+        issuance: "pending",
+        refundHandling: "reverse",
+      },
+    },
+  },
+  {
+    id: "net_retained",
+    label: "Qualify on net retained spending",
+    tradeoff: "Aligns the reward with business value, but requires retained-spend accounting.",
+    complexity: 2,
+    policy: {
+      ...vulnerableCommercePolicy,
+      name: "Net retained spend qualification",
+      referral: {
+        ...vulnerableCommercePolicy.referral,
+        qualificationBasis: "net_retained_spend",
+        issuance: "after_return_window",
+        refundHandling: "reverse",
+        promoCreditCountsTowardThreshold: false,
+      },
+    },
+  },
+];
+
+export interface CommerceExploitVerification {
+  readonly status: "exploit_verified" | "no_exploit";
+  readonly availableRewardUsd: number;
+  readonly retainedRevenueUsd: number;
+  readonly unintendedPayoutUsd: number;
+  readonly reason: string;
+}
+
+function availableRewardUsd(replay: CommerceReplay): number {
+  return replay.state.rewards
+    .filter((reward) => reward.status === "available")
+    .reduce((total, reward) => total + reward.amountUsd, 0);
+}
+
+export function verifyCommerceExploit(
+  replay: CommerceReplay,
+  goal: CommerceGoal,
+): CommerceExploitVerification {
+  const available = availableRewardUsd(replay);
+  const retained = replay.state.retainedRevenueUsd;
+  const isExploit = retained < goal.minimumUsd && available > 0;
+  return {
+    status: isExploit ? "exploit_verified" : "no_exploit",
+    availableRewardUsd: available,
+    retainedRevenueUsd: retained,
+    unintendedPayoutUsd: isExploit ? available : 0,
+    reason: isExploit
+      ? `$${available} became spendable while retained revenue was $${retained}, below the $${goal.minimumUsd} intended outcome.`
+      : `No spendable reward was observed below the $${goal.minimumUsd} retained-revenue outcome.`,
+  };
+}
+
+export function minimizeCommerceExploit(
+  initialState: CommerceState,
+  inputActions: readonly CommerceAction[],
+  policy: CommercePolicy,
+  goal: CommerceGoal,
+): readonly CommerceAction[] {
+  if (
+    verifyCommerceExploit(replayCommerce(initialState, inputActions, policy), goal).status !==
+    "exploit_verified"
+  ) {
+    throw new CommerceSimulationError("Trace does not contain a verified commerce exploit");
+  }
+  let actions = [...inputActions];
+  let index = 0;
+  while (index < actions.length) {
+    const candidate = actions.filter((_action, candidateIndex) => candidateIndex !== index);
+    try {
+      const verification = verifyCommerceExploit(
+        replayCommerce(initialState, candidate, policy),
+        goal,
+      );
+      if (verification.status === "exploit_verified") {
+        actions = candidate;
+        index = 0;
+        continue;
+      }
+    } catch (error) {
+      if (!(error instanceof CommerceSimulationError)) throw error;
+    }
+    index += 1;
+  }
+  return actions;
+}
+
+export interface CommerceStrategyMetrics {
+  readonly availableRewardUsd: number;
+  readonly pendingRewardUsd: number;
+  readonly reversedRewardUsd: number;
+  readonly retainedRevenueUsd: number;
+  readonly verifiedUnintendedPayoutUsd: number;
+  readonly rewardDelayDays: number | null;
+}
+
+export interface CommerceDesignEvaluation {
+  readonly attack: CommerceStrategyMetrics;
+  readonly honest: CommerceStrategyMetrics;
+  readonly knownAttackBlocked: boolean;
+  readonly honestRewardsPreserved: boolean;
+}
+
+function metrics(replay: CommerceReplay, goal: CommerceGoal): CommerceStrategyMetrics {
+  const verification = verifyCommerceExploit(replay, goal);
+  const rewards = replay.state.rewards;
+  const availableRewards = rewards.filter((reward) => reward.status === "available");
+  const available = availableRewards.reduce((total, reward) => total + reward.amountUsd, 0);
+  return {
+    availableRewardUsd: available,
+    pendingRewardUsd: rewards
+      .filter((reward) => reward.status === "pending" || reward.status === "scheduled")
+      .reduce((total, reward) => total + reward.amountUsd, 0),
+    reversedRewardUsd: rewards
+      .filter((reward) => reward.status === "reversed")
+      .reduce((total, reward) => total + reward.amountUsd, 0),
+    retainedRevenueUsd: replay.state.retainedRevenueUsd,
+    verifiedUnintendedPayoutUsd: verification.unintendedPayoutUsd,
+    rewardDelayDays:
+      availableRewards.length === 0
+        ? null
+        : Math.max(
+            ...availableRewards.map((reward) => reward.availableDay - reward.createdDay),
+          ),
+  };
+}
+
+export function evaluateCommerceDesign(
+  policy: CommercePolicy,
+  goal: CommerceGoal,
+  attackActions: readonly CommerceAction[],
+  honestActions: readonly CommerceAction[],
+): CommerceDesignEvaluation {
+  const attack = metrics(replayCommerce(createCommerceState(), attackActions, policy), goal);
+  const honest = metrics(replayCommerce(createCommerceState(), honestActions, policy), goal);
+  return {
+    attack,
+    honest,
+    knownAttackBlocked: attack.verifiedUnintendedPayoutUsd === 0,
+    honestRewardsPreserved:
+      honest.retainedRevenueUsd >= goal.minimumUsd &&
+      honest.availableRewardUsd === policy.referral.rewardUsd * 2,
+  };
+}

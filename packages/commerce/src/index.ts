@@ -11,6 +11,16 @@ export {
   createCommerceState,
   replayCommerce,
 } from "./simulator.js";
+export {
+  commerceGoal,
+  commerceRepairCandidates,
+  evaluateCommerceDesign,
+  honestCustomerActions,
+  minimizeCommerceExploit,
+  refundAttackActions,
+  verifyCommerceExploit,
+  vulnerableCommercePolicy,
+} from "./benchmark.js";
 export type {
   CommerceAction,
   CommerceGoal,
@@ -25,3 +35,9 @@ export type {
   CommerceReward,
   CommerceState,
 } from "./simulator.js";
+export type {
+  CommerceDesignEvaluation,
+  CommerceExploitVerification,
+  CommerceRepairCandidate,
+  CommerceStrategyMetrics,
+} from "./benchmark.js";

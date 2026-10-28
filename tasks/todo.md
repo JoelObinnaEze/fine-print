@@ -452,11 +452,11 @@
 **Description:** Add a three-action referral/refund benchmark, minimize verified traces, and evaluate delayed, pending/reversible, and net-retained repair designs against both adversarial and legitimate strategies.
 
 **Acceptance criteria:**
-- [ ] The vulnerable policy yields available credit with zero retained revenue after a refund.
-- [ ] Trace reduction removes every action that is unnecessary while preserving the verified failure.
-- [ ] Candidate comparison reports unintended payout, honest reward, retained revenue, reward delay, and tested tradeoffs.
+- [x] The vulnerable policy yields available credit with zero retained revenue after a refund.
+- [x] Trace reduction removes every action that is unnecessary while preserving the verified failure.
+- [x] Candidate comparison reports unintended payout, honest reward, retained revenue, reward delay, and tested tradeoffs.
 
-**Verification:** Focused tests cover the vulnerable trace, all repair candidates, trace minimality, and honest-customer preservation.
+**Verification:** Three benchmark tests prove `$20` spendable credit versus `$0` retained revenue, reduce a noisy four-action trace to the irreducible three transactions, and show all three candidate designs block the known trace while preserving `$20` honest reward on `$20` retained revenue. Seven focused commerce tests and strict typecheck pass.
 
 **Dependencies:** Task 25
 

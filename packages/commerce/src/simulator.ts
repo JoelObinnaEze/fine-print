@@ -146,7 +146,10 @@ function issueReferralRewards(
   if (state.rewards.some((reward) => reward.referralId === referral.id)) return state;
   if (qualificationAmount(purchase, policy) < policy.referral.qualifyingPurchaseUsd) return state;
   const status = rewardStatus(policy);
-  const availableDay = state.day + policy.referral.returnWindowDays;
+  const availableDay =
+    policy.referral.issuance === "immediate"
+      ? state.day
+      : state.day + policy.referral.returnWindowDays;
   const rewards = [referral.referrerId, referral.customerId].map(
     (accountId): CommerceReward => ({
       id: `${referral.id}:${purchase.id}:${accountId}`,
