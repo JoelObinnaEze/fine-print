@@ -356,3 +356,43 @@
 
 **Files touched:** `apps/web/src/arena/PolicyComposer.tsx`, `apps/web/src/arena/RedTeamArena.tsx`, `apps/web/src/depot/Depot.tsx`, `apps/web/src/policy/PolicyCard.tsx`, `apps/web/src/policy/PolicyGauntlet.tsx`, `apps/web/src/styles.css`, `tests/web/policy-gauntlet.test.ts`, `tests/web/replay.test.tsx`
 
+## Task 21: Explain every bounded search outcome
+
+**Description:** Turn the host's existing verification states and provider turns into a durable report that remains useful when no exploit is verified.
+
+**Acceptance criteria:**
+- [ ] Reports distinguish verified exploit, rejected candidate, completed search, and interrupted search.
+- [ ] Every report states requests used, trials completed, actions tested, and the host-computed reason.
+- [ ] Valid attempted action traces remain visible after unsuccessful searches without replacing loaded replay evidence.
+
+**Verification:** Focused service and web tests cover all four outcomes, idempotent replay, and a judge-readable unsuccessful report.
+
+**Dependencies:** Task 20
+
+**Files likely touched:** `apps/server/src/runs/live-attack-service.ts`, `apps/web/src/arena/RedTeamArena.tsx`, `tests/server/live-attacks.test.ts`, `tests/web/replay.test.tsx`
+
+**Estimated scope:** Medium
+
+## Task 22: Add an interacting batch-bonus benchmark
+
+**Description:** Add one deliberately vulnerable bonus based on the hopper reaching three items and compare it with a patch based on permanent processing receipts.
+
+**Acceptance criteria:**
+- [ ] Cycling the third hopper item can repeatedly earn the vulnerable batch bonus without useful processing.
+- [ ] The receipt-backed patch pays only on each third successfully processed eligible item.
+- [ ] Honest processing of three and six eligible items retains one and two legitimate batch bonuses, respectively.
+- [ ] The UI labels this as a designed benchmark and makes either policy selectable as the next Muse target.
+
+**Verification:** Policy tests cover exploit and honest traces; component/browser checks show the vulnerable and patched evidence without a paid request.
+
+**Dependencies:** Task 21
+
+**Files likely touched:** `packages/policy/src/schema.ts`, `packages/policy/src/receipts.ts`, `packages/policy/src/interpret.ts`, `apps/web/src/replay-data.ts`, `apps/web/src/policy/PolicyGauntlet.tsx`, `tests/policy/policy.test.ts`, `tests/web/replay.test.tsx`
+
+**Estimated scope:** Medium
+
+## Checkpoint: Harder failures are assessable
+
+- [ ] Unsuccessful live searches are understandable without developer tools.
+- [ ] One interacting-rule failure and its receipt-backed patch are deterministic, replayable, and honest-work preserving.
+

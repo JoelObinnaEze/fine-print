@@ -11,6 +11,7 @@ import {
 } from "../providers/meta-attacker.js";
 import type { Policy } from "../../../../packages/policy/src/schema.js";
 import { parsePolicy } from "../../../../packages/policy/src/schema.js";
+import { actionSchema, type Action } from "../../../../packages/engine/src/actions.js";
 import { canonicalHash } from "../../../../packages/engine/src/canonical-hash.js";
 import { createBottleReturnState } from "../../../../packages/engine/src/scenario.js";
 import {
@@ -47,6 +48,24 @@ export interface LiveAttackResult {
     readonly completionTokens: number;
     readonly totalTokens: number;
     readonly actualUsd: number;
+  };
+  readonly report: {
+    readonly outcome:
+      | "verified_exploit"
+      | "candidate_rejected"
+      | "search_completed"
+      | "search_interrupted";
+    readonly reason: string;
+    readonly requestsUsed: number;
+    readonly trialsCompleted: number;
+    readonly actionsTested: number;
+    readonly attemptedTraces: readonly {
+      readonly request: number;
+      readonly trial: number;
+      readonly kind: "trial" | "candidate";
+      readonly hypothesis: string;
+      readonly actions: readonly Action[];
+    }[];
   };
 }
 
@@ -93,6 +112,84 @@ function usage(turns: readonly MetaAttackerTurnRecord[]): LiveAttackResult["usag
     ...totals,
     actualUsd: Number(totals.actualUsd.toFixed(6)),
   };
+}
+
+function searchReport(
+  verification: AttackerSearchResult,
+  turns: readonly MetaAttackerTurnRecord[],
+): LiveAttackResult["report"] {
+  let trial = 1;
+  const attemptedTraces: LiveAttackResult["report"]["attemptedTraces"][number][] = [];
+  for (const turn of turns) {
+    for (const call of turn.toolCalls) {
+      if (call.name === "reset_trial") {
+        trial = Math.min(trial + 1, ATTACKER_LIMITS.maxTrials);
+        continue;
+      }
+      if (call.name !== "act" && call.name !== "submit_candidate") continue;
+      const rawActions =
+        typeof call.arguments === "object" && call.arguments !== null
+          ? Reflect.get(call.arguments, "actions")
+          : undefined;
+      if (!Array.isArray(rawActions)) continue;
+      const actions: Action[] = [];
+      for (const rawAction of rawActions) {
+        const parsed = actionSchema.safeParse(rawAction);
+        if (!parsed.success) {
+          actions.length = 0;
+          break;
+        }
+        actions.push(parsed.data);
+      }
+      if (actions.length === 0) continue;
+      attemptedTraces.push({
+        request: turn.sequence,
+        trial,
+        kind: call.name === "submit_candidate" ? "candidate" : "trial",
+        hypothesis: turn.strategySummary,
+        actions,
+      });
+    }
+  }
+
+  const common = {
+    requestsUsed: verification.requestsUsed,
+    trialsCompleted: trial,
+    actionsTested: attemptedTraces.reduce((total, trace) => total + trace.actions.length, 0),
+    attemptedTraces,
+  };
+  switch (verification.status) {
+    case "exploit_verified":
+      return {
+        ...common,
+        outcome: "verified_exploit",
+        reason: `Host replay verified ${verification.excessReward} unintended reward points across ${verification.verifiedActionCount} actions.`,
+      };
+    case "no_exploit_in_submitted_trace":
+      return {
+        ...common,
+        outcome: "candidate_rejected",
+        reason: `Host replay found ${verification.excessReward} unintended reward points, so the submitted candidate did not meet the exploit definition.`,
+      };
+    case "candidate_invalid":
+      return {
+        ...common,
+        outcome: "candidate_rejected",
+        reason: "The submitted candidate failed host action validation and was not replayed.",
+      };
+    case "no_exploit_found_within_budget":
+      return {
+        ...common,
+        outcome: "search_completed",
+        reason: "The bounded search completed; no exploit was found within the stated budget.",
+      };
+    case "run_incomplete":
+      return {
+        ...common,
+        outcome: "search_interrupted",
+        reason: "The provider request failed, timed out, or returned malformed output before the bounded search completed.",
+      };
+  }
 }
 
 export class LiveAttackService {
@@ -210,6 +307,7 @@ export class LiveAttackService {
         verification,
         turns: publicTurns(provider.turns),
         usage: usage(provider.turns),
+        report: searchReport(verification, provider.turns),
       };
       const finishedAt = new Date().toISOString();
       this.#database.transaction(() => {

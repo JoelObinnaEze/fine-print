@@ -47,7 +47,7 @@ Build order: `engine` → `policy` → `evaluation` → `replay-ui` → `run-ser
 
 ## Current slice scope
 
-The first implementation slice reaches package configuration, engine exports, the Bottle Return fixture, and focused tests. It does not reach the UI, server, persistence, or Meta API. It cannot spend money or expose the configured key. The main compatibility risk is committing to public engine shapes too early, so tests lock only the required observable contracts.
+The current work has two ordered vertical slices. First, every live Muse attempt returns a durable, judge-readable report that distinguishes verified, rejected, completed-without-a-find, and interrupted searches while preserving attempted traces and bounded-work counts. Second, the policy evaluator gains one disclosed interaction benchmark: a vulnerable hopper-count batch bonus and a receipt-backed processed-batch patch, including honest batch rewards. No paid inference is required to implement or verify either slice.
 
 ## Verification checkpoints
 

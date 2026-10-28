@@ -152,6 +152,14 @@ describe("offline replay game", () => {
               },
             ],
             usage: { requests: 2, totalTokens: 500, actualUsd: 0.001 },
+            report: {
+              outcome: "verified_exploit",
+              reason: "Host replay verified 30 unintended reward points.",
+              requestsUsed: 2,
+              trialsCompleted: 1,
+              actionsTested: 12,
+              attemptedTraces: [],
+            },
           },
           { status: 201 },
         );
@@ -179,7 +187,7 @@ describe("offline replay game", () => {
     expect(screen.getByRole("button", { name: "Test once-per-item patch" }).getAttribute("aria-pressed")).toBe("false");
   });
 
-  it("separates an inconclusive live attempt from the previously loaded replay", async () => {
+  it("explains an unsuccessful live attempt without replacing the loaded replay", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
       if (url === "/api/health") {
@@ -190,8 +198,38 @@ describe("offline replay game", () => {
       }
       if (url === "/api/attacks") {
         return Response.json(
-          { error: { message: "The live search did not return a verified trace." } },
-          { status: 422 },
+          {
+            searchId: "completed-search",
+            runId: null,
+            provenance: "live_model",
+            modelId: "muse-spark-1.3",
+            replayed: false,
+            verification: {
+              status: "no_exploit_found_within_budget",
+              totalReward: 0,
+              usefulItems: 0,
+              requestsUsed: 4,
+            },
+            turns: [{ sequence: 1, strategySummary: "Test batch eligibility.", toolNames: ["act"] }],
+            usage: { requests: 4, totalTokens: 800, actualUsd: 0.002 },
+            report: {
+              outcome: "search_completed",
+              reason: "The bounded search completed; no exploit was found within the stated budget.",
+              requestsUsed: 4,
+              trialsCompleted: 2,
+              actionsTested: 7,
+              attemptedTraces: [
+                {
+                  request: 1,
+                  trial: 1,
+                  kind: "trial",
+                  hypothesis: "Test batch eligibility.",
+                  actions: [{ type: "wait" }, { type: "finish" }],
+                },
+              ],
+            },
+          },
+          { status: 201 },
         );
       }
       return Response.json({ error: { message: "not found" } }, { status: 404 });
@@ -206,10 +244,15 @@ describe("offline replay game", () => {
     await user.click(screen.getByRole("button", { name: "Fresh-attack eligible-processing patch" }));
 
     const attempt = await screen.findByRole("status", { name: "Latest live attempt" });
-    expect(within(attempt).getByText("Inconclusive — no verified trace")).toBeTruthy();
+    expect(within(attempt).getByText("Search completed")).toBeTruthy();
     expect(within(attempt).getByText("eligible-processing patch")).toBeTruthy();
     expect(within(attempt).getByText("Live Meta search")).toBeTruthy();
-    expect(within(attempt).getByText("The live search did not return a verified trace.")).toBeTruthy();
+    expect(within(attempt).getByText("The bounded search completed; no exploit was found within the stated budget.")).toBeTruthy();
+    expect(within(attempt).getByText("4 requests")).toBeTruthy();
+    expect(within(attempt).getByText("2 trials")).toBeTruthy();
+    expect(within(attempt).getByText("7 actions")).toBeTruthy();
+    expect(within(attempt).getByText("Test batch eligibility.")).toBeTruthy();
+    expect(within(attempt).getByText("wait → finish")).toBeTruthy();
 
     const loadedEvidence = screen.getByRole("region", { name: "Loaded replay evidence" });
     expect(within(loadedEvidence).getByText("Exploit independently verified")).toBeTruthy();

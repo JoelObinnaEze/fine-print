@@ -77,6 +77,39 @@ class FixtureProvider implements AttackerProvider {
   }
 }
 
+class SingleTurnProvider implements AttackerProvider {
+  readonly turns: MetaAttackerTurnRecord[] = [];
+
+  constructor(
+    private readonly strategySummary: string,
+    private readonly toolCall: MetaAttackerTurnRecord["toolCalls"][number] | null,
+  ) {}
+
+  async next(input: AttackerProviderInput): Promise<AttackerTurn> {
+    const toolCalls = this.toolCall ? [this.toolCall] : [];
+    this.turns.push({
+      sequence: input.requestNumber,
+      strategySummary: this.strategySummary,
+      toolCalls,
+      usage: {
+        promptTokens: 40,
+        completionTokens: 10,
+        totalTokens: 50,
+        actualUsd: 0.0001,
+      },
+    });
+    return { strategySummary: this.strategySummary, toolCalls };
+  }
+}
+
+class InterruptedProvider implements AttackerProvider {
+  readonly turns: MetaAttackerTurnRecord[] = [];
+
+  async next(): Promise<AttackerTurn> {
+    throw new Error("fixture provider unavailable");
+  }
+}
+
 const databases = [] as ReturnType<typeof openDatabase>[];
 const servers: Server[] = [];
 
@@ -92,7 +125,7 @@ afterEach(async () => {
   for (const database of databases.splice(0)) database.close();
 });
 
-function createServices(provider: FixtureProvider) {
+function createServices(provider: AttackerProvider & { readonly turns: readonly MetaAttackerTurnRecord[] }) {
   const database = openDatabase(":memory:");
   databases.push(database);
   const config = readServerConfig({
@@ -139,6 +172,12 @@ describe("live browser attack lifecycle", () => {
         },
       ],
       usage: { requests: 1, totalTokens: 150, actualUsd: 0.000338 },
+      report: {
+        outcome: "verified_exploit",
+        requestsUsed: 1,
+        trialsCompleted: 1,
+        actionsTested: exploitActions.length,
+      },
     });
     expect(first.runId).toEqual(expect.any(String));
     expect(runs.get(first.runId!)).toMatchObject({
@@ -152,6 +191,76 @@ describe("live browser attack lifecycle", () => {
 
     expect(replayed).toEqual({ ...first, replayed: true });
     expect(provider.calls).toBe(1);
+  });
+
+  it.each([
+    {
+      name: "completed search",
+      provider: () =>
+        new SingleTurnProvider("No exploit found in the bounded search.", {
+          id: "conclude",
+          name: "conclude_no_exploit",
+          arguments: { summary: "No exploit found within this budget." },
+        }),
+      outcome: "search_completed",
+      status: "no_exploit_found_within_budget",
+      actionsTested: 0,
+      reason: /no exploit was found within/i,
+    },
+    {
+      name: "rejected candidate",
+      provider: () =>
+        new SingleTurnProvider("Submit a harmless candidate for host verification.", {
+          id: "submit",
+          name: "submit_candidate",
+          arguments: {
+            actions: [{ type: "finish" }],
+            summary: "This trace should not earn a reward.",
+            evidenceEventIds: [],
+          },
+        }),
+      outcome: "candidate_rejected",
+      status: "no_exploit_in_submitted_trace",
+      actionsTested: 1,
+      reason: /host replay found 0 unintended reward points/i,
+    },
+    {
+      name: "interrupted search",
+      provider: () => new InterruptedProvider(),
+      outcome: "search_interrupted",
+      status: "run_incomplete",
+      actionsTested: 0,
+      reason: /provider request failed/i,
+    },
+  ])("returns a durable report for a $name", async ({ provider, outcome, status, actionsTested, reason }) => {
+    const { attacks } = createServices(provider());
+
+    const result = await attacks.run(policy, `report-${outcome}`);
+
+    expect(result.verification.status).toBe(status);
+    expect(result.report).toMatchObject({
+      outcome,
+      requestsUsed: 1,
+      trialsCompleted: 1,
+      actionsTested,
+    });
+    expect(result.report.reason).toMatch(reason);
+    if (outcome === "candidate_rejected") {
+      expect(result.report.attemptedTraces).toEqual([
+        expect.objectContaining({
+          request: 1,
+          trial: 1,
+          kind: "candidate",
+          hypothesis: "Submit a harmless candidate for host verification.",
+          actions: [{ type: "finish" }],
+        }),
+      ]);
+    }
+
+    await expect(attacks.run(policy, `report-${outcome}`)).resolves.toEqual({
+      ...result,
+      replayed: true,
+    });
   });
 
   it("rejects an idempotency key reused for another policy", async () => {

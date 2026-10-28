@@ -27,9 +27,38 @@ export interface AttackTarget {
 }
 
 interface AttackAttempt {
-  readonly status: "running" | "verified" | "inconclusive";
+  readonly status:
+    | "running"
+    | "verified_exploit"
+    | "candidate_rejected"
+    | "search_completed"
+    | "search_interrupted";
   readonly target: string;
   readonly detail: string;
+  readonly requests?: number;
+  readonly trials?: number;
+  readonly actions?: number;
+  readonly traces?: readonly {
+    readonly request: number;
+    readonly trial: number;
+    readonly kind: "trial" | "candidate";
+    readonly hypothesis: string;
+    readonly actions: readonly Action[];
+  }[];
+}
+
+const attemptTitles: Record<AttackAttempt["status"], string> = {
+  running: "Search in progress",
+  verified_exploit: "Exploit verified",
+  candidate_rejected: "Candidate rejected",
+  search_completed: "Search completed",
+  search_interrupted: "Search interrupted",
+};
+
+function actionLabel(action: Action): string {
+  if (action.type === "move") return `move ${action.direction}`;
+  if ("itemId" in action) return `${action.type} ${action.itemId}`;
+  return action.type;
 }
 
 export const scriptedEvidence: RunEvidence = {
@@ -131,19 +160,48 @@ export function RedTeamArena({
           readonly totalTokens?: number;
           readonly actualUsd?: number;
         };
+        readonly report?: {
+          readonly outcome?: Exclude<AttackAttempt["status"], "running">;
+          readonly reason?: string;
+          readonly requestsUsed?: number;
+          readonly trialsCompleted?: number;
+          readonly actionsTested?: number;
+          readonly attemptedTraces?: readonly {
+            readonly request: number;
+            readonly trial: number;
+            readonly kind: "trial" | "candidate";
+            readonly hypothesis: string;
+            readonly actions: readonly unknown[];
+          }[];
+        };
       };
-      if (!response.ok || !result.runId || !result.verification || !result.usage) {
+      if (!response.ok || !result.verification || !result.usage || !result.report?.outcome) {
         throw new Error(result.error?.message ?? "The live search did not return a verified trace.");
       }
+      const traces = (result.report.attemptedTraces ?? []).map((trace) => ({
+        ...trace,
+        actions: trace.actions.map(parseAction),
+      }));
+      const strategySummaries = (result.turns ?? [])
+        .map((turn) => turn.strategySummary?.trim())
+        .filter((summary): summary is string => Boolean(summary));
+      setStrategies(strategySummaries);
+      setAttempt({
+        status: result.report.outcome,
+        target: attackTarget.label,
+        detail: result.report.reason ?? "The host did not provide an outcome reason.",
+        requests: result.report.requestsUsed ?? result.usage.requests ?? 0,
+        trials: result.report.trialsCompleted ?? 0,
+        actions: result.report.actionsTested ?? 0,
+        traces,
+      });
+      if (result.report.outcome !== "verified_exploit") return;
+      if (!result.runId) throw new Error("The verified search did not return a replay ID.");
       const exportResponse = await fetch(`/api/runs/${result.runId}/export`);
       if (!exportResponse.ok) throw new Error("The verified replay export was unavailable.");
       const exported = (await exportResponse.json()) as { readonly actions?: readonly unknown[] };
       if (!Array.isArray(exported.actions)) throw new Error("The replay export was invalid.");
       const actions = exported.actions.map(parseAction);
-      const strategySummaries = (result.turns ?? [])
-        .map((turn) => turn.strategySummary?.trim())
-        .filter((summary): summary is string => Boolean(summary));
-      setStrategies(strategySummaries);
       onLoadTrace(
         actions,
         {
@@ -162,13 +220,17 @@ export function RedTeamArena({
         attackTarget,
       );
       setAttempt({
-        status: "verified",
+        status: "verified_exploit",
         target: attackTarget.label,
         detail: "The exact model trace is loaded below. Every reward was recomputed by the host.",
+        requests: result.report.requestsUsed ?? result.usage.requests ?? 0,
+        trials: result.report.trialsCompleted ?? 0,
+        actions: result.report.actionsTested ?? 0,
+        traces,
       });
     } catch (error) {
       setAttempt({
-        status: "inconclusive",
+        status: "search_interrupted",
         target: attackTarget.label,
         detail: error instanceof Error ? error.message : "The live attack failed.",
       });
@@ -211,17 +273,30 @@ export function RedTeamArena({
           >
             <p className="eyebrow">Latest live attempt</p>
             <strong>
-              {attempt.status === "running"
-                ? "Search in progress"
-                : attempt.status === "verified"
-                  ? "Verified trace loaded"
-                  : "Inconclusive — no verified trace"}
+              {attemptTitles[attempt.status]}
             </strong>
             <dl>
               <div><dt>Target</dt><dd>{attempt.target}</dd></div>
               <div><dt>Provenance</dt><dd>Live Meta search</dd></div>
+              {attempt.requests !== undefined && <div><dt>Requests</dt><dd>{attempt.requests} requests</dd></div>}
+              {attempt.trials !== undefined && <div><dt>Trials</dt><dd>{attempt.trials} trials</dd></div>}
+              {attempt.actions !== undefined && <div><dt>Actions tested</dt><dd>{attempt.actions} actions</dd></div>}
             </dl>
             <p>{attempt.detail}</p>
+            {attempt.traces && attempt.traces.length > 0 && (
+              <details className="arena__traces">
+                <summary>Inspect {attempt.traces.length} attempted trace{attempt.traces.length === 1 ? "" : "s"}</summary>
+                <ol>
+                  {attempt.traces.map((trace) => (
+                    <li key={`${trace.request}-${trace.trial}-${trace.kind}`}>
+                      <b>Request {trace.request} · trial {trace.trial} · {trace.kind}</b>
+                      <span>{trace.hypothesis}</span>
+                      <code>{trace.actions.map(actionLabel).join(" → ")}</code>
+                    </li>
+                  ))}
+                </ol>
+              </details>
+            )}
           </div>
         )}
         <section className="arena__loaded-evidence" aria-label="Loaded replay evidence">
