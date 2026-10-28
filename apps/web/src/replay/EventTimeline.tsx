@@ -22,13 +22,18 @@ export function EventTimeline({
   readonly onSelect: (frame: number) => void;
 }) {
   return (
-    <section className="timeline-panel" aria-labelledby="timeline-title">
+    <section
+      className="timeline-panel"
+      aria-labelledby="timeline-title"
+      data-replay-shortcuts=""
+      tabIndex={0}
+    >
       <div className="timeline-heading">
         <div>
           <p className="eyebrow">Host-derived trace</p>
           <h2 id="timeline-title">Event timeline</h2>
         </div>
-        <p>Use ← → to step · Space to play</p>
+        <p>Focus this panel · use ← → to step · Space to play</p>
       </div>
       <ol className="timeline-list">
         {frames.slice(1).map((frame, index) => {

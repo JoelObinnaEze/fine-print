@@ -79,11 +79,15 @@ export function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (!(event.target instanceof HTMLElement)) return;
+      if (event.target.closest("button, input, textarea, select, a, [contenteditable='true']")) return;
+      if (!event.target.closest("[data-replay-shortcuts]")) return;
       if (event.key === "ArrowRight") {
+        event.preventDefault();
         setFrameIndex((current) => Math.min(current + 1, activeFrames.length - 1));
       }
       if (event.key === "ArrowLeft") {
+        event.preventDefault();
         setFrameIndex((current) => Math.max(0, current - 1));
       }
       if (event.key === " ") {

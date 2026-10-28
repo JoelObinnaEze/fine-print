@@ -64,11 +64,29 @@ describe("offline replay game", () => {
   it("steps with the keyboard", async () => {
     const user = userEvent.setup();
     render(<App />);
+    const timeline = screen.getByRole("region", { name: "Event timeline" });
+    timeline.focus();
 
     await user.keyboard("{ArrowRight}");
     expect(screen.getByLabelText("Current tick").textContent).toBe("1");
     await user.keyboard("{ArrowLeft}");
     expect(screen.getByLabelText("Current tick").textContent).toBe("0");
+    await user.keyboard(" ");
+    expect(screen.getByRole("button", { name: "Pause replay" })).toBeTruthy();
+  });
+
+  it("leaves Space available for page scrolling outside the replay timeline", () => {
+    render(<App />);
+    const space = new KeyboardEvent("keydown", {
+      key: " ",
+      bubbles: true,
+      cancelable: true,
+    });
+
+    document.body.dispatchEvent(space);
+
+    expect(space.defaultPrevented).toBe(false);
+    expect(screen.getByRole("button", { name: "Play replay" })).toBeTruthy();
   });
 
   it("replays the same trace under a process-only patch without mutating the original", async () => {
