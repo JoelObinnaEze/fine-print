@@ -327,3 +327,17 @@
 
 **Files likely touched:** `apps/web/src/arena/`, `apps/web/src/policy/PolicyGauntlet.tsx`, `apps/server/src/providers/meta-attacker.ts`, `tests/web/`, `tests/provider/meta-attacker.test.ts`, `docs/demo-script.md`
 
+## Task 19: Audit and polish the judge-facing interface
+
+**Description:** Apply an Impeccable technical audit without changing Fine Print's editorial/industrial identity.
+
+**Acceptance criteria:**
+- [x] The complete workflow sits inside one main landmark and the selected timeline event is exposed to assistive technology.
+- [x] Phone layouts preserve the title/tagline hierarchy without clipping or horizontal document overflow.
+- [x] Interactive controls meet a 44 px touch floor and retain visible focus, hover, disabled, and reduced-motion states.
+- [x] Template-like side accents are replaced without weakening pass/fail or evidence hierarchy.
+
+**Verification:** The audit improved the technical score from 15/20 to 18/20. Opera GX passes at 320 px and 1440 px with no document overflow, no sub-44 px controls, one complete main landmark, correct `aria-current` state, and no app-origin console errors. Impeccable's detector findings were resolved except its decorative-grid advisory, which is intentional because the grid is the actual 9×7 depot. The 80-test suite, strict typecheck, production build, and high-severity audit pass on October 27, 2026.
+
+**Files touched:** `apps/web/src/App.tsx`, `apps/web/src/replay/EventTimeline.tsx`, `apps/web/src/styles.css`, `tests/web/replay.test.tsx`
+

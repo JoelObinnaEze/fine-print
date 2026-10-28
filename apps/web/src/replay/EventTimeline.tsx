@@ -34,6 +34,7 @@ export function EventTimeline({
           return (
             <li key={event.sequence}>
               <button
+                aria-current={index + 1 === activeFrame ? "step" : undefined}
                 className={`${index + 1 === activeFrame ? "is-active" : ""}${payout ? " has-payout" : ""}`}
                 type="button"
                 onClick={() => onSelect(index + 1)}

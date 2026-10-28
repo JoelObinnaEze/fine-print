@@ -108,122 +108,124 @@ export function App() {
         <p className="tagline">You write the rules. The AI finds what you forgot.</p>
       </header>
 
-      <RedTeamArena
-        evidence={evidence}
-        activeSourceText={sourceText}
-        attackTarget={attackTarget}
-        onActivatePolicy={(policy, text) => {
-          setActivePolicy(policy);
-          setSourceText(text);
-          setIsPlaying(false);
-          setFrameIndex(0);
-          setActivePatch(null);
-          setTraceActions(exploitActions);
-          setEvidence(scriptedEvidence);
-        }}
-        onLoadTrace={(actions, nextEvidence, target) => {
-          setIsPlaying(false);
-          setFrameIndex(0);
-          setActivePatch(null);
-          setTraceActions(actions);
-          setEvidence(nextEvidence);
-          setActivePolicy(target.policy);
-          setSourceText(target.sourceText);
-        }}
-      />
-
-      <main className="game-layout">
-        <PolicyCard
-          policy={activePolicy}
-          activePatch={activePatch}
-          onTestPatch={setActivePatch}
-          sourceText={sourceText}
+      <main>
+        <RedTeamArena
+          evidence={evidence}
+          activeSourceText={sourceText}
+          attackTarget={attackTarget}
+          onActivatePolicy={(policy, text) => {
+            setActivePolicy(policy);
+            setSourceText(text);
+            setIsPlaying(false);
+            setFrameIndex(0);
+            setActivePatch(null);
+            setTraceActions(exploitActions);
+            setEvidence(scriptedEvidence);
+          }}
+          onLoadTrace={(actions, nextEvidence, target) => {
+            setIsPlaying(false);
+            setFrameIndex(0);
+            setActivePatch(null);
+            setTraceActions(actions);
+            setEvidence(nextEvidence);
+            setActivePolicy(target.policy);
+            setSourceText(target.sourceText);
+          }}
         />
-        <Depot state={frame.state} />
-        <aside className="evidence-panel" aria-label="Run evidence">
-          <p className="eyebrow">Observed result</p>
-          <h2>Reward ≠ outcome</h2>
-          <div className="counter counter--reward">
-            <span>Paid points</span>
-            <output aria-label="Paid points">{frame.state.rewardLedger.totalPoints}</output>
-          </div>
-          <div className="counter counter--useful">
-            <span>Actually recycled</span>
-            <output aria-label="Actually recycled">
-              {frame.state.outcomeLedger.processedEligibleItemIds.length}
-            </output>
-          </div>
-          <div className="receipt-stack" aria-live="polite">
-            <h3>Payout receipts</h3>
-            {frame.payouts.length === 0 ? (
-              <p className="empty-receipt">No payout yet.</p>
-            ) : (
-              frame.payouts.map((payout, index) => (
-                <p
-                  className="receipt"
-                  key={`${payout.eventSequence}-${payout.clauseId}-${index}`}
-                >
-                  <b>+{payout.amount}</b>
-                  <span>
-                    {payout.clauseId} paid {payout.amount} points to {payout.itemId} at tick {payout.eventSequence}.
-                  </span>
-                </p>
-              ))
-            )}
-          </div>
-          {patchedFrame && (
-            <section className="comparison-panel" aria-label="Patch comparison">
-              <h3>Counterfactual replay</h3>
-              <p className="comparison-basis">Same root state · same {frameIndex} actions · separate ledgers</p>
-              <div className="comparison-values">
-                <p>
-                  <span>Original</span>
-                  <output aria-label="Original paid points">{frame.state.rewardLedger.totalPoints}</output>
-                </p>
-                <p>
-                  <span>Patched</span>
-                  <output aria-label="Patched paid points">{patchedFrame.state.rewardLedger.totalPoints}</output>
-                </p>
-              </div>
-              {activePatch === "eligibleProcessing" && frame.state.rewardLedger.totalPoints > 0 && (
-                <p className="comparison-verdict">This exploit stopped paying.</p>
-              )}
-              {activePatch === "oncePerItem" && frame.state.rewardLedger.totalPoints > patchedFrame.state.rewardLedger.totalPoints && (
-                <p className="comparison-verdict">Repeated payouts stopped; premature deposit payment remains.</p>
-              )}
-            </section>
-          )}
-        </aside>
-      </main>
 
-      <ReplayControls
-        frame={frameIndex}
-        frameCount={activeFrames.length}
-        isPlaying={isPlaying}
-        speed={speed}
-        canJumpToPayout={nextPayoutFrame >= 0}
-        onFrameChange={selectFrame}
-        onPlayToggle={() => setIsPlaying((current) => !current)}
-        onSpeedChange={setSpeed}
-        onJumpToPayout={() => nextPayoutFrame >= 0 && selectFrame(nextPayoutFrame)}
-      />
-      <EventTimeline
-        frames={activeFrames}
-        activeFrame={frameIndex}
-        onSelect={selectFrame}
-      />
-      <PolicyGauntlet
-        policy={activePolicy}
-        patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
-      />
-      <PolicyLab
-        originalPolicy={activePolicy}
-        patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
-        frame={frame}
-        patchedFrame={patchedFrame ?? null}
-        actionCount={traceActions.length}
-        evidence={evidence}
-      />
+        <div className="game-layout">
+          <PolicyCard
+            policy={activePolicy}
+            activePatch={activePatch}
+            onTestPatch={setActivePatch}
+            sourceText={sourceText}
+          />
+          <Depot state={frame.state} />
+          <aside className="evidence-panel" aria-label="Run evidence">
+            <p className="eyebrow">Observed result</p>
+            <h2>Reward ≠ outcome</h2>
+            <div className="counter counter--reward">
+              <span>Paid points</span>
+              <output aria-label="Paid points">{frame.state.rewardLedger.totalPoints}</output>
+            </div>
+            <div className="counter counter--useful">
+              <span>Actually recycled</span>
+              <output aria-label="Actually recycled">
+                {frame.state.outcomeLedger.processedEligibleItemIds.length}
+              </output>
+            </div>
+            <div className="receipt-stack" aria-live="polite">
+              <h3>Payout receipts</h3>
+              {frame.payouts.length === 0 ? (
+                <p className="empty-receipt">No payout yet.</p>
+              ) : (
+                frame.payouts.map((payout, index) => (
+                  <p
+                    className="receipt"
+                    key={`${payout.eventSequence}-${payout.clauseId}-${index}`}
+                  >
+                    <b>+{payout.amount}</b>
+                    <span>
+                      {payout.clauseId} paid {payout.amount} points to {payout.itemId} at tick {payout.eventSequence}.
+                    </span>
+                  </p>
+                ))
+              )}
+            </div>
+            {patchedFrame && (
+              <section className="comparison-panel" aria-label="Patch comparison">
+                <h3>Counterfactual replay</h3>
+                <p className="comparison-basis">Same root state · same {frameIndex} actions · separate ledgers</p>
+                <div className="comparison-values">
+                  <p>
+                    <span>Original</span>
+                    <output aria-label="Original paid points">{frame.state.rewardLedger.totalPoints}</output>
+                  </p>
+                  <p>
+                    <span>Patched</span>
+                    <output aria-label="Patched paid points">{patchedFrame.state.rewardLedger.totalPoints}</output>
+                  </p>
+                </div>
+                {activePatch === "eligibleProcessing" && frame.state.rewardLedger.totalPoints > 0 && (
+                  <p className="comparison-verdict">This exploit stopped paying.</p>
+                )}
+                {activePatch === "oncePerItem" && frame.state.rewardLedger.totalPoints > patchedFrame.state.rewardLedger.totalPoints && (
+                  <p className="comparison-verdict">Repeated payouts stopped; premature deposit payment remains.</p>
+                )}
+              </section>
+            )}
+          </aside>
+        </div>
+
+        <ReplayControls
+          frame={frameIndex}
+          frameCount={activeFrames.length}
+          isPlaying={isPlaying}
+          speed={speed}
+          canJumpToPayout={nextPayoutFrame >= 0}
+          onFrameChange={selectFrame}
+          onPlayToggle={() => setIsPlaying((current) => !current)}
+          onSpeedChange={setSpeed}
+          onJumpToPayout={() => nextPayoutFrame >= 0 && selectFrame(nextPayoutFrame)}
+        />
+        <EventTimeline
+          frames={activeFrames}
+          activeFrame={frameIndex}
+          onSelect={selectFrame}
+        />
+        <PolicyGauntlet
+          policy={activePolicy}
+          patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
+        />
+        <PolicyLab
+          originalPolicy={activePolicy}
+          patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
+          frame={frame}
+          patchedFrame={patchedFrame ?? null}
+          actionCount={traceActions.length}
+          evidence={evidence}
+        />
+      </main>
     </div>
   );
 }

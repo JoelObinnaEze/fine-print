@@ -37,6 +37,19 @@ describe("offline replay game", () => {
     expect(screen.getByText("Observed traces, not a safety guarantee.")).toBeTruthy();
   });
 
+  it("keeps the full workflow in the main landmark and exposes the active timeline step", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const main = screen.getByRole("main");
+    expect(within(main).getByRole("heading", { name: "Can you earn rewards without recycling anything?" })).toBeTruthy();
+    expect(within(main).getByRole("heading", { name: "Policy Lab" })).toBeTruthy();
+
+    const firstStep = within(main).getByRole("button", { name: /1.*Agent moved/i });
+    await user.click(firstStep);
+    expect(firstStep.getAttribute("aria-current")).toBe("step");
+  });
+
   it("jumps to the next payout and keeps useful work separate", async () => {
     const user = userEvent.setup();
     render(<App />);
