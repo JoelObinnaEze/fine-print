@@ -1,6 +1,7 @@
 import type { EngineEvent } from "../../../../packages/engine/src/index.js";
 
 import type { ReplayFrame } from "../replay-data.js";
+import type { AttackReasoning } from "../arena/RedTeamArena.js";
 
 function describeEvent(event: EngineEvent): string {
   if (!event.success) return `Action rejected: ${event.reason?.replaceAll("_", " ")}`;
@@ -12,10 +13,12 @@ function describeEvent(event: EngineEvent): string {
 export function EventTimeline({
   frames,
   activeFrame,
+  reasoning,
   onSelect,
 }: {
   readonly frames: readonly ReplayFrame[];
   readonly activeFrame: number;
+  readonly reasoning: AttackReasoning | null;
   readonly onSelect: (frame: number) => void;
 }) {
   return (
@@ -47,6 +50,18 @@ export function EventTimeline({
           );
         })}
       </ol>
+      {reasoning && (
+        <aside className="timeline-reasoning" aria-labelledby="timeline-reasoning-title">
+          <p className="eyebrow">Model claim vs host evidence</p>
+          <h3 id="timeline-reasoning-title">Attack reasoning</h3>
+          <dl>
+            <div><dt>Model hypothesis</dt><dd>{reasoning.hypothesis}</dd></div>
+            <div><dt>Test</dt><dd><code>{reasoning.test}</code></dd></div>
+            <div><dt>Host observation</dt><dd>{reasoning.observation}</dd></div>
+            <div><dt>Host verdict</dt><dd>{reasoning.verdict}</dd></div>
+          </dl>
+        </aside>
+      )}
     </section>
   );
 }

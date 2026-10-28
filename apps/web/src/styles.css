@@ -72,7 +72,9 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .arena__traces li { padding-left: .2rem; }
 .arena__traces b, .arena__traces span, .arena__traces code { display: block; }
 .arena__traces b { color: var(--paper); font-size: .68rem; text-transform: uppercase; }
+.arena__traces small { display: block; margin-top: .35rem; color: #bcb3a3; font-size: .58rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
 .arena__traces code { margin-top: .25rem; overflow-wrap: anywhere; color: var(--green-pale); font-size: .68rem; }
+.arena__save-regression { width: 100%; min-height: 2.75rem; margin-top: .65rem; border: 1px solid var(--green-pale); background: transparent; color: var(--green-pale); cursor: pointer; font-weight: 900; }
 .arena__primary { min-height: 2.75rem; padding: .7rem 1rem; border: 1px solid var(--amber-pale); background: var(--amber); color: white; cursor: pointer; font-weight: 900; }
 .arena__primary:hover:not(:disabled) { background: #a84f12; }
 .arena__primary:disabled { cursor: wait; opacity: .5; }
@@ -86,6 +88,14 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .arena__activity { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .5rem; padding-top: 1rem; border-top: 1px solid #66645e; }
 .arena__activity p { margin: 0; padding: .45rem .6rem; background: #323833; color: #eee5d5; font-size: .75rem; }
 .arena__activity b { margin-right: .35rem; color: var(--amber-pale); }
+.arena__regressions { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(14rem, .7fr) 2fr; gap: 1rem; padding-top: 1rem; border-top: 1px solid #66645e; }
+.arena__regressions p { margin: .25rem 0 0; color: #d2c9b8; font-size: .75rem; }
+.arena__regressions ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.arena__regressions li { display: grid; gap: .2rem; padding: .65rem; border-top: 3px solid var(--amber-pale); background: #323833; }
+.arena__regressions li.is-pass { border-top-color: var(--green-pale); }
+.arena__regressions li b { color: var(--amber-pale); font-size: .68rem; text-transform: uppercase; }
+.arena__regressions li.is-pass b { color: var(--green-pale); }
+.arena__regressions li small { color: #bcb3a3; }
 
 .game-layout { display: grid; grid-template-columns: minmax(13rem, .8fr) minmax(32rem, 2.2fr) minmax(15rem, .9fr); gap: 1rem; padding: 1rem 0; }
 .game-layout > * { min-width: 0; }
@@ -172,6 +182,12 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .timeline-list span { display: block; color: var(--muted); font: 700 .65rem ui-monospace, monospace; }
 .timeline-list b { display: block; margin-top: .25rem; font-size: .76rem; }
 .timeline-list em { display: block; margin-top: .35rem; color: #81360f; font-size: .68rem; font-style: normal; font-weight: 900; }
+.timeline-reasoning { margin: 1rem; padding: 1rem; border-left: 4px solid var(--green); background: var(--paper-deep); }
+.timeline-reasoning h3 { margin-bottom: .7rem; }
+.timeline-reasoning dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: .7rem; margin: 0; }
+.timeline-reasoning dt { color: var(--muted); font-size: .62rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.timeline-reasoning dd { margin: .2rem 0 0; font-size: .78rem; font-weight: 700; }
+.timeline-reasoning code { overflow-wrap: anywhere; font-size: .68rem; }
 
 .gauntlet { margin-top: 1rem; padding: 1rem; }
 .gauntlet__heading { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 2px solid var(--ink); }
@@ -246,6 +262,7 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
   .arena { grid-template-areas: "intro" "steps" "composer" "proof"; grid-template-columns: 1fr; padding: 1rem; }
   .arena__steps { grid-template-columns: 1fr 1fr; }
   .arena__proof { grid-template-columns: 1fr; }
+  .arena__regressions { grid-template-columns: 1fr; }
   .arena__composer { grid-template-columns: 1fr; }
   .arena__composer-actions, .arena__candidate { grid-column: auto; }
   .arena__composer-actions { grid-template-columns: 1fr; }
@@ -260,6 +277,7 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
   .replay-controls { grid-template-columns: 1fr 1fr; }
   .replay-controls .primary-control, .scrubber { grid-column: 1 / -1; }
   .timeline-heading { display: block; }
+  .timeline-reasoning dl { grid-template-columns: 1fr; }
   .policy-lab__heading { display: block; }
   .provenance-grid, .policy-lab__comparison { grid-template-columns: 1fr 1fr; }
   .policy-lab__comparison > section { grid-column: 1 / -1; }

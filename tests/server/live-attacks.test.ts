@@ -300,10 +300,55 @@ describe("live browser attack lifecycle", () => {
     });
 
     expect(response.status).toBe(201);
-    await expect(response.json()).resolves.toMatchObject({
+    const result = await response.json() as { readonly runId: string };
+    expect(result).toMatchObject({
       searchId: "browser-route-1",
       modelId: "muse-spark-1.3",
       verification: { status: "exploit_verified", totalReward: 30 },
     });
+
+    const save = await fetch(`${baseUrl}/api/regressions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ runId: result.runId, label: "Repeated deposit" }),
+    });
+    expect(save.status).toBe(201);
+    await expect(save.json()).resolves.toMatchObject({
+      replayed: false,
+      regressionCase: { label: "Repeated deposit", expectedExcessReward: 30 },
+    });
+    const duplicate = await fetch(`${baseUrl}/api/regressions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ runId: result.runId, label: "Duplicate" }),
+    });
+    expect(duplicate.status).toBe(200);
+
+    const evaluated = await fetch(`${baseUrl}/api/regressions/evaluate`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        policy: {
+          ...policy,
+          clauses: [
+            {
+              ...policy.clauses[0]!,
+              trigger: "process",
+              eligibleOnly: true,
+              materials: ["plastic", "aluminium"],
+              repetition: "once_per_item",
+            },
+          ],
+        },
+      }),
+    });
+    expect(evaluated.status).toBe(200);
+    await expect(evaluated.json()).resolves.toEqual([
+      expect.objectContaining({
+        label: "Repeated deposit",
+        blocked: true,
+        current: expect.objectContaining({ excessReward: 0, totalReward: 0 }),
+      }),
+    ]);
   });
 });

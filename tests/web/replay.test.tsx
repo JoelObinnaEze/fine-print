@@ -136,6 +136,7 @@ describe("offline replay game", () => {
 
   it("runs a live Meta attack and loads the host-verified trace", async () => {
     let attackedPolicy: unknown;
+    let regressionSaved = false;
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const url = String(input);
       if (url === "/api/health") {
@@ -178,8 +179,41 @@ describe("offline replay game", () => {
               requestsUsed: 2,
               trialsCompleted: 1,
               actionsTested: 12,
-              attemptedTraces: [],
+              attemptedTraces: [
+                {
+                  request: 2,
+                  trial: 1,
+                  kind: "candidate",
+                  hypothesis: "Repeated deposits may pay before useful processing.",
+                  actions: exploitActions,
+                },
+              ],
             },
+          },
+          { status: 201 },
+        );
+      }
+      if (url === "/api/regressions/evaluate") {
+        return Response.json(
+          regressionSaved
+            ? [
+                {
+                  id: "saved-case",
+                  label: "once-per-item patch exploit",
+                  expectedExcessReward: 30,
+                  blocked: true,
+                  current: { totalReward: 10, usefulItems: 0, excessReward: 0 },
+                },
+              ]
+            : [],
+        );
+      }
+      if (url === "/api/regressions") {
+        regressionSaved = true;
+        return Response.json(
+          {
+            replayed: false,
+            regressionCase: { id: "saved-case", label: "once-per-item patch exploit" },
           },
           { status: 201 },
         );
@@ -201,10 +235,22 @@ describe("offline replay game", () => {
     expect(attackedPolicy).toEqual(patchPolicies.oncePerItem);
     expect(screen.getByText("muse-spark-1.3")).toBeTruthy();
     expect(screen.getByText("Test repeated deposits.")).toBeTruthy();
+    const reasoning = screen.getByRole("complementary", { name: "Attack reasoning" });
+    expect(within(reasoning).getByText("Model hypothesis")).toBeTruthy();
+    expect(within(reasoning).getByText("Repeated deposits may pay before useful processing.")).toBeTruthy();
+    expect(within(reasoning).getByText("Host observation")).toBeTruthy();
+    expect(within(reasoning).getByText("30 reward points · 0 useful items")).toBeTruthy();
+    expect(within(reasoning).getByText("Host verdict")).toBeTruthy();
     expect(screen.getByLabelText("Replay position").getAttribute("max")).toBe("12");
     expect(screen.getAllByText("Pay only once per item when it is deposited.")).toHaveLength(2);
     expect((screen.getByLabelText("Reward policy") as HTMLTextAreaElement).value).toBe("Pay only once per item when it is deposited.");
     expect(screen.getByRole("button", { name: "Test once-per-item patch" }).getAttribute("aria-pressed")).toBe("false");
+
+    await user.click(screen.getByRole("button", { name: "Save as regression case" }));
+    expect(await screen.findByText("Saved regression case: once-per-item patch exploit.")).toBeTruthy();
+    const savedCases = screen.getByRole("region", { name: "Saved regression cases" });
+    expect(within(savedCases).getByText("Blocked")).toBeTruthy();
+    expect(within(savedCases).getByText("Expected 30 excess · now 0")).toBeTruthy();
   });
 
   it("explains an unsuccessful live attempt without replacing the loaded replay", async () => {

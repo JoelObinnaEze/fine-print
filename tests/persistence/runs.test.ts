@@ -123,4 +123,72 @@ describe("persistent runs", () => {
     expect(retried.run).toMatchObject({ id: recovered.id, status: "interrupted" });
     expect(reopened.prepare("SELECT count(*) AS count FROM runs").get()).toEqual({ count: 1 });
   });
+
+  it("persists a verified discovery and replays it against a patched policy after restart", async () => {
+    const database = createDatabase();
+    const service = new RunService(database);
+    const created = service.create(
+      {
+        policy,
+        actions: [
+          { type: "move", direction: "up" },
+          { type: "take", itemId: "B1" },
+          { type: "move", direction: "right" },
+          { type: "move", direction: "right" },
+          { type: "move", direction: "right" },
+          { type: "move", direction: "right" },
+          { type: "deposit" },
+        ],
+      },
+      "regression-source",
+    );
+    await waitForTerminal(service, created.run.id);
+
+    const saved = service.saveRegression(created.run.id, "Deposit before processing");
+    const duplicate = service.saveRegression(created.run.id, "Ignored duplicate label");
+
+    expect(saved).toMatchObject({
+      replayed: false,
+      regressionCase: {
+        sourceRunId: created.run.id,
+        label: "Deposit before processing",
+        expectedExcessReward: 10,
+      },
+    });
+    expect(duplicate).toEqual({ ...saved, replayed: true });
+    expect(database.prepare("SELECT count(*) AS count FROM regression_cases").get()).toEqual({ count: 1 });
+    database.close();
+
+    const reopened = openDatabase(database.name);
+    databases.push(reopened);
+    const recoveredService = new RunService(reopened);
+    const patched: Policy = {
+      schemaVersion: 1,
+      clauses: [
+        {
+          ...policy.clauses[0]!,
+          id: "processed-item",
+          trigger: "process",
+          eligibleOnly: true,
+          materials: ["plastic", "aluminium"],
+          repetition: "once_per_item",
+        },
+      ],
+    };
+
+    expect(recoveredService.evaluateRegressions(patched)).toEqual([
+      expect.objectContaining({
+        id: saved.regressionCase.id,
+        label: "Deposit before processing",
+        sourceRunId: created.run.id,
+        expectedExcessReward: 10,
+        blocked: true,
+        current: expect.objectContaining({
+          status: "no_exploit_in_submitted_trace",
+          excessReward: 0,
+          totalReward: 0,
+        }),
+      }),
+    ]);
+  });
 });

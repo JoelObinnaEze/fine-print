@@ -17,6 +17,7 @@ import {
   idempotencyKeySchema,
   replayUnderPolicySchema,
   runIdSchema,
+  saveRegressionSchema,
 } from "./runs/contracts.js";
 import {
   LiveAttackServiceError,
@@ -189,6 +190,25 @@ async function handle(
     }
     const result = await attacks.run(input.data.policy, keyResult.data);
     sendJson(response, result.replayed ? 200 : 201, result);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/regressions") {
+    const input = saveRegressionSchema.safeParse(await readJson(request));
+    if (!input.success) {
+      throw new RequestError(422, "VALIDATION_ERROR", "Regression request is invalid.", input.error.issues);
+    }
+    const result = service.saveRegression(input.data.runId, input.data.label);
+    sendJson(response, result.replayed ? 200 : 201, result);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/regressions/evaluate") {
+    const input = replayUnderPolicySchema.safeParse(await readJson(request));
+    if (!input.success) {
+      throw new RequestError(422, "VALIDATION_ERROR", "Regression evaluation is invalid.", input.error.issues);
+    }
+    sendJson(response, 200, service.evaluateRegressions(input.data.policy));
     return;
   }
 

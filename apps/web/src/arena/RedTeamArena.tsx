@@ -18,6 +18,14 @@ export interface RunEvidence {
   readonly runId: string | null;
   readonly verdict: string;
   readonly summary: string;
+  readonly reasoning?: AttackReasoning;
+}
+
+export interface AttackReasoning {
+  readonly hypothesis: string;
+  readonly test: string;
+  readonly observation: string;
+  readonly verdict: string;
 }
 
 export interface AttackTarget {
@@ -38,6 +46,8 @@ interface AttackAttempt {
   readonly requests?: number;
   readonly trials?: number;
   readonly actions?: number;
+  readonly runId?: string | null;
+  readonly observation?: string;
   readonly traces?: readonly {
     readonly request: number;
     readonly trial: number;
@@ -45,6 +55,18 @@ interface AttackAttempt {
     readonly hypothesis: string;
     readonly actions: readonly Action[];
   }[];
+}
+
+interface RegressionEvaluation {
+  readonly id: string;
+  readonly label: string;
+  readonly expectedExcessReward: number;
+  readonly blocked: boolean;
+  readonly current: {
+    readonly totalReward: number;
+    readonly usefulItems: number;
+    readonly excessReward: number;
+  };
 }
 
 const attemptTitles: Record<AttackAttempt["status"], string> = {
@@ -81,6 +103,12 @@ const recordedEvidence: RunEvidence = {
   runId: "74e918a0-786b-4046-b415-9de2e665a6df",
   verdict: "Exploit independently verified",
   summary: "Muse found a 30-point trace with zero useful recycling; the host preserved two rejected actions.",
+  reasoning: {
+    hypothesis: "The deposit trigger may pay repeatedly before useful processing is proven.",
+    test: "deposit B1 → retrieve B1 → deposit B1 → retrieve B1 → deposit B1",
+    observation: "30 reward points · 0 useful items",
+    verdict: "Host replay verified 30 unintended reward points.",
+  },
 };
 
 export function RedTeamArena({
@@ -105,6 +133,8 @@ export function RedTeamArena({
   const [isRunning, setIsRunning] = useState(false);
   const [attempt, setAttempt] = useState<AttackAttempt | null>(null);
   const [strategies, setStrategies] = useState<readonly string[]>([]);
+  const [regressions, setRegressions] = useState<readonly RegressionEvaluation[]>([]);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -126,6 +156,36 @@ export function RedTeamArena({
       active = false;
     };
   }, []);
+
+  const refreshRegressions = async () => {
+    const response = await fetch("/api/regressions/evaluate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ policy: attackTarget.policy }),
+    });
+    if (!response.ok) throw new Error("Regression cases are unavailable.");
+    const result = await response.json() as readonly RegressionEvaluation[];
+    setRegressions(result);
+  };
+
+  useEffect(() => {
+    let active = true;
+    setSaveMessage(null);
+    void fetch("/api/regressions/evaluate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ policy: attackTarget.policy }),
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Regression cases are unavailable.");
+        const result = await response.json() as readonly RegressionEvaluation[];
+        if (active) setRegressions(result);
+      })
+      .catch(() => active && setRegressions([]));
+    return () => {
+      active = false;
+    };
+  }, [attackTarget.policy]);
 
   const runLiveAttack = async () => {
     setIsRunning(true);
@@ -193,6 +253,8 @@ export function RedTeamArena({
         requests: result.report.requestsUsed ?? result.usage.requests ?? 0,
         trials: result.report.trialsCompleted ?? 0,
         actions: result.report.actionsTested ?? 0,
+        runId: result.runId ?? null,
+        observation: `${result.verification.totalReward ?? 0} reward points · ${result.verification.usefulItems ?? 0} useful items`,
         traces,
       });
       if (result.report.outcome !== "verified_exploit") return;
@@ -202,6 +264,7 @@ export function RedTeamArena({
       const exported = (await exportResponse.json()) as { readonly actions?: readonly unknown[] };
       if (!Array.isArray(exported.actions)) throw new Error("The replay export was invalid.");
       const actions = exported.actions.map(parseAction);
+      const candidateTrace = traces.find((trace) => trace.kind === "candidate");
       onLoadTrace(
         actions,
         {
@@ -216,6 +279,16 @@ export function RedTeamArena({
               ? "Exploit independently verified"
               : "Bounded search completed",
           summary: `${result.verification.totalReward ?? 0} reward points versus ${result.verification.usefulItems ?? 0} useful items.`,
+          ...(candidateTrace
+            ? {
+                reasoning: {
+                  hypothesis: candidateTrace.hypothesis,
+                  test: candidateTrace.actions.map(actionLabel).join(" → "),
+                  observation: `${result.verification.totalReward ?? 0} reward points · ${result.verification.usefulItems ?? 0} useful items`,
+                  verdict: result.report.reason ?? "Host verification completed.",
+                },
+              }
+            : {}),
         },
         attackTarget,
       );
@@ -226,6 +299,8 @@ export function RedTeamArena({
         requests: result.report.requestsUsed ?? result.usage.requests ?? 0,
         trials: result.report.trialsCompleted ?? 0,
         actions: result.report.actionsTested ?? 0,
+        runId: result.runId ?? null,
+        observation: `${result.verification.totalReward ?? 0} reward points · ${result.verification.usefulItems ?? 0} useful items`,
         traces,
       });
     } catch (error) {
@@ -236,6 +311,27 @@ export function RedTeamArena({
       });
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const saveRegression = async () => {
+    if (!attempt?.runId) return;
+    setSaveMessage("Saving verified trace…");
+    try {
+      const response = await fetch("/api/regressions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ runId: attempt.runId, label: `${attempt.target} exploit` }),
+      });
+      const result = await response.json() as {
+        readonly error?: { readonly message?: string };
+        readonly regressionCase?: { readonly label?: string };
+      };
+      if (!response.ok) throw new Error(result.error?.message ?? "Regression case could not be saved.");
+      setSaveMessage(`Saved regression case: ${result.regressionCase?.label ?? attempt.target}.`);
+      await refreshRegressions();
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : "Regression case could not be saved.");
     }
   };
 
@@ -290,13 +386,29 @@ export function RedTeamArena({
                   {attempt.traces.map((trace) => (
                     <li key={`${trace.request}-${trace.trial}-${trace.kind}`}>
                       <b>Request {trace.request} · trial {trace.trial} · {trace.kind}</b>
+                      <small>Model hypothesis</small>
                       <span>{trace.hypothesis}</span>
+                      <small>Test actions</small>
                       <code>{trace.actions.map(actionLabel).join(" → ")}</code>
+                      {trace.kind === "candidate" && attempt.observation && (
+                        <>
+                          <small>Host observation</small>
+                          <span>{attempt.observation}</span>
+                          <small>Host verdict</small>
+                          <span>{attempt.detail}</span>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ol>
               </details>
             )}
+            {attempt.status === "verified_exploit" && attempt.runId && (
+              <button className="arena__save-regression" type="button" onClick={() => void saveRegression()}>
+                Save as regression case
+              </button>
+            )}
+            {saveMessage && <p aria-live="polite">{saveMessage}</p>}
           </div>
         )}
         <section className="arena__loaded-evidence" aria-label="Loaded replay evidence">
@@ -341,6 +453,26 @@ export function RedTeamArena({
           Load recorded starting-policy run
         </button>
       </div>
+      {regressions.length > 0 && (
+        <section className="arena__regressions" aria-labelledby="regressions-title">
+          <div>
+            <p className="eyebrow">Accumulated evidence</p>
+            <h3 id="regressions-title">Saved regression cases</h3>
+            <p>Replayed automatically against {attackTarget.label}.</p>
+          </div>
+          <ul>
+            {regressions.map((regression) => (
+              <li className={regression.blocked ? "is-pass" : "is-fail"} key={regression.id}>
+                <b>{regression.blocked ? "Blocked" : "Still pays"}</b>
+                <span>{regression.label}</span>
+                <small>
+                  Expected {regression.expectedExcessReward} excess · now {regression.current.excessReward}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {strategies.length > 0 && (
         <div className="arena__activity" aria-live="polite">
           {strategies.map((strategy, index) => (

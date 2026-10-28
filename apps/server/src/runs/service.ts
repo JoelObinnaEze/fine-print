@@ -10,6 +10,7 @@ import { parsePolicy, type Policy } from "../../../../packages/policy/src/schema
 import { openDatabase, type AppDatabase } from "../persistence/database.js";
 import { initializeRunSchema, recoverUnfinishedRuns } from "../persistence/schema.js";
 import type { CreateRunInput } from "./contracts.js";
+import { verifyCandidate } from "./verifier.js";
 import {
   createRunExport,
   runLimitsSchema,
@@ -102,12 +103,46 @@ const terminalStatuses = new Set<RunStatus>([
 
 export class RunServiceError extends Error {
   constructor(
-    readonly code: "RUN_NOT_FOUND" | "IDEMPOTENCY_KEY_REUSED" | "INVALID_BRANCH" | "RUN_NOT_TERMINAL",
+    readonly code:
+      | "RUN_NOT_FOUND"
+      | "IDEMPOTENCY_KEY_REUSED"
+      | "INVALID_BRANCH"
+      | "RUN_NOT_TERMINAL"
+      | "REGRESSION_NOT_VERIFIED",
     message: string,
   ) {
     super(message);
     this.name = "RunServiceError";
   }
+}
+
+export interface RegressionCaseView {
+  readonly id: string;
+  readonly sourceRunId: string;
+  readonly label: string;
+  readonly expectedExcessReward: number;
+  readonly createdAt: string;
+}
+
+export interface RegressionEvaluation extends RegressionCaseView {
+  readonly blocked: boolean;
+  readonly current: {
+    readonly status: "exploit_verified" | "no_exploit_in_submitted_trace";
+    readonly totalReward: number;
+    readonly usefulItems: number;
+    readonly excessReward: number;
+  };
+}
+
+interface RegressionCaseRow {
+  readonly id: string;
+  readonly source_run_id: string;
+  readonly label: string;
+  readonly policy_json: string;
+  readonly initial_state_json: string;
+  readonly actions_json: string;
+  readonly expected_excess_reward: number;
+  readonly created_at: string;
 }
 
 export interface RunCreateMetadata {
@@ -350,6 +385,94 @@ export class RunService {
     return this.#view(run);
   }
 
+  saveRegression(
+    runId: string,
+    label: string,
+  ): { readonly regressionCase: RegressionCaseView; readonly replayed: boolean } {
+    const normalizedLabel = label.trim();
+    if (normalizedLabel.length === 0 || normalizedLabel.length > 80) {
+      throw new RunServiceError("REGRESSION_NOT_VERIFIED", "Regression label is invalid.");
+    }
+    const existing = this.#database
+      .prepare("SELECT * FROM regression_cases WHERE source_run_id = ?")
+      .get(runId) as RegressionCaseRow | undefined;
+    if (existing) return { regressionCase: this.#regressionView(existing), replayed: true };
+
+    const run = this.#require(runId);
+    if (run.status !== "completed") {
+      throw new RunServiceError("REGRESSION_NOT_VERIFIED", "Only completed runs can become regression cases.");
+    }
+    const actions = [...run.actions.slice(0, run.state.tick)];
+    const verification = verifyCandidate(run.initialState, run.policy, actions);
+    if (verification.status !== "exploit_verified") {
+      throw new RunServiceError(
+        "REGRESSION_NOT_VERIFIED",
+        "Only a host-verified exploit can become a regression case.",
+      );
+    }
+
+    const row: RegressionCaseRow = {
+      id: randomUUID(),
+      source_run_id: run.id,
+      label: normalizedLabel,
+      policy_json: JSON.stringify(run.policy),
+      initial_state_json: JSON.stringify(run.initialState),
+      actions_json: JSON.stringify(actions),
+      expected_excess_reward: verification.excessReward,
+      created_at: new Date().toISOString(),
+    };
+    try {
+      this.#database
+        .prepare(`
+          INSERT INTO regression_cases
+            (id, source_run_id, label, policy_json, initial_state_json, actions_json,
+             expected_excess_reward, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .run(
+          row.id,
+          row.source_run_id,
+          row.label,
+          row.policy_json,
+          row.initial_state_json,
+          row.actions_json,
+          row.expected_excess_reward,
+          row.created_at,
+        );
+    } catch (error) {
+      const raced = this.#database
+        .prepare("SELECT * FROM regression_cases WHERE source_run_id = ?")
+        .get(runId) as RegressionCaseRow | undefined;
+      if (!raced) throw error;
+      return { regressionCase: this.#regressionView(raced), replayed: true };
+    }
+    return { regressionCase: this.#regressionView(row), replayed: false };
+  }
+
+  evaluateRegressions(inputPolicy: Policy): readonly RegressionEvaluation[] {
+    const policy = parsePolicy(inputPolicy);
+    const rows = this.#database
+      .prepare("SELECT * FROM regression_cases ORDER BY created_at, id")
+      .all() as RegressionCaseRow[];
+    return rows.map((row) => {
+      const initialState = JSON.parse(row.initial_state_json) as WorldState;
+      const actions = (JSON.parse(row.actions_json) as unknown[]).map(parseAction);
+      const verification = verifyCandidate(initialState, policy, actions);
+      return {
+        ...this.#regressionView(row),
+        blocked: verification.status !== "exploit_verified",
+        current: {
+          status: verification.status === "exploit_verified"
+            ? "exploit_verified"
+            : "no_exploit_in_submitted_trace",
+          totalReward: verification.totalReward,
+          usefulItems: verification.usefulItems,
+          excessReward: verification.excessReward,
+        },
+      };
+    });
+  }
+
   eventsAfter(runId: string, sequence: number): readonly RunEvent[] {
     return this.#require(runId).events.filter((event) => event.sequence > sequence);
   }
@@ -475,6 +598,16 @@ export class RunService {
     this.#database
       .prepare("INSERT INTO events (run_id, sequence, type, data_json) VALUES (?, ?, ?, ?)")
       .run(runId, event.sequence, event.type, JSON.stringify(event.data));
+  }
+
+  #regressionView(row: RegressionCaseRow): RegressionCaseView {
+    return {
+      id: row.id,
+      sourceRunId: row.source_run_id,
+      label: row.label,
+      expectedExcessReward: row.expected_excess_reward,
+      createdAt: row.created_at,
+    };
   }
 
   #require(runId: string): StoredRun {

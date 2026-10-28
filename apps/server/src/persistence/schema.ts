@@ -102,6 +102,17 @@ export function initializeRunSchema(database: AppDatabase): void {
       usage_json TEXT NOT NULL,
       PRIMARY KEY (search_id, sequence)
     );
+
+    CREATE TABLE IF NOT EXISTS regression_cases (
+      id TEXT PRIMARY KEY,
+      source_run_id TEXT NOT NULL UNIQUE REFERENCES runs(id) ON DELETE CASCADE,
+      label TEXT NOT NULL,
+      policy_json TEXT NOT NULL,
+      initial_state_json TEXT NOT NULL,
+      actions_json TEXT NOT NULL,
+      expected_excess_reward INTEGER NOT NULL CHECK (expected_excess_reward > 0),
+      created_at TEXT NOT NULL
+    );
   `);
 
   const runColumns = new Set(

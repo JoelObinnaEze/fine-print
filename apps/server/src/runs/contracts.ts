@@ -17,6 +17,11 @@ export const createRunSchema = z.strictObject({
 
 export const replayUnderPolicySchema = z.strictObject({ policy: policySchema });
 
+export const saveRegressionSchema = z.strictObject({
+  runId: runIdSchema,
+  label: z.string().trim().min(1).max(80),
+});
+
 export const branchRunSchema = z.strictObject({
   branchTick: z.number().int().min(0).max(120),
   policy: policySchema,

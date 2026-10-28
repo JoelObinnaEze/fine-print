@@ -212,6 +212,7 @@ export function App() {
         <EventTimeline
           frames={activeFrames}
           activeFrame={frameIndex}
+          reasoning={evidence.reasoning ?? null}
           onSelect={selectFrame}
         />
         <PolicyGauntlet
