@@ -179,6 +179,42 @@ describe("offline replay game", () => {
     expect(screen.getByRole("button", { name: "Test once-per-item patch" }).getAttribute("aria-pressed")).toBe("false");
   });
 
+  it("separates an inconclusive live attempt from the previously loaded replay", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url === "/api/health") {
+        return Response.json({ liveAgent: { isEnabled: true } });
+      }
+      if (url === "/api/usage") {
+        return Response.json({ availableAppUsd: 9.8 });
+      }
+      if (url === "/api/attacks") {
+        return Response.json(
+          { error: { message: "The live search did not return a verified trace." } },
+          { status: 422 },
+        );
+      }
+      return Response.json({ error: { message: "not found" } }, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByText(/Meta connected/)).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Load recorded starting-policy run" }));
+    await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));
+    await user.click(screen.getByRole("button", { name: "Fresh-attack eligible-processing patch" }));
+
+    const attempt = await screen.findByRole("status", { name: "Latest live attempt" });
+    expect(within(attempt).getByText("Inconclusive — no verified trace")).toBeTruthy();
+    expect(within(attempt).getByText("eligible-processing patch")).toBeTruthy();
+    expect(within(attempt).getByText("Live Meta search")).toBeTruthy();
+    expect(within(attempt).getByText("The live search did not return a verified trace.")).toBeTruthy();
+
+    const loadedEvidence = screen.getByRole("region", { name: "Loaded replay evidence" });
+    expect(within(loadedEvidence).getByText("Exploit independently verified")).toBeTruthy();
+  });
+
   it("interprets and explicitly activates a natural-language policy", async () => {
     const aluminiumPolicy = {
       schemaVersion: 1 as const,

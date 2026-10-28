@@ -57,6 +57,13 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .arena__proof { display: grid; align-content: space-between; gap: 1rem; padding-left: 1rem; border-left: 1px solid #66645e; }
 .arena__proof strong { display: block; color: var(--green-pale); }
 .arena__proof p { margin: .35rem 0 0; }
+.arena__loaded-evidence { min-width: 0; }
+.arena__attempt { padding: .75rem; border: 1px solid #66645e; border-top: 3px solid var(--green-pale); background: #323833; }
+.arena__attempt--inconclusive { border-top-color: var(--amber-pale); }
+.arena__attempt--inconclusive strong { color: var(--amber-pale); }
+.arena__attempt dl { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .6rem 0 0; }
+.arena__attempt dt { color: #bcb3a3; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.arena__attempt dd { margin: .1rem 0 0; color: var(--paper); font-size: .75rem; font-weight: 800; }
 .arena__primary { min-height: 2.75rem; padding: .7rem 1rem; border: 1px solid var(--amber-pale); background: var(--amber); color: white; cursor: pointer; font-weight: 900; }
 .arena__primary:hover:not(:disabled) { background: #a84f12; }
 .arena__primary:disabled { cursor: wait; opacity: .5; }

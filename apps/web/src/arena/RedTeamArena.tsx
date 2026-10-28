@@ -26,6 +26,12 @@ export interface AttackTarget {
   readonly sourceText: string;
 }
 
+interface AttackAttempt {
+  readonly status: "running" | "verified" | "inconclusive";
+  readonly target: string;
+  readonly detail: string;
+}
+
 export const scriptedEvidence: RunEvidence = {
   provenance: "scripted_fixture",
   modelId: null,
@@ -68,7 +74,7 @@ export function RedTeamArena({
   const [connection, setConnection] = useState<"checking" | "ready" | "offline">("checking");
   const [availableBudget, setAvailableBudget] = useState<number | null>(null);
   const [isRunning, setIsRunning] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState<AttackAttempt | null>(null);
   const [strategies, setStrategies] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -94,7 +100,11 @@ export function RedTeamArena({
 
   const runLiveAttack = async () => {
     setIsRunning(true);
-    setMessage("Muse is testing hypotheses through bounded tools. This can take up to two minutes.");
+    setAttempt({
+      status: "running",
+      target: attackTarget.label,
+      detail: "Muse is testing hypotheses through bounded tools. This can take up to two minutes.",
+    });
     setStrategies([]);
     try {
       const response = await fetch("/api/attacks", {
@@ -151,9 +161,17 @@ export function RedTeamArena({
         },
         attackTarget,
       );
-      setMessage("The exact model trace is loaded below. Every reward was recomputed by the host.");
+      setAttempt({
+        status: "verified",
+        target: attackTarget.label,
+        detail: "The exact model trace is loaded below. Every reward was recomputed by the host.",
+      });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "The live attack failed.");
+      setAttempt({
+        status: "inconclusive",
+        target: attackTarget.label,
+        detail: error instanceof Error ? error.message : "The live attack failed.",
+      });
     } finally {
       setIsRunning(false);
     }
@@ -185,8 +203,29 @@ export function RedTeamArena({
       />
 
       <div className="arena__proof">
-        <div>
-          <p className="eyebrow">Current evidence</p>
+        {attempt && (
+          <div
+            aria-label="Latest live attempt"
+            className={`arena__attempt arena__attempt--${attempt.status}`}
+            role="status"
+          >
+            <p className="eyebrow">Latest live attempt</p>
+            <strong>
+              {attempt.status === "running"
+                ? "Search in progress"
+                : attempt.status === "verified"
+                  ? "Verified trace loaded"
+                  : "Inconclusive — no verified trace"}
+            </strong>
+            <dl>
+              <div><dt>Target</dt><dd>{attempt.target}</dd></div>
+              <div><dt>Provenance</dt><dd>Live Meta search</dd></div>
+            </dl>
+            <p>{attempt.detail}</p>
+          </div>
+        )}
+        <section className="arena__loaded-evidence" aria-label="Loaded replay evidence">
+          <p className="eyebrow">Loaded replay evidence</p>
           <strong>{evidence.verdict}</strong>
           <p>{evidence.summary}</p>
           <p className="arena__target">Next search: {attackTarget.label}</p>
@@ -200,7 +239,7 @@ export function RedTeamArena({
                 : "Offline replay mode"}
             {availableBudget !== null ? ` · $${availableBudget.toFixed(2)} budget left` : ""}
           </p>
-        </div>
+        </section>
         <button
           className="arena__primary"
           type="button"
@@ -227,9 +266,8 @@ export function RedTeamArena({
           Load recorded starting-policy run
         </button>
       </div>
-      {(message || strategies.length > 0) && (
+      {strategies.length > 0 && (
         <div className="arena__activity" aria-live="polite">
-          {message && <p>{message}</p>}
           {strategies.map((strategy, index) => (
             <p key={`${index}-${strategy}`}><b>Turn {index + 1}</b> {strategy}</p>
           ))}
