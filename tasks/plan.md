@@ -47,7 +47,9 @@ Build order: `engine` → `policy` → `evaluation` → `replay-ui` → `run-ser
 
 ## Current slice scope
 
-The current work has two ordered vertical slices. First, every live Muse attempt returns a durable, judge-readable report that distinguishes verified, rejected, completed-without-a-find, and interrupted searches while preserving attempted traces and bounded-work counts. Second, the policy evaluator gains one disclosed interaction benchmark: a vulnerable hopper-count batch bonus and a receipt-backed processed-batch patch, including honest batch rewards. No paid inference is required to implement or verify either slice.
+The current work expands Fine Print into a two-domain incentive-design tool. The commerce domain supports referrals, purchases, promotional credit, refunds, and return-window timing in a deterministic host simulator. A policy owner supplies payout rules and the intended retained-revenue outcome separately. Ordinary customers, bargain hunters, and coordinated adversaries run under visible assumptions. Muse proposes counterexamples and competing repairs, while host code alone executes transactions, minimizes successful traces, and compares leakage, legitimate rewards, retained revenue, and reward delay. Bottle Return remains the second-domain proof that the same model-propose/host-verify workflow transfers across incentive systems.
+
+Build order: commerce contracts → deterministic replay and trace reduction → competing population evaluation → tested Muse repair comparison → user-policy investigation endpoint → integrated commerce workbench and browser proof.
 
 ## Verification checkpoints
 

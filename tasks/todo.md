@@ -430,3 +430,105 @@
 
 **Estimated scope:** Medium
 
+## Task 25: Model deterministic commerce incentives
+
+**Description:** Add a commerce domain covering referrals, purchases, promotional credit, refunds, reward status, and return-window timing while keeping the intended business outcome separate from payout rules.
+
+**Acceptance criteria:**
+- [x] Strict schemas reject unsupported accounts, negative money, duplicate referrals/purchases, and invalid policy combinations.
+- [x] A qualifying purchase can issue referral credit to both accounts and a later refund changes retained revenue deterministically.
+- [x] Model output is never trusted to update balances, rewards, or success metrics.
+
+**Verification:** The focused suite first failed on the missing commerce module, then four contract/replay tests passed. Strict typecheck also passed. The host owns all account, purchase, reward-status, retained-revenue, refund, return-window, and reversal-debt transitions.
+
+**Dependencies:** Task 24
+
+**Files likely touched:** `packages/commerce/src/contracts.ts`, `packages/commerce/src/simulator.ts`, `packages/commerce/src/index.ts`, `tests/commerce/simulator.test.ts`
+
+**Estimated scope:** Medium
+
+## Task 26: Reduce exploits and compare candidate repairs
+
+**Description:** Add a three-action referral/refund benchmark, minimize verified traces, and evaluate delayed, pending/reversible, and net-retained repair designs against both adversarial and legitimate strategies.
+
+**Acceptance criteria:**
+- [ ] The vulnerable policy yields available credit with zero retained revenue after a refund.
+- [ ] Trace reduction removes every action that is unnecessary while preserving the verified failure.
+- [ ] Candidate comparison reports unintended payout, honest reward, retained revenue, reward delay, and tested tradeoffs.
+
+**Verification:** Focused tests cover the vulnerable trace, all repair candidates, trace minimality, and honest-customer preservation.
+
+**Dependencies:** Task 25
+
+**Files likely touched:** `packages/commerce/src/benchmark.ts`, `packages/commerce/src/simulator.ts`, `packages/commerce/src/index.ts`, `tests/commerce/benchmark.test.ts`
+
+**Estimated scope:** Medium
+
+## Task 27: Compare competing participant populations
+
+**Description:** Run visible populations of ordinary customers, bargain hunters, and coordinated adversaries with distinct objectives and constraints, then aggregate host-computed outcomes without presenting them as fraud forecasts.
+
+**Acceptance criteria:**
+- [ ] Each strategy has disclosed assumptions, participant count, objective, and deterministic transaction traces.
+- [ ] Results separate legitimate rewards, verified unintended payouts, retained revenue, and reward delay by strategy and in aggregate.
+- [ ] Repeated accounts and promotional-credit-funded purchases can interact in the same environment without bypassing ledger validation.
+
+**Verification:** Focused population tests cover strategy objectives, account coordination, aggregate metrics, and deterministic repeated runs.
+
+**Dependencies:** Task 26
+
+**Files likely touched:** `packages/commerce/src/population.ts`, `packages/commerce/src/benchmark.ts`, `packages/commerce/src/index.ts`, `tests/commerce/population.test.ts`
+
+**Estimated scope:** Medium
+
+## Task 28: Add a Meta commerce investigation
+
+**Description:** Accept commerce policy text and a separate intended outcome, ask Muse for a supported mapping, explicit attack trace, and competing designs, then validate and score all output in host code under existing budget and idempotency controls.
+
+**Acceptance criteria:**
+- [ ] The endpoint has strict typed input/output and durable idempotency; reused keys with different payloads fail.
+- [ ] Unsupported conditions are surfaced rather than silently approximated.
+- [ ] Only a host-replayed counterexample may be labelled verified, and every design is scored by deterministic simulation.
+
+**Verification:** Provider and route tests use fake responses for valid, unsupported, rejected, replayed, and conflicting requests; no paid inference is required for tests.
+
+**Dependencies:** Task 27
+
+**Files likely touched:** `apps/server/src/providers/meta-commerce.ts`, `apps/server/src/app.ts`, `apps/server/src/main.ts`, `apps/server/src/persistence/schema.ts`, `tests/provider/meta-commerce.test.ts`
+
+**Estimated scope:** Medium
+
+## Task 29: Build the commerce policy workbench
+
+**Description:** Add a judge-facing commerce workbench where a policy owner edits rules and intended outcome separately, inspects the supported mapping, runs the verified referral/refund investigation, compares candidate designs by priority, and fresh-tests a selected repair.
+
+**Acceptance criteria:**
+- [ ] The opening view states the business question and shows dollars, retained revenue, and assumptions without implying fraud forecasts.
+- [ ] The minimized counterexample connects each transaction to a policy clause and host ledger effect.
+- [ ] Candidate repair cards expose leakage, honest reward, delay, complexity, and a fresh-test action; the Bottle Return domain remains one click away.
+
+**Verification:** Component tests cover editing, priority selection, trace explanation, repair selection, and honest/attack metrics at mobile and desktop layouts.
+
+**Dependencies:** Task 28
+
+**Files likely touched:** `apps/web/src/commerce/CommerceWorkbench.tsx`, `apps/web/src/App.tsx`, `apps/web/src/styles.css`, `tests/web/commerce-workbench.test.tsx`
+
+**Estimated scope:** Medium
+
+## Task 30: Capture live commerce evidence and finish the demo
+
+**Description:** Run one budgeted Muse investigation, preserve its verified evidence, exercise the complete sequence in Opera GX, and document the bounded claims and repeatable demo path.
+
+**Acceptance criteria:**
+- [ ] A live or clearly labelled recorded Muse result contains a host-verified multi-clause or multi-account commerce trace.
+- [ ] The selected repair is fresh-tested and the result is distinguishable from the original evidence.
+- [ ] Full tests, typecheck, production build, audit, secret scan, and responsive browser checks pass.
+
+**Verification:** Record the run ID, usage, host verdict, browser observations, and final commands in this ledger.
+
+**Dependencies:** Task 29
+
+**Files likely touched:** `artifacts/`, `docs/evaluation.md`, `README.md`, `tasks/todo.md`
+
+**Estimated scope:** Medium
+
