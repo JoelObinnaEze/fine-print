@@ -42,6 +42,54 @@ export const patchPolicies = {
       },
     ],
   },
+  batchVulnerable: {
+    schemaVersion: 1,
+    clauses: [
+      {
+        id: "processed-item",
+        enabled: true,
+        trigger: "process",
+        points: 10,
+        eligibleOnly: true,
+        materials: ["plastic", "aluminium"],
+        repetition: "once_per_item",
+      },
+      {
+        id: "hopper-batch",
+        enabled: true,
+        trigger: "hopper_threshold",
+        points: 5,
+        eligibleOnly: true,
+        materials: ["plastic", "aluminium"],
+        repetition: "every_event",
+        batchSize: 3,
+      },
+    ],
+  },
+  batchReceipt: {
+    schemaVersion: 1,
+    clauses: [
+      {
+        id: "processed-item",
+        enabled: true,
+        trigger: "process",
+        points: 10,
+        eligibleOnly: true,
+        materials: ["plastic", "aluminium"],
+        repetition: "once_per_item",
+      },
+      {
+        id: "receipt-batch",
+        enabled: true,
+        trigger: "processed_batch",
+        points: 5,
+        eligibleOnly: true,
+        materials: ["plastic", "aluminium"],
+        repetition: "every_event",
+        batchSize: 3,
+      },
+    ],
+  },
 } as const satisfies Readonly<Record<string, Policy>>;
 
 export type PatchId = keyof typeof patchPolicies;
@@ -49,7 +97,62 @@ export type PatchId = keyof typeof patchPolicies;
 export const patchSourceTexts: Readonly<Record<PatchId, string>> = {
   oncePerItem: "Pay only once per item when it is deposited.",
   eligibleProcessing: "Pay once after eligible material is successfully processed.",
+  batchVulnerable: "Pay 10 points after each eligible item is processed. Also pay 5 bonus points whenever the hopper reaches three eligible items.",
+  batchReceipt: "Pay 10 points after each eligible item is processed. Also pay 5 bonus points for each third permanent eligible-processing receipt.",
 };
+
+export const patchLabels: Readonly<Record<PatchId, string>> = {
+  oncePerItem: "once-per-item patch",
+  eligibleProcessing: "eligible-processing patch",
+  batchVulnerable: "vulnerable batch benchmark",
+  batchReceipt: "receipt-backed batch patch",
+};
+
+const rightToHopper = Array.from({ length: 4 }, () => ({
+  type: "move",
+  direction: "right",
+}) as const);
+const leftToInput = Array.from({ length: 4 }, () => ({
+  type: "move",
+  direction: "left",
+}) as const);
+
+function fillBatch(itemIds: readonly string[], fromProcessor = false): Action[] {
+  const actions: Action[] = fromProcessor
+    ? [{ type: "move", direction: "up" }, { type: "move", direction: "up" }, ...leftToInput]
+    : [{ type: "move", direction: "up" }];
+  itemIds.forEach((itemId, index) => {
+    actions.push({ type: "take", itemId }, ...rightToHopper, { type: "deposit" });
+    if (index < itemIds.length - 1) actions.push(...leftToInput);
+  });
+  return actions;
+}
+
+function honestBatches(batches: readonly (readonly string[])[]): readonly Action[] {
+  const actions: Action[] = [];
+  batches.forEach((itemIds, index) => {
+    actions.push(...fillBatch(itemIds, index > 0));
+    actions.push({ type: "move", direction: "down" }, { type: "move", direction: "down" });
+    for (const itemId of itemIds) actions.push({ type: "process", itemId });
+  });
+  actions.push({ type: "finish" });
+  return actions;
+}
+
+export const batchBonusExploitActions: readonly Action[] = [
+  ...fillBatch(["B1", "B2", "B3"]),
+  { type: "retrieve", itemId: "B3" },
+  { type: "deposit" },
+  { type: "retrieve", itemId: "B3" },
+  { type: "deposit" },
+  { type: "finish" },
+];
+
+export const batchHonestThreeActions = honestBatches([["B1", "B2", "B3"]]);
+export const batchHonestSixActions = honestBatches([
+  ["B1", "B2", "B3"],
+  ["C1", "C2", "C3"],
+]);
 
 export const exploitActions: readonly Action[] = [
   { type: "move", direction: "up" },

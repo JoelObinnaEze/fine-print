@@ -15,6 +15,7 @@ import { ReplayControls } from "./replay/ReplayControls.js";
 import {
   createReplayFrames,
   patchPolicies,
+  patchLabels,
   exploitActions,
   patchSourceTexts,
   startingPolicy,
@@ -34,7 +35,7 @@ export function App() {
   const [sourceText, setSourceText] = useState(startingPolicySourceText);
   const attackTarget: AttackTarget = activePatch
     ? {
-        label: activePatch === "oncePerItem" ? "once-per-item patch" : "eligible-processing patch",
+        label: patchLabels[activePatch],
         policy: patchPolicies[activePatch],
         sourceText: patchSourceTexts[activePatch],
       }
@@ -216,6 +217,8 @@ export function App() {
         <PolicyGauntlet
           policy={activePolicy}
           patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
+          activePatch={activePatch}
+          onTestPatch={setActivePatch}
         />
         <PolicyLab
           originalPolicy={activePolicy}

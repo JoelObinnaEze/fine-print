@@ -167,6 +167,13 @@ export interface AttackerProvider {
 
 export interface AttackerSearchResult extends VerificationResult {
   readonly requestsUsed: number;
+  readonly interruptionReason:
+    | "cancelled"
+    | "deadline_exceeded"
+    | "request_timeout"
+    | "provider_error"
+    | "malformed_response"
+    | null;
 }
 
 interface AttackerRunOptions {
@@ -175,8 +182,12 @@ interface AttackerRunOptions {
   readonly searchDeadlineMs?: number;
 }
 
-function withRequests(result: VerificationResult, requestsUsed: number): AttackerSearchResult {
-  return { ...result, requestsUsed };
+function withRequests(
+  result: VerificationResult,
+  requestsUsed: number,
+  interruptionReason: AttackerSearchResult["interruptionReason"] = null,
+): AttackerSearchResult {
+  return { ...result, requestsUsed, interruptionReason };
 }
 
 function possibleActions(state: WorldState): readonly Action[] {
@@ -389,15 +400,23 @@ export async function runBoundedAttacker(
 
   while (requestsUsed < maxInferenceRequests) {
     if (session.cancelled || session.final) {
-      return withRequests(session.final ?? session.fail(), requestsUsed);
+      return withRequests(
+        session.final ?? session.fail(),
+        requestsUsed,
+        session.cancelled ? "cancelled" : null,
+      );
     }
     const remainingMs = searchDeadlineMs - (Date.now() - startedAt);
-    if (remainingMs <= 0) return withRequests(session.fail(), requestsUsed);
+    if (remainingMs <= 0) return withRequests(session.fail(), requestsUsed, "deadline_exceeded");
 
     requestsUsed += 1;
     const controller = new AbortController();
     const signal = AbortSignal.any([controller.signal, session.signal]);
-    const timeout = setTimeout(() => controller.abort(), Math.min(requestTimeoutMs, remainingMs));
+    let requestTimedOut = false;
+    const timeout = setTimeout(() => {
+      requestTimedOut = true;
+      controller.abort();
+    }, Math.min(requestTimeoutMs, remainingMs));
     let abortRequest!: () => void;
     const aborted = new Promise<never>((_resolve, reject) => {
       abortRequest = () => reject(new Error("Attacker request aborted."));
@@ -421,16 +440,26 @@ export async function runBoundedAttacker(
     } catch {
       clearTimeout(timeout);
       signal.removeEventListener("abort", abortRequest);
-      return withRequests(session.fail(), requestsUsed);
+      return withRequests(
+        session.fail(),
+        requestsUsed,
+        session.cancelled ? "cancelled" : requestTimedOut ? "request_timeout" : "provider_error",
+      );
     }
     clearTimeout(timeout);
     signal.removeEventListener("abort", abortRequest);
 
     if (session.cancelled || Date.now() - startedAt >= searchDeadlineMs) {
-      return withRequests(session.fail(), requestsUsed);
+      return withRequests(
+        session.fail(),
+        requestsUsed,
+        session.cancelled ? "cancelled" : "deadline_exceeded",
+      );
     }
     const parsedTurn = attackerTurnSchema.safeParse(rawTurn);
-    if (!parsedTurn.success) return withRequests(session.fail(), requestsUsed);
+    if (!parsedTurn.success) {
+      return withRequests(session.fail(), requestsUsed, "malformed_response");
+    }
     previousToolResults = parsedTurn.data.toolCalls.map((call) => session.execute(call));
     const final = session.final;
     if (final) return withRequests(final, requestsUsed);

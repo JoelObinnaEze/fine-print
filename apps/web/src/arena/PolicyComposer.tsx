@@ -19,9 +19,9 @@ export function PolicyComposer({
   const [interpretation, setInterpretation] = useState<PolicyInterpretation | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const candidateClause = interpretation?.status === "candidate"
-    ? interpretation.policy.clauses[0]
-    : undefined;
+  const candidateClauses = interpretation?.status === "candidate"
+    ? interpretation.policy.clauses
+    : [];
 
   useEffect(() => {
     setDraft(sourceText);
@@ -107,15 +107,18 @@ export function PolicyComposer({
               : "Interpreting policy"}
           </strong>
           <p>{interpretation?.reason ?? message}</p>
-          {candidateClause && (
-            <dl>
-              <div><dt>Reward trigger</dt><dd>{candidateClause.trigger}</dd></div>
-              <div><dt>Paid materials</dt><dd>{candidateClause.materials.join(", ")}</dd></div>
-              <div><dt>Eligibility required</dt><dd>{candidateClause.eligibleOnly ? "Yes" : "No"}</dd></div>
-              <div><dt>Repeat limit</dt><dd>{candidateClause.repetition === "once_per_item" ? "once per item" : "none"}</dd></div>
-              <div><dt>Successful processing required</dt><dd>{candidateClause.trigger === "process" ? "Yes" : "No"}</dd></div>
-            </dl>
-          )}
+          {candidateClauses.map((clause) => (
+            <section className="arena__candidate-clause" key={clause.id}>
+              <b>{clause.id.replaceAll("-", " ")}</b>
+              <dl>
+                <div><dt>Reward trigger</dt><dd>{clause.trigger === "hopper_threshold" ? `hopper reaches ${clause.batchSize}` : clause.trigger === "processed_batch" ? `every ${clause.batchSize} processed receipts` : clause.trigger}</dd></div>
+                <div><dt>Paid materials</dt><dd>{clause.materials.join(", ")}</dd></div>
+                <div><dt>Eligibility required</dt><dd>{clause.eligibleOnly ? "Yes" : "No"}</dd></div>
+                <div><dt>Repeat limit</dt><dd>{clause.repetition === "once_per_item" ? "once per item" : "none"}</dd></div>
+                <div><dt>Successful processing required</dt><dd>{clause.trigger === "process" || clause.trigger === "processed_batch" ? "Yes" : "No"}</dd></div>
+              </dl>
+            </section>
+          ))}
         </div>
       )}
     </section>

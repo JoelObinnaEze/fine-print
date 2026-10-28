@@ -4,7 +4,7 @@ import type {
   WorldState,
 } from "../../engine/src/types.js";
 
-import type { Policy } from "./schema.js";
+import type { Policy, PolicyClause } from "./schema.js";
 
 export interface PayoutPredicateResults {
   readonly enabled: boolean;
@@ -25,6 +25,36 @@ export interface Payout {
 export interface PayoutEvaluation {
   readonly rewardLedger: RewardLedger;
   readonly payouts: readonly Payout[];
+}
+
+function itemMatchesBatch(item: WorldState["items"][number], clause: PolicyClause): boolean {
+  return (!clause.eligibleOnly || item.eligible) && clause.materials.includes(item.material);
+}
+
+function triggerMatches(
+  stateBefore: WorldState,
+  event: EngineEvent,
+  item: WorldState["items"][number],
+  clause: PolicyClause,
+): boolean {
+  if (clause.trigger === "deposit" || clause.trigger === "process") {
+    return clause.trigger === event.kind;
+  }
+  const batchSize = clause.batchSize;
+  if (batchSize === undefined) return false;
+  if (clause.trigger === "hopper_threshold") {
+    if (event.kind !== "deposit" || !itemMatchesBatch(item, clause)) return false;
+    const hopperItems = stateBefore.items.filter(
+      (candidate) => candidate.locus.kind === "hopper" && itemMatchesBatch(candidate, clause),
+    ).length;
+    return hopperItems + 1 === batchSize;
+  }
+  if (event.kind !== "process" || !item.eligible || !itemMatchesBatch(item, clause)) return false;
+  const processedItems = stateBefore.outcomeLedger.processedEligibleItemIds.filter((itemId) => {
+    const processed = stateBefore.items.find((candidate) => candidate.id === itemId);
+    return processed ? itemMatchesBatch(processed, clause) : false;
+  }).length;
+  return (processedItems + 1) % batchSize === 0;
 }
 
 export function evaluatePayouts(
@@ -49,7 +79,7 @@ export function evaluatePayouts(
     const previousItemIds = rewardedItemIdsByClause[clause.id] ?? [];
     const predicateResults: PayoutPredicateResults = {
       enabled: clause.enabled,
-      trigger: clause.trigger === event.kind,
+      trigger: triggerMatches(stateBefore, event, item, clause),
       eligible: !clause.eligibleOnly || item.eligible,
       material: clause.materials.includes(item.material),
       repetition:

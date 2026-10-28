@@ -230,7 +230,7 @@ describe("live browser attack lifecycle", () => {
       outcome: "search_interrupted",
       status: "run_incomplete",
       actionsTested: 0,
-      reason: /provider request failed/i,
+      reason: /provider API request failed/i,
     },
   ])("returns a durable report for a $name", async ({ provider, outcome, status, actionsTested, reason }) => {
     const { attacks } = createServices(provider());

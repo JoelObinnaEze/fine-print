@@ -55,6 +55,23 @@ describe("parsePolicy", () => {
     expect(parsePolicy(startingPolicy)).toEqual(startingPolicy);
   });
 
+  it("requires a batch size only for batch triggers", () => {
+    const batchClause = {
+      ...startingClause,
+      id: "batch-bonus",
+      trigger: "hopper_threshold",
+      points: 5,
+      batchSize: 3,
+    } as const;
+
+    expect(parsePolicy({ ...startingPolicy, clauses: [startingClause, batchClause] })).toEqual({
+      ...startingPolicy,
+      clauses: [startingClause, batchClause],
+    });
+    expect(() => parsePolicy({ ...startingPolicy, clauses: [{ ...batchClause, batchSize: undefined }] })).toThrow();
+    expect(() => parsePolicy({ ...startingPolicy, clauses: [{ ...startingClause, batchSize: 3 }] })).toThrow();
+  });
+
   it.each([
     ["unknown policy fields", { ...startingPolicy, surprise: true }],
     [

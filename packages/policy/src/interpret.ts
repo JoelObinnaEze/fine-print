@@ -47,7 +47,10 @@ export const policyInterpretationJsonSchema = {
             properties: {
               id: { type: "string", pattern: "^[a-z0-9][a-z0-9_-]{0,63}$" },
               enabled: { type: "boolean" },
-              trigger: { type: "string", enum: ["deposit", "process"] },
+              trigger: {
+                type: "string",
+                enum: ["deposit", "process", "hopper_threshold", "processed_batch"],
+              },
               points: { type: "integer", minimum: 0, maximum: 10 },
               eligibleOnly: { type: "boolean" },
               materials: {
@@ -61,6 +64,7 @@ export const policyInterpretationJsonSchema = {
                 },
               },
               repetition: { type: "string", enum: ["every_event", "once_per_item"] },
+              batchSize: { type: "integer", minimum: 2, maximum: 8 },
             },
             required: [
               "id",

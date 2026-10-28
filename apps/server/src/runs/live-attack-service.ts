@@ -184,10 +184,19 @@ function searchReport(
         reason: "The bounded search completed; no exploit was found within the stated budget.",
       };
     case "run_incomplete":
+      const interruptionReasons = {
+        cancelled: "The host cancelled the bounded search before completion.",
+        deadline_exceeded: "The bounded search reached its two-minute deadline before completion.",
+        request_timeout: "A provider request timed out before the bounded search completed.",
+        provider_error: "The provider API request failed before the bounded search completed.",
+        malformed_response: "The provider returned malformed output that the host refused to execute.",
+      } as const;
       return {
         ...common,
         outcome: "search_interrupted",
-        reason: "The provider request failed, timed out, or returned malformed output before the bounded search completed.",
+        reason: verification.interruptionReason
+          ? interruptionReasons[verification.interruptionReason]
+          : "The bounded search stopped before completion.",
       };
   }
 }
@@ -276,6 +285,7 @@ export class LiveAttackService {
         verification = {
           ...emptyVerification("run_incomplete"),
           requestsUsed: provider.turns.length,
+          interruptionReason: "provider_error",
         };
       }
 

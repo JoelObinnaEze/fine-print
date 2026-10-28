@@ -2,21 +2,33 @@ import * as z from "zod";
 
 import { MATERIALS } from "../../engine/src/types.js";
 
-const clauseSchema = z.strictObject({
-  id: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/),
-  enabled: z.boolean(),
-  trigger: z.enum(["deposit", "process"]),
-  points: z.number().int().min(0).max(10),
-  eligibleOnly: z.boolean(),
-  materials: z
-    .array(z.enum(MATERIALS))
-    .min(1)
-    .max(MATERIALS.length)
-    .refine((materials) => new Set(materials).size === materials.length, {
-      error: "materials must not contain duplicates",
-    }),
-  repetition: z.enum(["every_event", "once_per_item"]),
-});
+const clauseSchema = z
+  .strictObject({
+    id: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/),
+    enabled: z.boolean(),
+    trigger: z.enum(["deposit", "process", "hopper_threshold", "processed_batch"]),
+    points: z.number().int().min(0).max(10),
+    eligibleOnly: z.boolean(),
+    materials: z
+      .array(z.enum(MATERIALS))
+      .min(1)
+      .max(MATERIALS.length)
+      .refine((materials) => new Set(materials).size === materials.length, {
+        error: "materials must not contain duplicates",
+      }),
+    repetition: z.enum(["every_event", "once_per_item"]),
+    batchSize: z.number().int().min(2).max(8).optional(),
+  })
+  .superRefine((clause, context) => {
+    const isBatch = clause.trigger === "hopper_threshold" || clause.trigger === "processed_batch";
+    if (isBatch === (clause.batchSize === undefined)) {
+      context.addIssue({
+        code: "custom",
+        path: ["batchSize"],
+        message: isBatch ? "batch triggers require batchSize" : "batchSize requires a batch trigger",
+      });
+    }
+  });
 
 export const policySchema = z
   .strictObject({

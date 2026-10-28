@@ -114,6 +114,26 @@ describe("offline replay game", () => {
     expect(screen.getAllByText("Paid nothing")).toHaveLength(2);
   });
 
+  it("shows the designed batch interaction and targets either policy for Muse", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Can a transient hopper state impersonate completed work?" })).toBeTruthy();
+    expect(screen.getByText("15 exploit points · 0 useful items")).toBeTruthy();
+    expect(screen.getByText("0 exploit points · 0 useful items")).toBeTruthy();
+    expect(screen.getAllByText("Honest 3: 35 points · honest 6: 70")).toHaveLength(2);
+
+    const vulnerable = screen.getByRole("button", { name: "Target vulnerable batch policy" });
+    await user.click(vulnerable);
+    expect(vulnerable.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Fresh-attack vulnerable batch benchmark" })).toBeTruthy();
+
+    const patched = screen.getByRole("button", { name: "Target receipt-backed patch" });
+    await user.click(patched);
+    expect(patched.getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Fresh-attack receipt-backed batch patch" })).toBeTruthy();
+  });
+
   it("runs a live Meta attack and loads the host-verified trace", async () => {
     let attackedPolicy: unknown;
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {

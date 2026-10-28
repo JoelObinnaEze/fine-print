@@ -6,7 +6,14 @@ import { createHonestWorkerActions } from "../../../../packages/evaluation/src/h
 import { calculateCompletedMetrics } from "../../../../packages/evaluation/src/metrics.js";
 import { replayActions } from "../../../../packages/evaluation/src/replay.js";
 import type { Policy } from "../../../../packages/policy/src/index.js";
-import { exploitActions } from "../replay-data.js";
+import {
+  batchBonusExploitActions,
+  batchHonestSixActions,
+  batchHonestThreeActions,
+  exploitActions,
+  patchPolicies,
+  type PatchId,
+} from "../replay-data.js";
 
 const contaminationActions: readonly Action[] = [
   { type: "move", direction: "up" },
@@ -122,9 +129,13 @@ function EvidenceCard({ label, result }: { readonly label: string; readonly resu
 export function PolicyGauntlet({
   policy,
   patchedPolicy,
+  activePatch,
+  onTestPatch,
 }: {
   readonly policy: Policy;
   readonly patchedPolicy: Policy | null;
+  readonly activePatch: PatchId | null;
+  readonly onTestPatch: (patch: PatchId) => void;
 }) {
   const active = useMemo(() => evaluatePolicyGauntlet(policy), [policy]);
   const patched = useMemo(
@@ -133,6 +144,24 @@ export function PolicyGauntlet({
   );
   const inspected = patched ?? active;
   const inspectedLabel = patched ? "Selected patch" : "Active policy";
+  const batchResults = useMemo(() => {
+    const initialState = createBottleReturnState();
+    const summarize = (actions: readonly Action[], selectedPolicy: Policy) => {
+      const replay = replayActions(initialState, actions, selectedPolicy);
+      return {
+        reward: replay.state.rewardLedger.totalPoints,
+        usefulItems: replay.state.outcomeLedger.processedEligibleItemIds.length,
+      };
+    };
+    return {
+      vulnerableExploit: summarize(batchBonusExploitActions, patchPolicies.batchVulnerable),
+      patchedExploit: summarize(batchBonusExploitActions, patchPolicies.batchReceipt),
+      vulnerableThree: summarize(batchHonestThreeActions, patchPolicies.batchVulnerable),
+      patchedThree: summarize(batchHonestThreeActions, patchPolicies.batchReceipt),
+      vulnerableSix: summarize(batchHonestSixActions, patchPolicies.batchVulnerable),
+      patchedSix: summarize(batchHonestSixActions, patchPolicies.batchReceipt),
+    };
+  }, []);
   return (
     <section className="gauntlet" aria-labelledby="gauntlet-title">
       <div className="gauntlet__heading">
@@ -172,6 +201,42 @@ export function PolicyGauntlet({
           ))}
         </ul>
       </div>
+      <section className="batch-benchmark" aria-labelledby="batch-benchmark-title">
+        <div>
+          <p className="eyebrow">Designed interaction benchmark</p>
+          <h3 id="batch-benchmark-title">Can a transient hopper state impersonate completed work?</h3>
+          <p>
+            Individual rewards require processing. A separate five-point bonus fires when the
+            hopper reaches three items; the patch counts permanent processing receipts instead.
+          </p>
+        </div>
+        <div className="batch-benchmark__comparison">
+          <article>
+            <b>Hopper-count rule</b>
+            <strong>{batchResults.vulnerableExploit.reward} exploit points · {batchResults.vulnerableExploit.usefulItems} useful items</strong>
+            <span>Honest 3: {batchResults.vulnerableThree.reward} points · honest 6: {batchResults.vulnerableSix.reward}</span>
+            <button
+              aria-pressed={activePatch === "batchVulnerable"}
+              type="button"
+              onClick={() => onTestPatch("batchVulnerable")}
+            >
+              Target vulnerable batch policy
+            </button>
+          </article>
+          <article>
+            <b>Receipt-backed rule</b>
+            <strong>{batchResults.patchedExploit.reward} exploit points · {batchResults.patchedExploit.usefulItems} useful items</strong>
+            <span>Honest 3: {batchResults.patchedThree.reward} points · honest 6: {batchResults.patchedSix.reward}</span>
+            <button
+              aria-pressed={activePatch === "batchReceipt"}
+              type="button"
+              onClick={() => onTestPatch("batchReceipt")}
+            >
+              Target receipt-backed patch
+            </button>
+          </article>
+        </div>
+      </section>
     </section>
   );
 }

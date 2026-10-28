@@ -53,8 +53,11 @@ export function verifyCandidate(
 
   const replay = replayActions(initialState, parsed.data, policy);
   const usefulItemIds = new Set(replay.state.outcomeLedger.processedEligibleItemIds);
+  const clausesById = new Map(policy.clauses.map((clause) => [clause.id, clause]));
   const rewardsByItem = new Map<string, number>();
   for (const payout of replay.payouts) {
+    const trigger = clausesById.get(payout.clauseId)?.trigger;
+    if (trigger === "hopper_threshold" || trigger === "processed_batch") continue;
     rewardsByItem.set(payout.itemId, (rewardsByItem.get(payout.itemId) ?? 0) + payout.amount);
   }
 
@@ -66,10 +69,37 @@ export function verifyCandidate(
       })
       .map((item) => item.id),
   );
-  const excessReward = initialState.items.reduce((total, item) => {
+  let excessReward = initialState.items.reduce((total, item) => {
     const usefulValue = item.eligible && usefulItemIds.has(item.id) ? 10 : 0;
     return total + Math.max(0, (rewardsByItem.get(item.id) ?? 0) - usefulValue);
   }, 0);
+  const evidenceEventIds = replay.payouts
+    .filter((payout) => {
+      const trigger = clausesById.get(payout.clauseId)?.trigger;
+      return trigger !== "hopper_threshold" && trigger !== "processed_batch" && excessItemIds.has(payout.itemId);
+    })
+    .map((payout) => payout.eventSequence);
+
+  for (const clause of policy.clauses) {
+    if (
+      (clause.trigger !== "hopper_threshold" && clause.trigger !== "processed_batch") ||
+      clause.batchSize === undefined
+    ) {
+      continue;
+    }
+    const completedMatchingItems = initialState.items.filter(
+      (item) =>
+        usefulItemIds.has(item.id) &&
+        (!clause.eligibleOnly || item.eligible) &&
+        clause.materials.includes(item.material),
+    ).length;
+    const allowedBonuses = Math.floor(completedMatchingItems / clause.batchSize);
+    const clausePayouts = replay.payouts.filter((payout) => payout.clauseId === clause.id);
+    for (const payout of clausePayouts.slice(allowedBonuses)) {
+      excessReward += payout.amount;
+      evidenceEventIds.push(payout.eventSequence);
+    }
+  }
 
   return {
     status: excessReward > 0 ? "exploit_verified" : "no_exploit_in_submitted_trace",
@@ -81,8 +111,6 @@ export function verifyCandidate(
     contamination: replay.state.outcomeLedger.contaminationItemIds.length,
     excessReward,
     stateHash: canonicalHash({ engineVersion: ENGINE_VERSION, state: replay.state }),
-    evidenceEventIds: replay.payouts
-      .filter((payout) => excessItemIds.has(payout.itemId))
-      .map((payout) => payout.eventSequence),
+    evidenceEventIds,
   };
 }

@@ -11,6 +11,12 @@ import { canonicalHash, ENGINE_VERSION } from "../../packages/engine/src/index.j
 import { createBottleReturnState } from "../../packages/engine/src/scenario.js";
 import { replayActions } from "../../packages/evaluation/src/index.js";
 import type { Policy } from "../../packages/policy/src/index.js";
+import {
+  batchBonusExploitActions,
+  batchHonestThreeActions,
+  patchPolicies,
+} from "../../apps/web/src/replay-data.js";
+import { verifyCandidate } from "../../apps/server/src/runs/verifier.js";
 
 const policy: Policy = {
   schemaVersion: 1,
@@ -179,6 +185,30 @@ describe("bounded attacker host", () => {
     });
   });
 
+  it("allows one declared batch bonus per completed batch but rejects transient extras", () => {
+    const initialState = createBottleReturnState();
+
+    expect(verifyCandidate(initialState, patchPolicies.batchVulnerable, batchBonusExploitActions)).toMatchObject({
+      status: "exploit_verified",
+      excessReward: 15,
+      totalReward: 15,
+      usefulItems: 0,
+    });
+    expect(verifyCandidate(initialState, patchPolicies.batchReceipt, batchBonusExploitActions)).toMatchObject({
+      status: "no_exploit_in_submitted_trace",
+      excessReward: 0,
+      totalReward: 0,
+    });
+    for (const batchPolicy of [patchPolicies.batchVulnerable, patchPolicies.batchReceipt]) {
+      expect(verifyCandidate(initialState, batchPolicy, batchHonestThreeActions)).toMatchObject({
+        status: "no_exploit_in_submitted_trace",
+        excessReward: 0,
+        totalReward: 35,
+        usefulItems: 3,
+      });
+    }
+  });
+
   it("does not execute a provider response that arrives after cancellation", async () => {
     let release!: (value: Awaited<ReturnType<AttackerProvider["next"]>>) => void;
     const provider: AttackerProvider = {
@@ -197,6 +227,7 @@ describe("bounded attacker host", () => {
 
     await expect(run).resolves.toMatchObject({
       status: "run_incomplete",
+      interruptionReason: "cancelled",
       verifiedActionCount: 0,
       requestsUsed: 1,
     });
@@ -212,6 +243,24 @@ describe("bounded attacker host", () => {
       runBoundedAttacker(new BoundedAttackerSession(createBottleReturnState(), policy), provider, {
         requestTimeoutMs: 5,
       }),
-    ).resolves.toMatchObject({ status: "run_incomplete", requestsUsed: 1 });
+    ).resolves.toMatchObject({
+      status: "run_incomplete",
+      interruptionReason: "request_timeout",
+      requestsUsed: 1,
+    });
+  });
+
+  it("reports malformed provider output separately from API failures", async () => {
+    const provider = {
+      next: async () => ({ strategySummary: "", toolCalls: [] }),
+    } satisfies AttackerProvider;
+
+    await expect(
+      runBoundedAttacker(new BoundedAttackerSession(createBottleReturnState(), policy), provider),
+    ).resolves.toMatchObject({
+      status: "run_incomplete",
+      interruptionReason: "malformed_response",
+      requestsUsed: 1,
+    });
   });
 });

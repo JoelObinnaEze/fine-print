@@ -361,11 +361,11 @@
 **Description:** Turn the host's existing verification states and provider turns into a durable report that remains useful when no exploit is verified.
 
 **Acceptance criteria:**
-- [ ] Reports distinguish verified exploit, rejected candidate, completed search, and interrupted search.
-- [ ] Every report states requests used, trials completed, actions tested, and the host-computed reason.
-- [ ] Valid attempted action traces remain visible after unsuccessful searches without replacing loaded replay evidence.
+- [x] Reports distinguish verified exploit, rejected candidate, completed search, and interrupted search.
+- [x] Every report states requests used, trials completed, actions tested, and the host-computed reason.
+- [x] Valid attempted action traces remain visible after unsuccessful searches without replacing loaded replay evidence.
 
-**Verification:** Focused service and web tests cover all four outcomes, idempotent replay, and a judge-readable unsuccessful report.
+**Verification:** Service tests cover all four outcomes, precise timeout/cancellation/provider/malformed interruption reasons, and idempotent replay. The component test preserves an attempted trace with request/trial/action counts beside older loaded evidence. The 85-test checkpoint, strict typecheck, and production build passed before the batch slice.
 
 **Dependencies:** Task 20
 
@@ -378,12 +378,12 @@
 **Description:** Add one deliberately vulnerable bonus based on the hopper reaching three items and compare it with a patch based on permanent processing receipts.
 
 **Acceptance criteria:**
-- [ ] Cycling the third hopper item can repeatedly earn the vulnerable batch bonus without useful processing.
-- [ ] The receipt-backed patch pays only on each third successfully processed eligible item.
-- [ ] Honest processing of three and six eligible items retains one and two legitimate batch bonuses, respectively.
-- [ ] The UI labels this as a designed benchmark and makes either policy selectable as the next Muse target.
+- [x] Cycling the third hopper item can repeatedly earn the vulnerable batch bonus without useful processing.
+- [x] The receipt-backed patch pays only on each third successfully processed eligible item.
+- [x] Honest processing of three and six eligible items retains one and two legitimate batch bonuses, respectively.
+- [x] The UI labels this as a designed benchmark and makes either policy selectable as the next Muse target.
 
-**Verification:** Policy tests cover exploit and honest traces; component/browser checks show the vulnerable and patched evidence without a paid request.
+**Verification:** Policy and verifier tests prove 15 vulnerable exploit points versus zero after patching, while both policies pay 35 for one honest batch and 70 for two. Opera GX exposes both benchmark cards and both Muse target states in the accessibility tree. The 91-test suite, strict typecheck, production build, and high-severity dependency audit pass. No paid request was made.
 
 **Dependencies:** Task 21
 
@@ -393,6 +393,6 @@
 
 ## Checkpoint: Harder failures are assessable
 
-- [ ] Unsuccessful live searches are understandable without developer tools.
-- [ ] One interacting-rule failure and its receipt-backed patch are deterministic, replayable, and honest-work preserving.
+- [x] Unsuccessful live searches are understandable without developer tools.
+- [x] One interacting-rule failure and its receipt-backed patch are deterministic, replayable, and honest-work preserving.
 
