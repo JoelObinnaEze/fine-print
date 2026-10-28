@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { CommerceWorkbench } from "./commerce/CommerceWorkbench.js";
 import { Depot } from "./depot/Depot.js";
 import {
   RedTeamArena,
@@ -103,13 +104,23 @@ export function App() {
     <div className="app-shell">
       <header className="site-header">
         <div>
-          <p className="eyebrow">Executable incentive test · {evidence.provenance.replaceAll("_", " ")}</p>
+          <p className="eyebrow">Executable incentive design · deterministic verification</p>
           <h1>Fine Print</h1>
         </div>
         <p className="tagline">You write the rules. The AI finds what you forgot.</p>
       </header>
 
       <main>
+        <CommerceWorkbench />
+
+        <section className="bottle-domain" id="bottle-return" aria-labelledby="bottle-domain-title">
+          <div className="bottle-domain__heading">
+            <div>
+              <p className="eyebrow">Domain 02 · Bottle Return</p>
+              <h2 id="bottle-domain-title">Same verifier. Different incentive system.</h2>
+            </div>
+            <p>Switch domains to show that model-proposed attacks still end in deterministic receipts.</p>
+          </div>
         <RedTeamArena
           evidence={evidence}
           activeSourceText={sourceText}
@@ -229,6 +240,7 @@ export function App() {
           actionCount={traceActions.length}
           evidence={evidence}
         />
+        </section>
       </main>
     </div>
   );
