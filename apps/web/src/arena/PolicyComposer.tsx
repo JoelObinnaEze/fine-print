@@ -110,7 +110,8 @@ export function PolicyComposer({
           {candidateClause && (
             <dl>
               <div><dt>Reward trigger</dt><dd>{candidateClause.trigger}</dd></div>
-              <div><dt>Eligible objects</dt><dd>{candidateClause.eligibleOnly ? candidateClause.materials.join(", ") : "all supported items"}</dd></div>
+              <div><dt>Paid materials</dt><dd>{candidateClause.materials.join(", ")}</dd></div>
+              <div><dt>Eligibility required</dt><dd>{candidateClause.eligibleOnly ? "Yes" : "No"}</dd></div>
               <div><dt>Repeat limit</dt><dd>{candidateClause.repetition === "once_per_item" ? "once per item" : "none"}</dd></div>
               <div><dt>Successful processing required</dt><dd>{candidateClause.trigger === "process" ? "Yes" : "No"}</dd></div>
             </dl>

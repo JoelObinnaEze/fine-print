@@ -21,7 +21,7 @@ export function PolicyCard({
       {clause ? (
         <dl className="clause-grid">
           <div><dt>When</dt><dd>{clause.trigger}</dd></div>
-          <div><dt>Which</dt><dd>{clause.eligibleOnly ? "eligible items" : "any item"}</dd></div>
+          <div><dt>Which</dt><dd>{clause.eligibleOnly ? "eligible " : ""}{clause.materials.join(", ")} items</dd></div>
           <div><dt>How often</dt><dd>{clause.repetition.replaceAll("_", " ")}</dd></div>
           <div><dt>Completion required</dt><dd>{clause.trigger === "process" ? "yes" : "no"}</dd></div>
           <div><dt>Points</dt><dd>+{clause.points}</dd></div>

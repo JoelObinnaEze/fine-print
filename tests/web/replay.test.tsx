@@ -180,6 +180,20 @@ describe("offline replay game", () => {
   });
 
   it("interprets and explicitly activates a natural-language policy", async () => {
+    const aluminiumPolicy = {
+      schemaVersion: 1 as const,
+      clauses: [
+        {
+          id: "aluminium-processing",
+          enabled: true,
+          trigger: "process" as const,
+          points: 7,
+          eligibleOnly: false,
+          materials: ["aluminium"] as const,
+          repetition: "once_per_item" as const,
+        },
+      ],
+    };
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
       if (url === "/api/health") {
@@ -192,8 +206,8 @@ describe("offline replay game", () => {
         return Response.json({
           interpretation: {
             status: "candidate",
-            reason: "Pays once after eligible processing.",
-            policy: patchPolicies.eligibleProcessing,
+            reason: "Pays seven points once after aluminium processing.",
+            policy: aluminiumPolicy,
           },
           usage: { actualUsd: 0.001 },
         });
@@ -203,23 +217,25 @@ describe("offline replay game", () => {
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
     render(<App />);
-    const sourceText = "Pay 10 points once when an eligible bottle is processed.";
+    const sourceText = "Pay 7 points once per aluminium item, only after it is successfully processed. Depositing an item earns no points.";
 
     await user.clear(screen.getByLabelText("Reward policy"));
     await user.type(screen.getByLabelText("Reward policy"), sourceText);
     await user.click(screen.getByRole("button", { name: "Interpret with Meta" }));
 
-    expect(await screen.findByText("Pays once after eligible processing.")).toBeTruthy();
+    expect(await screen.findByText("Pays seven points once after aluminium processing.")).toBeTruthy();
     expect(screen.getByText("Reward trigger")).toBeTruthy();
-    expect(screen.getByText("Eligible objects")).toBeTruthy();
+    expect(screen.getByText("Paid materials")).toBeTruthy();
+    expect(screen.getByText("Eligibility required")).toBeTruthy();
     expect(screen.getByText("Repeat limit")).toBeTruthy();
     expect(screen.getByText("Successful processing required")).toBeTruthy();
-    expect(screen.getByText("Yes")).toBeTruthy();
+    expect(screen.getByText("aluminium")).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Activate candidate" }));
     expect(screen.getAllByText(sourceText)).toHaveLength(2);
     const activePolicy = screen.getByText(/^Active policy/).closest("section");
     expect(activePolicy).not.toBeNull();
     expect(within(activePolicy!).getByText("process", { selector: "dd" })).toBeTruthy();
-    expect(within(activePolicy!).getByText("eligible items", { selector: "dd" })).toBeTruthy();
+    expect(within(activePolicy!).getByText("aluminium items", { selector: "dd" })).toBeTruthy();
+    expect(within(activePolicy!).getByText("+7", { selector: "dd" })).toBeTruthy();
   });
 });

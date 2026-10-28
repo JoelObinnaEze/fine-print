@@ -50,7 +50,7 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .arena__candidate { grid-column: 2 / -1; padding: .65rem .75rem; border: 1px solid #66645e; border-top: 3px solid var(--green-pale); background: #323833; }
 .arena__candidate strong { color: var(--green-pale); }
 .arena__candidate p { margin: .25rem 0 0; color: #eee5d5; font-size: .75rem; }
-.arena__candidate dl { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem; margin: .65rem 0 0; }
+.arena__candidate dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: .5rem; margin: .65rem 0 0; }
 .arena__candidate dl div { padding-top: .45rem; border-top: 1px solid #66645e; }
 .arena__candidate dt { color: #bcb3a3; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .arena__candidate dd { margin: .15rem 0 0; color: var(--paper); font-size: .75rem; font-weight: 800; }
