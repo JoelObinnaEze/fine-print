@@ -23,9 +23,9 @@ const contaminationActions: readonly Action[] = [
 ];
 
 const honestOrders = [
-  ["B1", "B2", "B3", "C1", "C2", "C3"],
-  ["C3", "C2", "C1", "B3", "B2", "B1"],
-  ["B1", "C1", "B2", "C2", "B3", "C3"],
+  { name: "Input order", itemIds: ["B1", "B2", "B3", "C1", "C2", "C3"] },
+  { name: "Reverse order", itemIds: ["C3", "C2", "C1", "B3", "B2", "B1"] },
+  { name: "Alternating order", itemIds: ["B1", "C1", "B2", "C2", "B3", "C3"] },
 ] as const;
 
 const prematurePayoutActions: readonly Action[] = [
@@ -34,7 +34,16 @@ const prematurePayoutActions: readonly Action[] = [
 ];
 
 export interface GauntletResult {
-  readonly honestWorkflows: { readonly passed: number; readonly total: number };
+  readonly honestWorkflows: {
+    readonly passed: number;
+    readonly total: number;
+    readonly results: readonly {
+      readonly name: string;
+      readonly expectedReward: number;
+      readonly actualReward: number;
+      readonly passed: boolean;
+    }[];
+  };
   readonly attacks: readonly {
     readonly id: "duplicate_reward" | "ineligible_payout" | "premature_payout";
     readonly name: string;
@@ -46,18 +55,26 @@ export interface GauntletResult {
 
 export function evaluatePolicyGauntlet(policy: Policy): GauntletResult {
   const initialState = createBottleReturnState();
+  const expectedHonestReward = initialState.items.filter((item) => item.eligible).length * 10;
   const completedMetrics = (actions: readonly Action[]) =>
     calculateCompletedMetrics(initialState, replayActions(initialState, actions, policy));
-  const honestResults = honestOrders.map((order) =>
-    completedMetrics(createHonestWorkerActions(initialState, order)),
-  );
+  const honestResults = honestOrders.map(({ name, itemIds }) => {
+    const metrics = completedMetrics(createHonestWorkerActions(initialState, itemIds));
+    return {
+      name,
+      expectedReward: expectedHonestReward,
+      actualReward: metrics.reward,
+      passed: metrics.legitimateCoverage === 1,
+    };
+  });
   const duplicateReward = completedMetrics(exploitActions).reward;
   const ineligiblePayout = completedMetrics(contaminationActions).reward;
   const prematurePayout = completedMetrics(prematurePayoutActions).reward;
   return {
     honestWorkflows: {
-      passed: honestResults.filter(({ legitimateCoverage }) => legitimateCoverage === 1).length,
+      passed: honestResults.filter(({ passed }) => passed).length,
       total: honestResults.length,
+      results: honestResults,
     },
     attacks: [
       {
@@ -115,6 +132,7 @@ export function PolicyGauntlet({
     [patchedPolicy],
   );
   const inspected = patched ?? active;
+  const inspectedLabel = patched ? "Selected patch" : "Active policy";
   return (
     <section className="gauntlet" aria-labelledby="gauntlet-title">
       <div className="gauntlet__heading">
@@ -132,6 +150,24 @@ export function PolicyGauntlet({
             <li className={attack.blocked ? "is-pass" : "is-fail"} key={attack.id}>
               <b>{attack.blocked ? "Blocked" : "Failed"}</b>
               <span><strong>{attack.name}</strong>{attack.result}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="gauntlet__honest">
+        <div>
+          <h3>Honest-work reference</h3>
+          <p>
+            Reference goal: process all six eligible items for 10 points each. A different policy
+            is not invalid; it simply does not preserve this baseline.
+          </p>
+        </div>
+        <ul aria-label={`${inspectedLabel} honest workflow payouts`}>
+          {inspected.honestWorkflows.results.map((result) => (
+            <li className={result.passed ? "is-pass" : "is-different"} key={result.name}>
+              <b>{result.name}</b>
+              <span>Expected {result.expectedReward} · actual {result.actualReward}</span>
+              <em>{result.passed ? "Preserved" : "Different"}</em>
             </li>
           ))}
         </ul>

@@ -273,5 +273,7 @@ describe("offline replay game", () => {
     expect(within(activePolicy!).getByText("process", { selector: "dd" })).toBeTruthy();
     expect(within(activePolicy!).getByText("aluminium items", { selector: "dd" })).toBeTruthy();
     expect(within(activePolicy!).getByText("+7", { selector: "dd" })).toBeTruthy();
+    expect(screen.getAllByText("Expected 60 · actual 21")).toHaveLength(3);
+    expect(screen.getByText(/A different policy is not invalid/)).toBeTruthy();
   });
 });
