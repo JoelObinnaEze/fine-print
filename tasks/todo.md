@@ -341,3 +341,18 @@
 
 **Files touched:** `apps/web/src/App.tsx`, `apps/web/src/replay/EventTimeline.tsx`, `apps/web/src/styles.css`, `tests/web/replay.test.tsx`
 
+## Task 20: Close reviewer trust gaps and add a 3D live depot
+
+**Description:** Fix contradictory policy summaries, distinguish each live attack attempt from loaded replay evidence, explain honest-work expectations, compress the judge-facing opening, and render the deterministic depot in 3D.
+
+**Acceptance criteria:**
+- [x] Candidate and active-policy summaries report material, eligibility, trigger, repetition, and reward constraints independently.
+- [x] Inconclusive searches show their own target, provenance, and outcome without replacing or impersonating loaded replay evidence.
+- [x] Every honest workflow reports the 60-point reference expectation beside its actual payout and explains that a narrower custom policy is not inherently invalid.
+- [x] The live depot uses an isometric 3D stage while retaining the existing deterministic DOM state and screen-reader description.
+- [x] The desktop arena is compact enough to reveal the simulator in the opening viewport.
+
+**Verification:** The reviewer's seven-point aluminium policy reproduces as `aluminium`, `+7`, and 21 actual points against the clearly labeled 60-point reference. An inconclusive eligible-processing search is regression-tested beside previously loaded verified evidence. Opera GX shows live agent movement on the isometric depot at tick 1, no app-origin console errors, no horizontal overflow at 320, 768, or 1024 px, and the simulator entering the 1024 px opening viewport. The 82-test suite, strict typecheck, production build, and high-severity audit pass on October 27, 2026. No paid inference request was made for this task.
+
+**Files touched:** `apps/web/src/arena/PolicyComposer.tsx`, `apps/web/src/arena/RedTeamArena.tsx`, `apps/web/src/depot/Depot.tsx`, `apps/web/src/policy/PolicyCard.tsx`, `apps/web/src/policy/PolicyGauntlet.tsx`, `apps/web/src/styles.css`, `tests/web/policy-gauntlet.test.ts`, `tests/web/replay.test.tsx`
+
