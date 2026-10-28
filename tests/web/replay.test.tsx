@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -10,6 +10,8 @@ import {
   exploitActions,
   patchPolicies,
   replayFrames,
+  startingPolicy,
+  startingPolicySourceText,
 } from "../../apps/web/src/replay-data.js";
 
 afterEach(() => {
@@ -26,6 +28,49 @@ function renderBottle(view: "attack" | "replay" | "validate" | "inspect" = "atta
 }
 
 describe("offline replay game", () => {
+  it("prefills the executable starting policy without exposing the credit balance", async () => {
+    let attackedPolicy: unknown;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (input, init) => {
+        const url = String(input);
+        if (url === "/api/health") return Response.json({ liveAgent: { isEnabled: true } });
+        if (url === "/api/regressions/evaluate") return Response.json([]);
+        if (url === "/api/attacks") {
+          attackedPolicy = JSON.parse(String(init?.body)).policy;
+          return Response.json(
+            {
+              runId: null,
+              verification: { status: "no_exploit_found_within_budget" },
+              usage: { requests: 1, totalTokens: 20, actualUsd: 0.001 },
+              report: {
+                outcome: "search_completed",
+                reason: "Search completed.",
+                requestsUsed: 1,
+                trialsCompleted: 1,
+                actionsTested: 1,
+                attemptedTraces: [],
+              },
+            },
+            { status: 201 },
+          );
+        }
+        return Response.json({ error: { message: "not found" } }, { status: 404 });
+      }),
+    );
+    const user = userEvent.setup();
+    renderBottle();
+
+    expect((screen.getByLabelText("Reward policy") as HTMLTextAreaElement).value).toBe(
+      startingPolicySourceText,
+    );
+    const runButton = screen.getByRole("button", { name: "Run fresh Muse attack" });
+    await waitFor(() => expect(runButton.hasAttribute("disabled")).toBe(false));
+    expect(screen.queryByText(/Meta connected|budget left/)).toBeNull();
+    await user.click(runButton);
+    await waitFor(() => expect(attackedPolicy).toEqual(startingPolicy));
+  });
+
   it("keeps the Bottle Return workflow complete behind four focused views", async () => {
     const user = userEvent.setup();
     renderBottle();
@@ -262,7 +307,9 @@ describe("offline replay game", () => {
     const user = userEvent.setup();
     renderBottle();
 
-    expect(await screen.findByText(/Meta connected/)).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Run fresh Muse attack" }).hasAttribute("disabled")).toBe(false),
+    );
     await user.click(screen.getByRole("tab", { name: /^Validate/i }));
     await user.click(screen.getByRole("button", { name: "Test once-per-item patch" }));
     await user.click(screen.getByRole("tab", { name: /^Attack/i }));
@@ -353,7 +400,9 @@ describe("offline replay game", () => {
     const user = userEvent.setup();
     renderBottle();
 
-    expect(await screen.findByText(/Meta connected/)).toBeTruthy();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Run fresh Muse attack" }).hasAttribute("disabled")).toBe(false),
+    );
     await user.click(screen.getByRole("button", { name: "Load recorded starting-policy run" }));
     await user.click(screen.getByRole("tab", { name: /^Validate/i }));
     await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));

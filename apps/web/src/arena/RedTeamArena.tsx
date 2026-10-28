@@ -129,7 +129,6 @@ export function RedTeamArena({
   ) => void;
 }) {
   const [connection, setConnection] = useState<"checking" | "ready" | "offline">("checking");
-  const [availableBudget, setAvailableBudget] = useState<number | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [attempt, setAttempt] = useState<AttackAttempt | null>(null);
   const [strategies, setStrategies] = useState<readonly string[]>([]);
@@ -138,18 +137,14 @@ export function RedTeamArena({
 
   useEffect(() => {
     let active = true;
-    void Promise.all([fetch("/api/health"), fetch("/api/usage")])
-      .then(async ([healthResponse, usageResponse]) => {
-        if (!healthResponse.ok || !usageResponse.ok) throw new Error("Server unavailable.");
+    void fetch("/api/health")
+      .then(async (healthResponse) => {
+        if (!healthResponse.ok) throw new Error("Server unavailable.");
         const health = (await healthResponse.json()) as {
           readonly liveAgent?: { readonly isEnabled?: boolean };
         };
-        const usage = (await usageResponse.json()) as { readonly availableAppUsd?: number };
         if (!active) return;
         setConnection(health.liveAgent?.isEnabled ? "ready" : "offline");
-        setAvailableBudget(
-          typeof usage.availableAppUsd === "number" ? usage.availableAppUsd : null,
-        );
       })
       .catch(() => active && setConnection("offline"));
     return () => {
@@ -418,14 +413,11 @@ export function RedTeamArena({
           <p className="arena__target">Next search: {attackTarget.label}</p>
           {/* shortcut: mirrors fixed server limits; expose them from /api/health if they become configurable. */}
           <p>Search budget: up to 12 requests · 4 trials · 120 ticks per trial · 2 minutes.</p>
-          <p className={`arena__status arena__status--${connection}`} role="status">
-            {connection === "ready"
-              ? "Meta connected"
-              : connection === "checking"
-                ? "Checking Meta connection"
-                : "Offline replay mode"}
-            {availableBudget !== null ? ` · $${availableBudget.toFixed(2)} budget left` : ""}
-          </p>
+          {connection !== "ready" && (
+            <p className={`arena__status arena__status--${connection}`} role="status">
+              {connection === "checking" ? "Checking Meta connection" : "Offline replay mode"}
+            </p>
+          )}
         </section>
         <button
           className="arena__primary"

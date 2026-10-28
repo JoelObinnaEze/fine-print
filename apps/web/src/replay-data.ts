@@ -18,7 +18,8 @@ export const startingPolicy: Policy = {
   ],
 };
 
-export const startingPolicySourceText = "Pay 10 points whenever an item is deposited.";
+export const startingPolicySourceText =
+  "Pay 10 points every time plastic, aluminium, carton, or rubbish is deposited. The same item can earn points again when it is retrieved and redeposited.";
 
 export const patchPolicies = {
   oncePerItem: {
