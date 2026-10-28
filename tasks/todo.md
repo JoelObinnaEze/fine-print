@@ -486,11 +486,11 @@
 **Description:** Accept commerce policy text and a separate intended outcome, ask Muse for a supported mapping, explicit attack trace, and competing designs, then validate and score all output in host code under existing budget and idempotency controls.
 
 **Acceptance criteria:**
-- [ ] The endpoint has strict typed input/output and durable idempotency; reused keys with different payloads fail.
-- [ ] Unsupported conditions are surfaced rather than silently approximated.
-- [ ] Only a host-replayed counterexample may be labelled verified, and every design is scored by deterministic simulation.
+- [x] The endpoint has strict typed input/output and durable idempotency; reused keys with different payloads fail.
+- [x] Unsupported conditions are surfaced rather than silently approximated.
+- [x] Only a host-replayed counterexample may be labelled verified, and every design is scored by deterministic simulation.
 
-**Verification:** Provider and route tests use fake responses for valid, unsupported, rejected, replayed, and conflicting requests; no paid inference is required for tests.
+**Verification:** Four provider/route tests prove strict structured output, host trace minimization and verification, three host-scored repairs, population evaluation, unsupported-condition refusal, durable idempotent replay, conflicting-key rejection, budget settlement, secret exclusion, and HTTP exposure. Fourteen focused commerce/provider tests and strict typecheck pass without paid inference.
 
 **Dependencies:** Task 27
 

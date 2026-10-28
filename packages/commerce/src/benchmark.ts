@@ -27,29 +27,40 @@ export const vulnerableCommercePolicy: CommercePolicy = {
   },
 };
 
-export const refundAttackActions: readonly CommerceAction[] = [
-  { type: "refer", referrerId: "A", customerId: "B" },
-  {
-    type: "purchase",
-    accountId: "B",
-    purchaseId: "P1",
-    priceUsd: 20,
-    promoCreditUsd: 0,
-  },
-  { type: "refund", accountId: "B", purchaseId: "P1" },
-];
+export function createRefundAttackActions(
+  policy: CommercePolicy,
+): readonly CommerceAction[] {
+  return [
+    { type: "refer", referrerId: "A", customerId: "B" },
+    {
+      type: "purchase",
+      accountId: "B",
+      purchaseId: "P1",
+      priceUsd: policy.referral.qualifyingPurchaseUsd,
+      promoCreditUsd: 0,
+    },
+    { type: "refund", accountId: "B", purchaseId: "P1" },
+  ];
+}
 
-export const honestCustomerActions: readonly CommerceAction[] = [
-  { type: "refer", referrerId: "A", customerId: "B" },
-  {
-    type: "purchase",
-    accountId: "B",
-    purchaseId: "H1",
-    priceUsd: 20,
-    promoCreditUsd: 0,
-  },
-  { type: "advance_days", days: 30 },
-];
+export function createHonestCustomerActions(
+  policy: CommercePolicy,
+): readonly CommerceAction[] {
+  return [
+    { type: "refer", referrerId: "A", customerId: "B" },
+    {
+      type: "purchase",
+      accountId: "B",
+      purchaseId: "H1",
+      priceUsd: policy.referral.qualifyingPurchaseUsd,
+      promoCreditUsd: 0,
+    },
+    { type: "advance_days", days: policy.referral.returnWindowDays },
+  ];
+}
+
+export const refundAttackActions = createRefundAttackActions(vulnerableCommercePolicy);
+export const honestCustomerActions = createHonestCustomerActions(vulnerableCommercePolicy);
 
 export interface CommerceRepairCandidate {
   readonly id: "delay" | "pending_reversal" | "net_retained";

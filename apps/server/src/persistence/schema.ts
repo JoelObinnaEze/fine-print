@@ -113,6 +113,16 @@ export function initializeRunSchema(database: AppDatabase): void {
       expected_excess_reward INTEGER NOT NULL CHECK (expected_excess_reward > 0),
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS commerce_investigations (
+      id TEXT PRIMARY KEY,
+      idempotency_key TEXT NOT NULL UNIQUE,
+      request_hash TEXT NOT NULL,
+      state TEXT NOT NULL CHECK (state IN ('claimed', 'completed', 'incomplete')),
+      result_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
 
   const runColumns = new Set(

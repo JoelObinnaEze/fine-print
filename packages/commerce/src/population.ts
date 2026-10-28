@@ -29,7 +29,10 @@ export interface CommercePopulationResult {
   };
 }
 
-const participantStrategies: readonly CommerceParticipantStrategy[] = [
+function participantStrategies(policy: CommercePolicy): readonly CommerceParticipantStrategy[] {
+  const purchaseUsd = policy.referral.qualifyingPurchaseUsd;
+  const spendableCreditUsd = Math.min(policy.referral.rewardUsd, purchaseUsd);
+  return [
   {
     id: "ordinary",
     label: "Ordinary customers",
@@ -43,10 +46,10 @@ const participantStrategies: readonly CommerceParticipantStrategy[] = [
         type: "purchase",
         accountId: "O2",
         purchaseId: "OP1",
-        priceUsd: 20,
+        priceUsd: purchaseUsd,
         promoCreditUsd: 0,
       },
-      { type: "advance_days", days: 30 },
+      { type: "advance_days", days: policy.referral.returnWindowDays },
     ],
   },
   {
@@ -62,16 +65,16 @@ const participantStrategies: readonly CommerceParticipantStrategy[] = [
         type: "purchase",
         accountId: "H2",
         purchaseId: "HP1",
-        priceUsd: 20,
+        priceUsd: purchaseUsd,
         promoCreditUsd: 0,
       },
-      { type: "advance_days", days: 30 },
+      { type: "advance_days", days: policy.referral.returnWindowDays },
       {
         type: "purchase",
         accountId: "H2",
         purchaseId: "HP2",
-        priceUsd: 20,
-        promoCreditUsd: 10,
+        priceUsd: purchaseUsd,
+        promoCreditUsd: spendableCreditUsd,
       },
     ],
   },
@@ -88,19 +91,20 @@ const participantStrategies: readonly CommerceParticipantStrategy[] = [
         type: "purchase",
         accountId: "A2",
         purchaseId: "AP1",
-        priceUsd: 20,
+        priceUsd: purchaseUsd,
         promoCreditUsd: 0,
       },
       { type: "refund", accountId: "A2", purchaseId: "AP1" },
     ],
   },
-];
+  ];
+}
 
 export function evaluateCommercePopulation(
   policy: CommercePolicy,
   goal: CommerceGoal,
 ): CommercePopulationResult {
-  const strategies = participantStrategies.map(
+  const strategies = participantStrategies(policy).map(
     (strategy): CommercePopulationStrategyResult => {
       const replay = replayCommerce(
         createCommerceState(strategy.accountIds),

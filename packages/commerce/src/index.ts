@@ -15,6 +15,8 @@ export {
   commerceGoal,
   commerceRepairCandidates,
   calculateCommerceStrategyMetrics,
+  createHonestCustomerActions,
+  createRefundAttackActions,
   evaluateCommerceDesign,
   honestCustomerActions,
   minimizeCommerceExploit,

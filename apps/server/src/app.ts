@@ -12,6 +12,11 @@ import {
   type MetaPolicyTranslator,
 } from "./providers/meta.js";
 import {
+  commerceInvestigationRequestSchema,
+  MetaCommerceInvestigatorError,
+  type MetaCommerceInvestigator,
+} from "./providers/meta-commerce.js";
+import {
   branchRunSchema,
   createRunSchema,
   idempotencyKeySchema,
@@ -125,6 +130,7 @@ interface ServerOptions {
   readonly budget: BudgetService;
   readonly translator?: MetaPolicyTranslator;
   readonly attacks?: LiveAttackService;
+  readonly commerce?: MetaCommerceInvestigator;
 }
 
 async function handle(
@@ -135,6 +141,7 @@ async function handle(
   budget: BudgetService | undefined,
   translator: MetaPolicyTranslator | undefined,
   attacks: LiveAttackService | undefined,
+  commerce: MetaCommerceInvestigator | undefined,
 ): Promise<void> {
   const method = request.method ?? "GET";
   const url = new URL(request.url ?? "/", "http://localhost");
@@ -189,6 +196,36 @@ async function handle(
       throw new RequestError(422, "VALIDATION_ERROR", "Attack request is invalid.", input.error.issues);
     }
     const result = await attacks.run(input.data.policy, keyResult.data);
+    sendJson(response, result.replayed ? 200 : 201, result);
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/commerce/investigations") {
+    if (!config.liveAgent.isEnabled || !commerce) {
+      throw new RequestError(
+        503,
+        "LIVE_COMMERCE_DISABLED",
+        "Live Meta commerce investigations are unavailable.",
+      );
+    }
+    const keyResult = idempotencyKeySchema.safeParse(request.headers["idempotency-key"]);
+    if (!keyResult.success) {
+      throw new RequestError(
+        400,
+        "INVALID_IDEMPOTENCY_KEY",
+        "Idempotency-Key is required and invalid.",
+      );
+    }
+    const input = commerceInvestigationRequestSchema.safeParse(await readJson(request));
+    if (!input.success) {
+      throw new RequestError(
+        422,
+        "VALIDATION_ERROR",
+        "Commerce investigation request is invalid.",
+        input.error.issues,
+      );
+    }
+    const result = await commerce.investigate(input.data, keyResult.data);
     sendJson(response, result.replayed ? 200 : 201, result);
     return;
   }
@@ -305,6 +342,7 @@ export function createRunServer(service = new RunService(), options?: ServerOpti
       options?.budget,
       options?.translator,
       options?.attacks,
+      options?.commerce,
     ).catch((error: unknown) => {
       if (error instanceof RequestError) {
         sendError(response, error.status, error.code, error.message, error.details);
@@ -338,6 +376,19 @@ export function createRunServer(service = new RunService(), options?: ServerOpti
             : error.code === "PROVIDER_BUSY"
               ? 429
               : 409;
+        sendError(response, status, error.code, error.message);
+      } else if (error instanceof MetaCommerceInvestigatorError) {
+        const status =
+          error.code === "PROVIDER_BUSY"
+            ? 429
+            : error.code === "PROVIDER_REJECTED" ||
+                error.code === "PROVIDER_OUTPUT_INVALID" ||
+                error.code === "PROVIDER_OUTCOME_UNKNOWN"
+              ? 502
+              : error.code === "INVESTIGATION_ALREADY_ATTEMPTED" ||
+                  error.code === "IDEMPOTENCY_KEY_REUSED"
+                ? 409
+                : 422;
         sendError(response, status, error.code, error.message);
       } else {
         sendError(response, 500, "INTERNAL_ERROR", "Internal server error.");
