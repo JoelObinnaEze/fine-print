@@ -167,6 +167,115 @@ describe("Meta commerce investigation", () => {
     expect(JSON.stringify(first)).not.toContain("test-secret");
   });
 
+  it("executes a coherent trace when Muse names the two simulator accounts", async () => {
+    const namedActions = [
+      { type: "refer", referrerId: "Alice", customerId: "Bob" },
+      {
+        type: "purchase",
+        accountId: "Bob",
+        purchaseId: "order_35",
+        priceUsd: 35,
+        promoCreditUsd: 0,
+      },
+      { type: "refund", accountId: "Bob", purchaseId: "order_35" },
+    ] as const;
+    const namedPolicy = {
+      ...vulnerableCommercePolicy,
+      referral: {
+        ...vulnerableCommercePolicy.referral,
+        rewardUsd: 9,
+        qualifyingPurchaseUsd: 35,
+        returnWindowDays: 21,
+      },
+    };
+    const { commerce } = createServices(async () =>
+      completion({
+        ...modelOutput,
+        policy: namedPolicy,
+        attackActions: namedActions,
+        candidates: modelOutput.candidates.map((candidate) => ({
+          ...candidate,
+          policy: {
+            ...candidate.policy,
+            referral: {
+              ...candidate.policy.referral,
+              rewardUsd: 9,
+              qualifyingPurchaseUsd: 35,
+              returnWindowDays: 21,
+            },
+          },
+        })),
+      }),
+    );
+
+    const result = await commerce.investigate(
+      {
+        ...request,
+        goal: { ...request.goal, minimumUsd: 35 },
+      },
+      "commerce-named-accounts",
+    );
+
+    expect(result.attack).toMatchObject({
+      minimizedActions: [
+        { type: "refer", referrerId: "A", customerId: "B" },
+        { type: "purchase", accountId: "B", purchaseId: "order_35" },
+        { type: "refund", accountId: "B", purchaseId: "order_35" },
+      ],
+      verification: {
+        status: "exploit_verified",
+        unintendedPayoutUsd: 18,
+        retainedRevenueUsd: 0,
+      },
+    });
+    expect(result.attack?.events.map((event) => event.summary)).toEqual([
+      "A referred B.",
+      "B bought order_35 for $35.",
+      "B refunded order_35.",
+    ]);
+    expect(result.candidates.every((candidate) => candidate.evaluation.knownAttackBlocked)).toBe(
+      true,
+    );
+  });
+
+  it("accepts an attack-only recheck with no executable candidate", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      const body = JSON.parse(String(init?.body)) as { messages: { content: string }[] };
+      expect(body.messages[1]?.content).toContain('"mode":"attack_only"');
+      return completion({
+        ...modelOutput,
+        reason: "The repaired policy was mapped, but no executable attack candidate was found.",
+        policy: commerceRepairCandidates[0]!.policy,
+        attackHypothesis: "",
+        attackActions: [],
+        candidates: [],
+      });
+    });
+    const { commerce } = createServices(fetchMock);
+
+    const result = await commerce.investigate(
+      {
+        ...request,
+        mode: "attack_only",
+        sourceText:
+          "Give both people $10 immediately after a $20 purchase. Reverse the credit after a refund.",
+      },
+      "commerce-attack-only-no-candidate",
+    );
+
+    expect(result).toMatchObject({
+      mapping: { status: "candidate", policy: commerceRepairCandidates[0]!.policy },
+      attack: {
+        hypothesis: "Muse returned no executable attack candidate in this attempt.",
+        proposedActionCount: 0,
+        minimizedActions: [],
+        verification: { status: "no_exploit", unintendedPayoutUsd: 0 },
+        events: [],
+      },
+      candidates: [],
+    });
+  });
+
   it("surfaces unsupported conditions without inventing an executable mapping", async () => {
     const { commerce } = createServices(async () =>
       completion({
@@ -191,6 +300,56 @@ describe("Meta commerce investigation", () => {
       candidates: [],
       population: null,
     });
+  });
+
+  it("rejects candidate mappings with unsupported conditions or duplicate repairs", async () => {
+    const duplicateRepairs = modelOutput.candidates.map((candidate, index) => ({
+      ...candidate,
+      id: `duplicate-${index}`,
+      policy: modelOutput.candidates[0]!.policy,
+    }));
+    const invalidOutputs = [
+      { ...modelOutput, unsupportedConditions: ["country eligibility"] },
+      { ...modelOutput, candidates: duplicateRepairs },
+    ];
+
+    for (const [index, output] of invalidOutputs.entries()) {
+      const { commerce } = createServices(async () => completion(output));
+      await expect(
+        commerce.investigate(request, `commerce-invalid-${index}`),
+      ).rejects.toMatchObject({ code: "PROVIDER_OUTPUT_INVALID" });
+    }
+  });
+
+  it("marks an investigation incomplete when reported usage exceeds its reservation", async () => {
+    const { budget, commerce, database } = createServices(async () =>
+      new Response(
+        JSON.stringify({
+          id: "chatcmpl-commerce-overage",
+          choices: [{
+            index: 0,
+            message: { role: "assistant", content: JSON.stringify(modelOutput) },
+            finish_reason: "stop",
+          }],
+          usage: {
+            prompt_tokens: 1_000_000,
+            completion_tokens: 1_000_000,
+            total_tokens: 2_000_000,
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+
+    await expect(
+      commerce.investigate(request, "commerce-overage"),
+    ).rejects.toMatchObject({ code: "PROVIDER_OUTCOME_UNKNOWN" });
+    expect(budget.getUsage().ambiguousUsd).toBeGreaterThan(0);
+    expect(
+      database
+        .prepare("SELECT state FROM commerce_investigations WHERE idempotency_key = ?")
+        .get("commerce-overage"),
+    ).toEqual({ state: "incomplete" });
   });
 
   it("rejects an idempotency key reused for another investigation", async () => {

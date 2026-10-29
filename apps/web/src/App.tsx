@@ -13,6 +13,7 @@ import { PolicyGauntlet } from "./policy/PolicyGauntlet.js";
 import { PolicyLab } from "./policy/PolicyLab.js";
 import { EventTimeline } from "./replay/EventTimeline.js";
 import { ReplayControls } from "./replay/ReplayControls.js";
+import { handleTabKeyDown } from "./tab-navigation.js";
 import {
   createReplayFrames,
   patchPolicies,
@@ -26,13 +27,12 @@ import {
 import type { Policy } from "../../../packages/policy/src/index.js";
 
 type WorkspaceId = "commerce" | "bottle";
-type BottleView = "attack" | "replay" | "validate" | "inspect";
+type BottleView = "attack" | "replay" | "validate";
 
 const bottleViews: readonly { id: BottleView; label: string; description: string }[] = [
-  { id: "attack", label: "Attack", description: "Ask Muse to break it" },
-  { id: "replay", label: "Replay", description: "Inspect the receipts" },
-  { id: "validate", label: "Validate", description: "Compare repairs" },
-  { id: "inspect", label: "Inspect", description: "Audit provenance" },
+  { id: "attack", label: "Step 1 · Your rule", description: "What should happen" },
+  { id: "replay", label: "Step 2 · What went wrong", description: "Confirmed replay" },
+  { id: "validate", label: "Step 3 · Best repair", description: "Keep honest rewards" },
 ];
 
 export function App() {
@@ -58,6 +58,7 @@ export function App() {
     [activePolicy, traceActions],
   );
   const frame = activeFrames[frameIndex]!;
+  const completedFrame = activeFrames.at(-1)!;
   const patchedFrames = useMemo(
     () =>
       activePatch
@@ -126,9 +127,9 @@ export function App() {
       <header className="site-header">
         <div className="site-brand">
           <h1>Fine Print</h1>
-          <p>Find the reward loophole before your users do.</p>
+          <p>Test reward rules before launch.</p>
         </div>
-        <nav className="workspace-tabs" aria-label="Choose an incentive system" role="tablist">
+        <nav className="workspace-tabs" aria-label="Choose an incentive system" role="tablist" onKeyDown={handleTabKeyDown}>
           <button
             aria-controls="commerce-workspace"
             aria-selected={activeWorkspace === "commerce"}
@@ -172,12 +173,16 @@ export function App() {
         >
           <div className="bottle-domain__heading">
             <div>
-              <h2>Can rewards be earned without recycling anything?</h2>
-              <p>Muse proposes an attack. The host replays every action and keeps model claims separate from evidence.</p>
+              <h2>Test whether points reflect real recycling.</h2>
+              <p>Muse searches for ways points can be paid before recycling is proven. Fine Print replays each idea and compares repairs that keep honest rewards.</p>
             </div>
-            <strong>30 points paid · 0 items recycled</strong>
+            <dl className="bottle-domain__metrics">
+              <div><dt>Reward paid</dt><dd><output aria-label="Reward paid">{completedFrame.state.rewardLedger.totalPoints}</output></dd></div>
+              <div><dt>Items recycled</dt><dd><output aria-label="Items recycled">{completedFrame.state.outcomeLedger.processedEligibleItemIds.length}</output></dd></div>
+              <div><dt>Actions replayed</dt><dd><output aria-label="Actions replayed">{traceActions.length}</output></dd></div>
+            </dl>
           </div>
-          <nav className="bottle-workspace__tabs" aria-label="Bottle Return workflow" role="tablist">
+          <nav className="bottle-workspace__tabs" aria-label="Bottle Return workflow" role="tablist" onKeyDown={handleTabKeyDown}>
             {bottleViews.map((view) => (
               <button
                 aria-controls={`bottle-panel-${view.id}`}
@@ -187,6 +192,7 @@ export function App() {
                 onClick={() => {
                   setIsPlaying(false);
                   setBottleView(view.id);
+                  if (view.id === "replay") setFrameIndex(activeFrames.length - 1);
                 }}
                 role="tab"
                 type="button"
@@ -241,8 +247,7 @@ export function App() {
                 <div className="game-layout game-layout--replay">
                   <Depot state={frame.state} />
                   <aside className="evidence-panel" aria-label="Run evidence">
-                    <p className="eyebrow">Observed result</p>
-                    <h2>Reward ≠ outcome</h2>
+                    <h2>Replay what happened</h2>
                     <div className="counter counter--reward">
                       <span>Paid points</span>
                       <output aria-label="Paid points">{frame.state.rewardLedger.totalPoints}</output>
@@ -253,8 +258,8 @@ export function App() {
                         {frame.state.outcomeLedger.processedEligibleItemIds.length}
                       </output>
                     </div>
-                    <div className="receipt-stack" aria-live="polite">
-                      <h3>Payout receipts</h3>
+                    <details className="receipt-stack" aria-live="polite">
+                      <summary>Show payout receipts</summary>
                       {frame.payouts.length === 0 ? (
                         <p className="empty-receipt">No payout yet.</p>
                       ) : (
@@ -265,7 +270,7 @@ export function App() {
                           </p>
                         ))
                       )}
-                    </div>
+                    </details>
                     {patchedFrame && (
                       <section className="comparison-panel" aria-label="Patch comparison">
                         <h3>Counterfactual replay</h3>
@@ -274,7 +279,7 @@ export function App() {
                           <p><span>Original</span><output aria-label="Original paid points">{frame.state.rewardLedger.totalPoints}</output></p>
                           <p><span>Patched</span><output aria-label="Patched paid points">{patchedFrame.state.rewardLedger.totalPoints}</output></p>
                         </div>
-                        {activePatch === "eligibleProcessing" && frame.state.rewardLedger.totalPoints > 0 && <p className="comparison-verdict">This exploit stopped paying.</p>}
+                        {activePatch === "eligibleProcessing" && frame.state.rewardLedger.totalPoints > 0 && <p className="comparison-verdict">This failure stopped paying.</p>}
                         {activePatch === "oncePerItem" && frame.state.rewardLedger.totalPoints > patchedFrame.state.rewardLedger.totalPoints && <p className="comparison-verdict">Repeated payouts stopped; premature deposit payment remains.</p>}
                       </section>
                     )}
@@ -287,7 +292,14 @@ export function App() {
                   speed={speed}
                   canJumpToPayout={nextPayoutFrame >= 0}
                   onFrameChange={selectFrame}
-                  onPlayToggle={() => setIsPlaying((current) => !current)}
+                  onPlayToggle={() => {
+                    if (!isPlaying && frameIndex === activeFrames.length - 1) {
+                      setFrameIndex(0);
+                      setIsPlaying(true);
+                      return;
+                    }
+                    setIsPlaying((current) => !current);
+                  }}
                   onSpeedChange={setSpeed}
                   onJumpToPayout={() => nextPayoutFrame >= 0 && selectFrame(nextPayoutFrame)}
                 />
@@ -296,21 +308,40 @@ export function App() {
             )}
 
             {bottleView === "validate" && (
-              <div className="bottle-validation-grid">
-                <PolicyCard policy={activePolicy} activePatch={activePatch} onTestPatch={setActivePatch} sourceText={sourceText} />
-                <PolicyGauntlet policy={activePolicy} patchedPolicy={activePatch ? patchPolicies[activePatch] : null} activePatch={activePatch} onTestPatch={setActivePatch} />
-              </div>
-            )}
-
-            {bottleView === "inspect" && (
-              <PolicyLab
-                originalPolicy={activePolicy}
-                patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
-                frame={frame}
-                patchedFrame={patchedFrame ?? null}
-                actionCount={traceActions.length}
-                evidence={evidence}
-              />
+              <section className="bottle-repair" aria-labelledby="bottle-repair-title">
+                <div className="bottle-repair__recommendation">
+                  <div>
+                    <span>Recommended repair</span>
+                    <h2 id="bottle-repair-title">Require successful processing</h2>
+                    <p>Pay once, only after an eligible item is actually recycled.</p>
+                  </div>
+                  <button
+                    aria-pressed={activePatch === "eligibleProcessing"}
+                    type="button"
+                    onClick={() => setActivePatch("eligibleProcessing")}
+                  >
+                    Use recommended repair
+                  </button>
+                </div>
+                <details className="commerce__technical bottle-repair__details">
+                  <summary>Compare every repair and benchmark</summary>
+                  <div className="bottle-validation-grid">
+                    <PolicyCard policy={activePolicy} activePatch={activePatch} onTestPatch={setActivePatch} sourceText={sourceText} />
+                    <PolicyGauntlet policy={activePolicy} patchedPolicy={activePatch ? patchPolicies[activePatch] : null} activePatch={activePatch} onTestPatch={setActivePatch} />
+                  </div>
+                </details>
+                <details className="commerce__technical bottle-repair__details">
+                  <summary>Show technical evidence</summary>
+                  <PolicyLab
+                    originalPolicy={activePolicy}
+                    patchedPolicy={activePatch ? patchPolicies[activePatch] : null}
+                    frame={frame}
+                    patchedFrame={patchedFrame ?? null}
+                    actionCount={traceActions.length}
+                    evidence={evidence}
+                  />
+                </details>
+              </section>
             )}
           </div>
           )}

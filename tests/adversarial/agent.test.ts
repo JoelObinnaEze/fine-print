@@ -185,6 +185,20 @@ describe("bounded attacker host", () => {
     });
   });
 
+  it("reports only the action prefix the host actually executed", () => {
+    const result = verifyCandidate(createBottleReturnState(), policy, [
+      { type: "wait" },
+      { type: "finish" },
+      { type: "wait" },
+    ]);
+
+    expect(result).toMatchObject({
+      status: "no_exploit_in_submitted_trace",
+      actions: [{ type: "wait" }, { type: "finish" }],
+      verifiedActionCount: 2,
+    });
+  });
+
   it("allows one declared batch bonus per completed batch but rejects transient extras", () => {
     const initialState = createBottleReturnState();
 

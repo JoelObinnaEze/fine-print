@@ -29,7 +29,7 @@ function environment(overrides: Record<string, string | undefined> = {}) {
     META_MODEL_ID: "muse-spark-1.3",
     EVENT_CREDITS_CONFIRMED: "true",
     EVENT_CREDITS_REMAINING_USD: "10",
-    APP_BUDGET_USD: "1",
+    APP_BUDGET_USD: "2",
     SESSION_BUDGET_USD: "1",
     SEARCH_BUDGET_USD: "0.6",
     META_INPUT_USD_PER_MILLION: "1.25",
@@ -49,6 +49,22 @@ describe("safe server configuration", () => {
     expect(unconfirmed.liveAgent.reasons).toContain("Credit availability is not confirmed.");
     expect(noBudget.liveAgent.isEnabled).toBe(false);
     expect(noBudget.liveAgent.reasons).toContain("A positive app budget is required.");
+  });
+
+  it("preserves the database path when an unrelated budget value is invalid", () => {
+    const config = readServerConfig(
+      environment({ APP_BUDGET_USD: "invalid", DATABASE_PATH: "custom.db" }),
+    );
+
+    expect(config.databasePath).toBe("custom.db");
+    expect(config.liveAgent.isEnabled).toBe(false);
+    expect(config.liveAgent.reasons).toContain("Budget configuration is invalid.");
+  });
+
+  it("keeps the required credit reserve outside the usable app allowance", () => {
+    const config = readServerConfig(environment({ APP_BUDGET_USD: "10" }));
+
+    expect(config.budgets.effectiveAppUsd).toBe(9);
   });
 });
 

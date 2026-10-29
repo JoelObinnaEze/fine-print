@@ -217,7 +217,15 @@ function releaseRewards(state: CommerceState, policy: CommercePolicy): CommerceS
     const canRelease =
       purchase?.status === "active" &&
       qualificationAmount(purchase, policy) >= policy.referral.qualifyingPurchaseUsd;
-    if (!canRelease) return { ...reward, status: "reversed" };
+    if (!canRelease) {
+      if (reward.status === "pending") {
+        accounts = replaceAccount(accounts, reward.accountId, (account) => ({
+          ...account,
+          pendingCreditUsd: Math.max(0, account.pendingCreditUsd - reward.amountUsd),
+        }));
+      }
+      return { ...reward, status: "reversed" };
+    }
     accounts = replaceAccount(accounts, reward.accountId, (account) => ({
       ...account,
       pendingCreditUsd:

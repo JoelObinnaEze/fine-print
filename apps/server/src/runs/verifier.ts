@@ -52,6 +52,8 @@ export function verifyCandidate(
   if (!parsed.success) return emptyVerification("candidate_invalid");
 
   const replay = replayActions(initialState, parsed.data, policy);
+  const verifiedActionCount = replay.state.tick - initialState.tick;
+  const verifiedActions = parsed.data.slice(0, verifiedActionCount);
   const usefulItemIds = new Set(replay.state.outcomeLedger.processedEligibleItemIds);
   const clausesById = new Map(policy.clauses.map((clause) => [clause.id, clause]));
   const rewardsByItem = new Map<string, number>();
@@ -103,8 +105,8 @@ export function verifyCandidate(
 
   return {
     status: excessReward > 0 ? "exploit_verified" : "no_exploit_in_submitted_trace",
-    actions: parsed.data,
-    verifiedActionCount: parsed.data.length,
+    actions: verifiedActions,
+    verifiedActionCount,
     invalidActionCount: replay.events.filter((event) => event.kind === "action_rejected").length,
     totalReward: replay.state.rewardLedger.totalPoints,
     usefulItems: usefulItemIds.size,

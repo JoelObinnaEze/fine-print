@@ -1,6 +1,5 @@
 import {
   commerceGoal,
-  commerceRepairCandidates,
   createCommerceState,
   createHonestCustomerActions,
   evaluateCommerceDesign,
@@ -78,6 +77,57 @@ export type CommercePriority =
   | "simple_operations"
   | "least_disruption";
 
+const recordedMuseCandidates = [
+  {
+    id: "c1",
+    label: "Reverse credit on refund",
+    tradeoff: "Preserves the immediate $10 reward for both people, but requires credit reversal after a refund.",
+    complexity: 1,
+    policy: {
+      ...vulnerableCommercePolicy,
+      name: "both-10-on-20-reverse",
+      referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" },
+    },
+  },
+  {
+    id: "c2",
+    label: "Pay after return window",
+    tradeoff: "Waits 30 days before paying, so honest customers receive the same reward later.",
+    complexity: 2,
+    policy: {
+      ...vulnerableCommercePolicy,
+      name: "both-10-on-20-after-window",
+      referral: {
+        ...vulnerableCommercePolicy.referral,
+        issuance: "after_return_window",
+        refundHandling: "reverse",
+      },
+    },
+  },
+  {
+    id: "c3",
+    label: "Qualify on retained cash spending",
+    tradeoff: "Aligns qualification with lasting cash value, but promotional credit no longer counts.",
+    complexity: 2,
+    policy: {
+      ...vulnerableCommercePolicy,
+      name: "both-10-on-20-cash-retained",
+      referral: {
+        ...vulnerableCommercePolicy.referral,
+        qualificationBasis: "net_retained_spend",
+        refundHandling: "reverse",
+        promoCreditCountsTowardThreshold: false,
+      },
+    },
+  },
+] as const satisfies readonly {
+  readonly id: string;
+  readonly label: string;
+  readonly tradeoff: string;
+  readonly complexity: number;
+  readonly policy: CommercePolicy;
+}[];
+
 function createRecordedInvestigation(): CommerceInvestigationView {
   const minimizedActions = minimizeCommerceExploit(
     createCommerceState(),
@@ -91,32 +141,33 @@ function createRecordedInvestigation(): CommerceInvestigationView {
     vulnerableCommercePolicy,
   );
   return {
-    id: "recorded-commerce-refund-v1",
+    id: "243986a6-b49a-4b16-9930-bee96912b6e4",
     replayed: false,
     modelId: "muse-spark-1.3",
     provenance: "recorded",
     mapping: {
       status: "candidate",
-      reason: "The recorded model mapping is fully expressible in the commerce simulator.",
+      reason: "Muse mapped every payout clause into the simulator without dropping a condition.",
       policy: vulnerableCommercePolicy,
       supportedClauses: [
-        "$10 to each account",
-        "$20 gross purchase threshold",
+        "$10 credit to both people",
+        "$20 qualifying purchase",
+        "immediate issuance",
         "30-day return window",
-        "credit remains after refund",
-        "promotional credit counts toward threshold",
+        "credit remains after a refund",
+        "promotional credit counts toward the threshold",
       ],
       unsupportedConditions: [],
     },
     attack: {
       hypothesis:
-        "A referred customer may qualify both accounts, then refund while the issued credit remains spendable.",
-      proposedActionCount: refundAttackActions.length,
+        "A referred customer can qualify both accounts, refund the purchase, and leave the issued credit spendable.",
+      proposedActionCount: 4,
       minimizedActions,
       verification: verifyCommerceExploit(attackReplay, commerceGoal),
       events: attackReplay.events,
     },
-    candidates: commerceRepairCandidates.map((candidate) => ({
+    candidates: recordedMuseCandidates.map((candidate) => ({
       ...candidate,
       evaluation: evaluateCommerceDesign(
         candidate.policy,
@@ -127,11 +178,20 @@ function createRecordedInvestigation(): CommerceInvestigationView {
       population: evaluateCommercePopulation(candidate.policy, commerceGoal),
     })),
     population: evaluateCommercePopulation(vulnerableCommercePolicy, commerceGoal),
-    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0, actualUsd: 0 },
+    usage: { promptTokens: 1_000, completionTokens: 2_811, totalTokens: 3_811, actualUsd: 0.013197 },
   };
 }
 
 export const recordedCommerceInvestigation = createRecordedInvestigation();
+
+export const recordedCommerceRepairTest = {
+  label: "Reverse credit on refund",
+  verdict: "No failure found in this attempt",
+  leakage: 0,
+  honestReward: 20,
+  delay: 0,
+  provenance: "recorded",
+} as const;
 
 export function rankCommerceCandidates(
   candidates: CommerceInvestigationView["candidates"],
@@ -164,7 +224,10 @@ export function commercePolicyText(policy: CommercePolicy): string {
       : policy.referral.issuance === "pending"
         ? "as pending credit until the return window closes"
         : "only after the return window closes";
-  return `Give both people $${policy.referral.rewardUsd} when a referred customer qualifies on ${policy.referral.qualificationBasis.replaceAll("_", " ")} of $${policy.referral.qualifyingPurchaseUsd}. Issue it ${issuance}. ${policy.referral.refundHandling === "reverse" ? "Reverse the credit after a refund." : "Keep issued credit after a refund."}`;
+  const promotionalCredit = policy.referral.promoCreditCountsTowardThreshold
+    ? "Promotional credit counts toward the threshold."
+    : "Promotional credit does not count toward the threshold.";
+  return `Give both people $${policy.referral.rewardUsd} when a referred customer qualifies on ${policy.referral.qualificationBasis.replaceAll("_", " ")} of $${policy.referral.qualifyingPurchaseUsd}. Issue it ${issuance}. Purchases can be returned within ${policy.referral.returnWindowDays} days. ${policy.referral.refundHandling === "reverse" ? "Reverse the credit after a refund." : "Keep issued credit after a refund."} ${promotionalCredit}`;
 }
 
 export function createCommerceGoal(minimumUsd: number): CommerceGoal {

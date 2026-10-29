@@ -103,10 +103,10 @@ export const patchSourceTexts: Readonly<Record<PatchId, string>> = {
 };
 
 export const patchLabels: Readonly<Record<PatchId, string>> = {
-  oncePerItem: "once-per-item patch",
-  eligibleProcessing: "eligible-processing patch",
-  batchVulnerable: "vulnerable batch benchmark",
-  batchReceipt: "receipt-backed batch patch",
+  oncePerItem: "once-per-item repair",
+  eligibleProcessing: "processing-backed repair",
+  batchVulnerable: "hopper-count batch benchmark",
+  batchReceipt: "receipt-backed batch repair",
 };
 
 const rightToHopper = Array.from({ length: 4 }, () => ({

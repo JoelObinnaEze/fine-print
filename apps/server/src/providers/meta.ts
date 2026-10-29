@@ -11,7 +11,7 @@ import {
   policyInterpretationJsonSchema,
   type PolicyInterpretation,
 } from "../../../../packages/policy/src/interpret.js";
-import { readBoundedJsonResponse } from "./meta-compatibility.js";
+import { metaUsageSchema, readBoundedJsonResponse } from "./meta-compatibility.js";
 
 // Reasoning and visible JSON share this cap: https://dev.meta.ai/docs/reasoning#token-usage
 const maxCompletionTokens = 1_200;
@@ -34,11 +34,7 @@ const chatCompletionSchema = z.object({
       }),
     )
     .length(1),
-  usage: z.object({
-    prompt_tokens: z.number().int().nonnegative(),
-    completion_tokens: z.number().int().nonnegative(),
-    total_tokens: z.number().int().nonnegative(),
-  }),
+  usage: metaUsageSchema,
 });
 
 interface TranslationRow {
@@ -202,6 +198,16 @@ export class MetaPolicyTranslator {
       throw error;
     }
 
+    const releaseProviderRequest = this.#budget.claimProviderRequest();
+    if (!releaseProviderRequest) {
+      this.#budget.settle(reservation.id, { state: "released" });
+      this.#database.prepare("DELETE FROM policy_translations WHERE id = ?").run(id);
+      throw new MetaPolicyTranslatorError(
+        "PROVIDER_BUSY",
+        "Another provider request is already in progress.",
+      );
+    }
+
     this.#inFlight = true;
     try {
       let response: Response;
@@ -303,6 +309,7 @@ export class MetaPolicyTranslator {
       this.#mark(id, "succeeded", JSON.stringify(result));
       return result;
     } finally {
+      releaseProviderRequest();
       this.#inFlight = false;
     }
   }

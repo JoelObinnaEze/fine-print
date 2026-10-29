@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   parsePolicyInterpretation,
@@ -19,21 +19,25 @@ export function PolicyComposer({
   const [interpretation, setInterpretation] = useState<PolicyInterpretation | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const requestVersion = useRef(0);
   const candidateClauses = interpretation?.status === "candidate"
     ? interpretation.policy.clauses
     : [];
 
   useEffect(() => {
+    requestVersion.current += 1;
     setDraft(sourceText);
     setInterpretation(null);
+    setMessage(null);
   }, [sourceText]);
 
   const interpret = async () => {
     const text = draft.trim();
     if (!text) return;
+    const version = ++requestVersion.current;
     setIsTranslating(true);
     setInterpretation(null);
-    setMessage("Meta is compiling your rule into the bounded policy language…");
+    setMessage("Muse is mapping your rule into the simulator…");
     try {
       const response = await fetch("/api/policies/translate", {
         method: "POST",
@@ -51,10 +55,13 @@ export function PolicyComposer({
         throw new Error(result.error?.message ?? "Meta did not return a policy interpretation.");
       }
       const nextInterpretation = parsePolicyInterpretation(result.interpretation);
+      if (requestVersion.current !== version) return;
       setInterpretation(nextInterpretation);
       setMessage(null);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Policy interpretation failed.");
+      if (requestVersion.current === version) {
+        setMessage(error instanceof Error ? error.message : "Policy interpretation failed.");
+      }
     } finally {
       setIsTranslating(false);
     }
@@ -62,10 +69,7 @@ export function PolicyComposer({
 
   return (
     <section className="arena__composer" aria-labelledby="composer-title">
-      <div>
-        <p className="eyebrow">Policy compiler</p>
-        <h3 id="composer-title">Write the incentive in plain English</h3>
-      </div>
+      <h3 id="composer-title">Describe the reward rule</h3>
       <label>
         <span>Reward policy</span>
         <textarea
@@ -73,27 +77,29 @@ export function PolicyComposer({
           maxLength={2_000}
           rows={3}
           onChange={(event) => {
+            requestVersion.current += 1;
             setDraft(event.target.value);
             setInterpretation(null);
+            setMessage(null);
           }}
         />
       </label>
       <div className="arena__composer-actions">
         <button
-          className="arena__primary"
+          className="arena__secondary"
           type="button"
           disabled={connection !== "ready" || isTranslating || draft.trim().length === 0}
           onClick={() => void interpret()}
         >
-          {isTranslating ? "Interpreting…" : "Interpret with Meta"}
+          {isTranslating ? "Understanding…" : "Understand this rule"}
         </button>
         {interpretation?.status === "candidate" && (
           <button
-            className="arena__secondary"
+            className="arena__primary"
             type="button"
             onClick={() => onActivate(interpretation.policy, draft.trim())}
           >
-            Activate candidate
+            Use this rule
           </button>
         )}
       </div>
@@ -107,18 +113,23 @@ export function PolicyComposer({
               : "Interpreting policy"}
           </strong>
           <p>{interpretation?.reason ?? message}</p>
-          {candidateClauses.map((clause) => (
-            <section className="arena__candidate-clause" key={clause.id}>
-              <b>{clause.id.replaceAll("-", " ")}</b>
-              <dl>
-                <div><dt>Reward trigger</dt><dd>{clause.trigger === "hopper_threshold" ? `hopper reaches ${clause.batchSize}` : clause.trigger === "processed_batch" ? `every ${clause.batchSize} processed receipts` : clause.trigger}</dd></div>
-                <div><dt>Paid materials</dt><dd>{clause.materials.join(", ")}</dd></div>
-                <div><dt>Eligibility required</dt><dd>{clause.eligibleOnly ? "Yes" : "No"}</dd></div>
-                <div><dt>Repeat limit</dt><dd>{clause.repetition === "once_per_item" ? "once per item" : "none"}</dd></div>
-                <div><dt>Successful processing required</dt><dd>{clause.trigger === "process" || clause.trigger === "processed_batch" ? "Yes" : "No"}</dd></div>
-              </dl>
-            </section>
-          ))}
+          {candidateClauses.length > 0 && (
+            <details className="commerce__technical commerce__technical--dark">
+              <summary>Show technical rule mapping</summary>
+              {candidateClauses.map((clause) => (
+                <section className="arena__candidate-clause" key={clause.id}>
+                  <b>{clause.id.replaceAll("-", " ")}</b>
+                  <dl>
+                    <div><dt>Reward trigger</dt><dd>{clause.trigger === "hopper_threshold" ? `hopper reaches ${clause.batchSize}` : clause.trigger === "processed_batch" ? `every ${clause.batchSize} processed receipts` : clause.trigger}</dd></div>
+                    <div><dt>Paid materials</dt><dd>{clause.materials.join(", ")}</dd></div>
+                    <div><dt>Eligibility required</dt><dd>{clause.eligibleOnly ? "Yes" : "No"}</dd></div>
+                    <div><dt>Repeat limit</dt><dd>{clause.repetition === "once_per_item" ? "once per item" : "none"}</dd></div>
+                    <div><dt>Successful processing required</dt><dd>{clause.trigger === "process" || clause.trigger === "processed_batch" ? "Yes" : "No"}</dd></div>
+                  </dl>
+                </section>
+              ))}
+            </details>
+          )}
         </div>
       )}
     </section>

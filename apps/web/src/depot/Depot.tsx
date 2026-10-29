@@ -35,10 +35,7 @@ export function Depot({ state }: { readonly state: WorldState }) {
   return (
     <section className="depot-panel" aria-label="Bottle Return depot">
       <div className="depot-heading">
-        <div>
-          <p className="eyebrow">3D live evidence</p>
-          <h2>Bottle Return depot</h2>
-        </div>
+        <h2>3D Bottle Return replay</h2>
         <p className="tick-stamp">
           Tick <output aria-label="Current tick">{state.tick}</output> / {state.horizon}
         </p>

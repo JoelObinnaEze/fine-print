@@ -5,7 +5,9 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "../../apps/web/src/App.js";
+import { EventTimeline } from "../../apps/web/src/replay/EventTimeline.js";
 import {
+  batchBonusExploitActions,
   createReplayFrames,
   exploitActions,
   patchPolicies,
@@ -19,15 +21,51 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function renderBottle(view: "attack" | "replay" | "validate" | "inspect" = "attack") {
+function renderBottle(view: "attack" | "replay" | "validate" = "attack") {
   render(<App />);
   fireEvent.click(screen.getByRole("tab", { name: /Bottle Return lab/ }));
   if (view !== "attack") {
-    fireEvent.click(screen.getByRole("tab", { name: new RegExp(`^${view}`, "i") }));
+    fireEvent.click(screen.getByRole("tab", { name: view === "replay" ? /What went wrong/ : /Best repair/ }));
   }
 }
 
 describe("offline replay game", () => {
+  it("supports standard arrow-key navigation in every tab list", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const failureTab = screen.getByRole("tab", { name: /What went wrong/ });
+    failureTab.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: /Best repair/ }).getAttribute("aria-selected")).toBe("true");
+
+    const commerceTab = screen.getByRole("tab", { name: /Commerce audit/ });
+    commerceTab.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: /Bottle Return lab/ }).getAttribute("aria-selected")).toBe("true");
+
+    const ruleTab = screen.getByRole("tab", { name: /Your rule/ });
+    ruleTab.focus();
+    await user.keyboard("{ArrowRight}");
+    const replayTab = screen.getByRole("tab", { name: /What went wrong/ });
+    expect(replayTab.getAttribute("aria-selected")).toBe("true");
+    fireEvent.keyDown(replayTab, { key: "Home", ctrlKey: true });
+    expect(replayTab.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("labels timeline payouts with the host-computed amount", () => {
+    render(
+      <EventTimeline
+        frames={createReplayFrames(patchPolicies.batchVulnerable, batchBonusExploitActions)}
+        activeFrame={0}
+        reasoning={null}
+        onSelect={() => undefined}
+      />,
+    );
+
+    expect(screen.getAllByText("+5 payout")).toHaveLength(3);
+  });
+
   it("prefills the executable starting policy without exposing the credit balance", async () => {
     let attackedPolicy: unknown;
     vi.stubGlobal(
@@ -64,31 +102,40 @@ describe("offline replay game", () => {
     expect((screen.getByLabelText("Reward policy") as HTMLTextAreaElement).value).toBe(
       startingPolicySourceText,
     );
-    const runButton = screen.getByRole("button", { name: "Run fresh Muse attack" });
+    const runButton = screen.getByRole("button", { name: "Test my rule" });
     await waitFor(() => expect(runButton.hasAttribute("disabled")).toBe(false));
     expect(screen.queryByText(/Meta connected|budget left/)).toBeNull();
     await user.click(runButton);
     await waitFor(() => expect(attackedPolicy).toEqual(startingPolicy));
   });
 
-  it("keeps the Bottle Return workflow complete behind four focused views", async () => {
+  it("presents the Bottle Return workflow as three judge-focused steps", async () => {
     const user = userEvent.setup();
     renderBottle();
 
     expect(screen.getByRole("heading", { level: 1, name: "Fine Print" })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Can rewards be earned without recycling anything?" })).toBeTruthy();
-    expect(screen.getByText("30 points paid. 0 items recycled.")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Test whether points reflect real recycling." })).toBeTruthy();
+    expect(screen.getByText(/Muse searches for ways points can be paid before recycling is proven/i)).toBeTruthy();
+    expect(within(screen.getByRole("tablist", { name: "Bottle Return workflow" })).getAllByRole("tab")).toHaveLength(3);
+    expect(screen.getByLabelText("Reward paid").textContent).toBe("30");
+    expect(screen.getByLabelText("Items recycled").textContent).toBe("0");
+    expect(screen.getByRole("button", { name: "Load recorded case" })).toBeTruthy();
+    const evidenceDetails = screen.getByText("Show current evidence and limits").closest("details");
+    expect(evidenceDetails?.hasAttribute("open")).toBe(false);
+    await user.click(screen.getByText("Show current evidence and limits"));
+    expect(evidenceDetails?.hasAttribute("open")).toBe(true);
     expect(screen.getByText(/Search budget: up to 12 requests/)).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Load recorded starting-policy run" })).toBeTruthy();
 
-    await user.click(screen.getByRole("tab", { name: /^Replay/i }));
+    await user.click(screen.getByRole("tab", { name: /What went wrong/ }));
     expect(screen.getByRole("region", { name: "Bottle Return depot" })).toBeTruthy();
-    expect(screen.getByLabelText("Paid points").textContent).toBe("0");
+    expect(screen.getByLabelText("Paid points").textContent).toBe("30");
     expect(screen.getByLabelText("Actually recycled").textContent).toBe("0");
-    expect(screen.getByRole("button", { name: "Play replay" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Replay from start" })).toBeTruthy();
     expect(screen.getByRole("slider", { name: "Replay position" })).toBeTruthy();
 
-    await user.click(screen.getByRole("tab", { name: /^Inspect/i }));
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    expect(screen.getByRole("heading", { name: "Require successful processing" })).toBeTruthy();
+    await user.click(screen.getByText("Show technical evidence"));
     expect(screen.getByRole("heading", { name: "Policy Lab" })).toBeTruthy();
     expect(screen.getByText("Scripted fixture")).toBeTruthy();
     expect(screen.getByText("Observed traces, not a safety guarantee.")).toBeTruthy();
@@ -99,7 +146,7 @@ describe("offline replay game", () => {
     renderBottle("replay");
 
     const main = screen.getByRole("main");
-    expect(within(main).getByRole("heading", { name: "Can rewards be earned without recycling anything?" })).toBeTruthy();
+    expect(within(main).getByRole("heading", { name: "Test whether points reflect real recycling." })).toBeTruthy();
     expect(within(main).queryByRole("heading", { name: "Policy Lab" })).toBeNull();
 
     const firstStep = within(main).getByRole("button", { name: /1.*Agent moved/i });
@@ -110,6 +157,7 @@ describe("offline replay game", () => {
   it("jumps to the next payout and keeps useful work separate", async () => {
     const user = userEvent.setup();
     renderBottle("replay");
+    fireEvent.change(screen.getByRole("slider", { name: "Replay position" }), { target: { value: "0" } });
 
     await user.click(screen.getByRole("button", { name: "Jump to next payout" }));
 
@@ -121,6 +169,7 @@ describe("offline replay game", () => {
   it("steps with the keyboard", async () => {
     const user = userEvent.setup();
     renderBottle("replay");
+    fireEvent.change(screen.getByRole("slider", { name: "Replay position" }), { target: { value: "0" } });
     const timeline = screen.getByRole("region", { name: "Event timeline" });
     timeline.focus();
 
@@ -143,22 +192,24 @@ describe("offline replay game", () => {
     document.body.dispatchEvent(space);
 
     expect(space.defaultPrevented).toBe(false);
-    expect(screen.getByRole("button", { name: "Play replay" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Replay from start" })).toBeTruthy();
   });
 
   it("replays the same trace under a process-only patch without mutating the original", async () => {
     const user = userEvent.setup();
     renderBottle("validate");
 
-    await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));
-    await user.click(screen.getByRole("tab", { name: /^Replay/i }));
+    await user.click(screen.getByText("Compare every repair and benchmark"));
+    await user.click(screen.getByRole("button", { name: "Try processing-backed repair" }));
+    await user.click(screen.getByRole("tab", { name: /What went wrong/ }));
     await user.click(screen.getByRole("button", { name: /11.*Deposit B1/i }));
 
     expect(screen.getByLabelText("Original paid points").textContent).toBe("30");
     expect(screen.getByLabelText("Patched paid points").textContent).toBe("0");
-    expect(screen.getByText("This exploit stopped paying.")).toBeTruthy();
+    expect(screen.getByText("This failure stopped paying.")).toBeTruthy();
     expect(screen.getByLabelText("Current tick").textContent).toBe("11");
-    await user.click(screen.getByRole("tab", { name: /^Inspect/i }));
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    await user.click(screen.getByText("Show technical evidence"));
     expect(screen.getByRole("row", { name: /Trigger deposit process/i })).toBeTruthy();
     expect(screen.getByRole("row", { name: /Eligibility required false true/i })).toBeTruthy();
     expect(screen.getByText("Server exports include the exact policy, actions, provenance, limits, and integrity hashes for offline replay.")).toBeTruthy();
@@ -173,20 +224,21 @@ describe("offline replay game", () => {
   it("shows the failed first fix and stronger patch as explicit regression evidence", async () => {
     const user = userEvent.setup();
     renderBottle("validate");
+    await user.click(screen.getByText("Compare every repair and benchmark"));
 
-    expect(screen.getByRole("heading", { name: "Policy gauntlet" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Repair scorecard" })).toBeTruthy();
     expect(screen.getByLabelText("Active honest workflows preserved").textContent).toBe("3 / 3");
     expect(screen.getByLabelText("Active known failures blocked").textContent).toBe("0 / 3");
 
-    await user.click(screen.getByRole("button", { name: "Test once-per-item patch" }));
+    await user.click(screen.getByRole("button", { name: "Try once-per-item repair" }));
 
-    expect(screen.getByLabelText("Selected patch known failures blocked").textContent).toBe("1 / 3");
+    expect(screen.getByLabelText("Selected repair known failures blocked").textContent).toBe("1 / 3");
     expect(screen.getByText("No duplicate payout")).toBeTruthy();
     expect(screen.getByText("Ineligible deposit paid 10 points")).toBeTruthy();
 
-    await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));
+    await user.click(screen.getByRole("button", { name: "Try processing-backed repair" }));
 
-    expect(screen.getByLabelText("Selected patch known failures blocked").textContent).toBe("3 / 3");
+    expect(screen.getByLabelText("Selected repair known failures blocked").textContent).toBe("3 / 3");
     expect(screen.getByText("No duplicate payout")).toBeTruthy();
     expect(screen.getAllByText("Paid nothing")).toHaveLength(2);
   });
@@ -194,24 +246,25 @@ describe("offline replay game", () => {
   it("shows the designed batch interaction and targets either policy for Muse", async () => {
     const user = userEvent.setup();
     renderBottle("validate");
+    await user.click(screen.getByText("Compare every repair and benchmark"));
 
     expect(screen.getByRole("heading", { name: "Can a transient hopper state impersonate completed work?" })).toBeTruthy();
-    expect(screen.getByText("15 exploit points · 0 useful items")).toBeTruthy();
-    expect(screen.getByText("0 exploit points · 0 useful items")).toBeTruthy();
+    expect(screen.getByText("15 test points · 0 useful items")).toBeTruthy();
+    expect(screen.getByText("0 test points · 0 useful items")).toBeTruthy();
     expect(screen.getAllByText("Honest 3: 35 points · honest 6: 70")).toHaveLength(2);
 
-    const vulnerable = screen.getByRole("button", { name: "Target vulnerable batch policy" });
+    const vulnerable = screen.getByRole("button", { name: "Test hopper-count rule" });
     await user.click(vulnerable);
     expect(vulnerable.getAttribute("aria-pressed")).toBe("true");
-    await user.click(screen.getByRole("tab", { name: /^Attack/i }));
-    expect(screen.getByRole("button", { name: "Fresh-attack vulnerable batch benchmark" })).toBeTruthy();
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    expect(screen.getByRole("button", { name: "Recheck hopper-count batch benchmark" })).toBeTruthy();
 
-    await user.click(screen.getByRole("tab", { name: /^Validate/i }));
-    const patched = screen.getByRole("button", { name: "Target receipt-backed patch" });
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    const patched = screen.getByRole("button", { name: "Test receipt-backed repair" });
     await user.click(patched);
     expect(patched.getAttribute("aria-pressed")).toBe("true");
-    await user.click(screen.getByRole("tab", { name: /^Attack/i }));
-    expect(screen.getByRole("button", { name: "Fresh-attack receipt-backed batch patch" })).toBeTruthy();
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    expect(screen.getByRole("button", { name: "Recheck receipt-backed batch repair" })).toBeTruthy();
   });
 
   it("runs a live Meta attack and loads the host-verified trace", async () => {
@@ -308,45 +361,51 @@ describe("offline replay game", () => {
     renderBottle();
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Run fresh Muse attack" }).hasAttribute("disabled")).toBe(false),
+      expect(screen.getByRole("button", { name: "Test my rule" }).hasAttribute("disabled")).toBe(false),
     );
-    await user.click(screen.getByRole("tab", { name: /^Validate/i }));
-    await user.click(screen.getByRole("button", { name: "Test once-per-item patch" }));
-    await user.click(screen.getByRole("tab", { name: /^Attack/i }));
-    await user.click(screen.getByRole("button", { name: "Fresh-attack once-per-item patch" }));
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    await user.click(screen.getByText("Compare every repair and benchmark"));
+    await user.click(screen.getByRole("button", { name: "Try once-per-item repair" }));
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    await user.click(screen.getByRole("button", { name: "Recheck once-per-item repair" }));
 
-    expect(await screen.findByText("Exploit verified")).toBeTruthy();
+    const latestAttempt = await screen.findByRole("status", { name: "Latest test result" });
+    expect(within(latestAttempt).getByText("Failure confirmed")).toBeTruthy();
     expect(attackedPolicy).toEqual(patchPolicies.oncePerItem);
+    await user.click(screen.getByText("Show Muse test activity"));
     expect(screen.getByText("Test repeated deposits.")).toBeTruthy();
     expect((screen.getByLabelText("Reward policy") as HTMLTextAreaElement).value).toBe("Pay only once per item when it is deposited.");
 
-    await user.click(screen.getByRole("button", { name: "Save as regression case" }));
-    expect(await screen.findByText("Saved regression case: once-per-item patch exploit.")).toBeTruthy();
-    const savedCases = screen.getByRole("region", { name: "Saved regression cases" });
-    expect(within(savedCases).getByText("Blocked")).toBeTruthy();
-    expect(within(savedCases).getByText("Expected 30 excess · now 0")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Save as permanent check" }));
+    expect(await screen.findByText("Saved permanent check: once-per-item patch failure.")).toBeTruthy();
+    await user.click(screen.getByText("Show saved checks"));
+    const savedCases = screen.getByRole("region", { name: "Saved checks" });
+    expect(within(savedCases).getByText("Passed")).toBeTruthy();
+    expect(within(savedCases).getByText("Expected 30 extra · now 0")).toBeTruthy();
 
-    await user.click(screen.getByRole("tab", { name: /^Replay/i }));
-    const reasoning = screen.getByRole("complementary", { name: "Attack reasoning" });
-    expect(within(reasoning).getByText("Model hypothesis")).toBeTruthy();
+    await user.click(screen.getByRole("tab", { name: /What went wrong/ }));
+    await user.click(screen.getByText("Show AI reasoning and simulator evidence"));
+    const reasoning = screen.getByRole("group", { name: "AI reasoning and simulator evidence" });
+    expect(within(reasoning).getByText("AI test idea")).toBeTruthy();
     expect(within(reasoning).getByText("Repeated deposits may pay before useful processing.")).toBeTruthy();
-    expect(within(reasoning).getByText("Host observation")).toBeTruthy();
+    expect(within(reasoning).getByText("Simulator result")).toBeTruthy();
     expect(within(reasoning).getByText("30 reward points · 0 useful items")).toBeTruthy();
-    expect(within(reasoning).getByText("Host verdict")).toBeTruthy();
+    expect(within(reasoning).getByText("Verdict")).toBeTruthy();
     expect(screen.getByLabelText("Replay position").getAttribute("max")).toBe("12");
 
-    await user.click(screen.getByRole("tab", { name: /^Inspect/i }));
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    await user.click(screen.getByText("Show technical evidence"));
     expect(screen.getByText("Live model")).toBeTruthy();
     expect(screen.getByText("muse-spark-1.3")).toBeTruthy();
-    await user.click(screen.getByRole("tab", { name: /^Validate/i }));
-    const validation = screen.getByRole("tabpanel", { name: /^Validate/i });
+    const validation = screen.getByRole("tabpanel", { name: /Best repair/i });
+    await user.click(screen.getByText("Compare every repair and benchmark"));
     expect(within(validation).getByText("Pay only once per item when it is deposited.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Test once-per-item patch" }).getAttribute("aria-pressed")).toBe("false");
-    await user.click(screen.getByRole("tab", { name: /^Attack/i }));
-    expect(within(screen.getByRole("status", { name: "Latest live attempt" })).getByText("Exploit verified")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try once-per-item repair" }).getAttribute("aria-pressed")).toBe("false");
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    expect(within(screen.getByRole("status", { name: "Latest test result" })).getByText("Failure confirmed")).toBeTruthy();
     await user.click(screen.getByRole("tab", { name: /Commerce audit/ }));
     await user.click(screen.getByRole("tab", { name: /Bottle Return lab/ }));
-    expect(within(screen.getByRole("status", { name: "Latest live attempt" })).getByText("Exploit verified")).toBeTruthy();
+    expect(within(screen.getByRole("status", { name: "Latest test result" })).getByText("Failure confirmed")).toBeTruthy();
   });
 
   it("explains an unsuccessful live attempt without replacing the loaded replay", async () => {
@@ -401,27 +460,30 @@ describe("offline replay game", () => {
     renderBottle();
 
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Run fresh Muse attack" }).hasAttribute("disabled")).toBe(false),
+      expect(screen.getByRole("button", { name: "Test my rule" }).hasAttribute("disabled")).toBe(false),
     );
-    await user.click(screen.getByRole("button", { name: "Load recorded starting-policy run" }));
-    await user.click(screen.getByRole("tab", { name: /^Validate/i }));
-    await user.click(screen.getByRole("button", { name: "Test eligible-processing patch" }));
-    await user.click(screen.getByRole("tab", { name: /^Attack/i }));
-    await user.click(screen.getByRole("button", { name: "Fresh-attack eligible-processing patch" }));
+    await user.click(screen.getByRole("button", { name: "Load recorded case" }));
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    await user.click(screen.getByText("Compare every repair and benchmark"));
+    await user.click(screen.getByRole("button", { name: "Try processing-backed repair" }));
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    await user.click(screen.getByRole("button", { name: "Recheck processing-backed repair" }));
 
-    const attempt = await screen.findByRole("status", { name: "Latest live attempt" });
-    expect(within(attempt).getByText("Search completed")).toBeTruthy();
-    expect(within(attempt).getByText("eligible-processing patch")).toBeTruthy();
-    expect(within(attempt).getByText("Live Meta search")).toBeTruthy();
-    expect(within(attempt).getByText("The bounded search completed; no exploit was found within the stated budget.")).toBeTruthy();
+    const attempt = await screen.findByRole("status", { name: "Latest test result" });
+    expect(within(attempt).getByText("No failure found in this attempt")).toBeTruthy();
+    expect(within(attempt).getByText("processing-backed repair", { selector: "span" })).toBeTruthy();
+    expect(within(attempt).getByText("The bounded search completed; no failure was found within the stated budget.")).toBeTruthy();
+    await user.click(within(attempt).getByText("Show test details"));
+    expect(within(attempt).getByText("Live Meta test")).toBeTruthy();
     expect(within(attempt).getByText("4 requests")).toBeTruthy();
     expect(within(attempt).getByText("2 trials")).toBeTruthy();
     expect(within(attempt).getByText("7 actions")).toBeTruthy();
     expect(within(attempt).getByText("Test batch eligibility.")).toBeTruthy();
     expect(within(attempt).getByText("wait → finish")).toBeTruthy();
 
-    const loadedEvidence = screen.getByRole("region", { name: "Loaded replay evidence" });
-    expect(within(loadedEvidence).getByText("Exploit independently verified")).toBeTruthy();
+    await user.click(screen.getByText("Show current evidence and limits"));
+    const loadedEvidence = screen.getByRole("region", { name: "Current evidence and limits" });
+    expect(within(loadedEvidence).getByText("Failure independently confirmed")).toBeTruthy();
   });
 
   it("interprets and explicitly activates a natural-language policy", async () => {
@@ -466,26 +528,87 @@ describe("offline replay game", () => {
 
     await user.clear(screen.getByLabelText("Reward policy"));
     await user.type(screen.getByLabelText("Reward policy"), sourceText);
-    await user.click(screen.getByRole("button", { name: "Interpret with Meta" }));
+    await user.click(screen.getByRole("button", { name: "Understand this rule" }));
 
     expect(await screen.findByText("Pays seven points once after aluminium processing.")).toBeTruthy();
+    await user.click(screen.getByText("Show technical rule mapping"));
     expect(screen.getByText("Reward trigger")).toBeTruthy();
     expect(screen.getByText("Paid materials")).toBeTruthy();
     expect(screen.getByText("Eligibility required")).toBeTruthy();
     expect(screen.getByText("Repeat limit")).toBeTruthy();
     expect(screen.getByText("Successful processing required")).toBeTruthy();
     expect(screen.getByText("aluminium")).toBeTruthy();
-    await user.click(screen.getByRole("button", { name: "Activate candidate" }));
+    await user.click(screen.getByRole("button", { name: "Use this rule" }));
     expect((screen.getByLabelText("Reward policy") as HTMLTextAreaElement).value).toBe(sourceText);
-    await user.click(screen.getByRole("tab", { name: /^Validate/i }));
-    const validation = screen.getByRole("tabpanel", { name: /^Validate/i });
+    expect(screen.getByLabelText("Reward paid").textContent).toBe("0");
+    expect(screen.getByLabelText("Items recycled").textContent).toBe("0");
+    await user.click(screen.getByRole("tab", { name: /Best repair/i }));
+    await user.click(screen.getByText("Compare every repair and benchmark"));
+    const validation = screen.getByRole("tabpanel", { name: /Best repair/i });
     expect(within(validation).getByText(sourceText)).toBeTruthy();
-    const activePolicy = screen.getByText(/^Active policy/).closest("section");
+    const activePolicy = screen.getByRole("heading", { name: "Your active rule" }).closest("section");
     expect(activePolicy).not.toBeNull();
     expect(within(activePolicy!).getByText("process", { selector: "dd" })).toBeTruthy();
     expect(within(activePolicy!).getByText("aluminium items", { selector: "dd" })).toBeTruthy();
     expect(within(activePolicy!).getByText("+7", { selector: "dd" })).toBeTruthy();
     expect(screen.getAllByText("Expected 60 · actual 21")).toHaveLength(3);
     expect(screen.getByText(/A different policy is not invalid/)).toBeTruthy();
+  });
+
+  it("discards a translation response after the policy draft changes", async () => {
+    let resolveTranslation!: (response: Response) => void;
+    const translation = new Promise<Response>((resolve) => {
+      resolveTranslation = resolve;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (input) => {
+        const url = String(input);
+        if (url === "/api/health") return Response.json({ liveAgent: { isEnabled: true } });
+        if (url === "/api/regressions/evaluate") return Response.json([]);
+        if (url === "/api/policies/translate") return translation;
+        return Response.json({ error: { message: "not found" } }, { status: 404 });
+      }),
+    );
+    const user = userEvent.setup();
+    renderBottle();
+    const input = screen.getByLabelText("Reward policy");
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Understand this rule" }).hasAttribute("disabled")).toBe(false),
+    );
+    await user.clear(input);
+    await user.type(input, "Pay seven points after aluminium processing.");
+    await user.click(screen.getByRole("button", { name: "Understand this rule" }));
+    await user.clear(input);
+    await user.type(input, "Pay three points after plastic processing.");
+    resolveTranslation(
+      Response.json({
+        interpretation: {
+          status: "candidate",
+          reason: "Pays seven points after aluminium processing.",
+          policy: {
+            schemaVersion: 1,
+            clauses: [
+              {
+                id: "aluminium-processing",
+                enabled: true,
+                trigger: "process",
+                points: 7,
+                eligibleOnly: true,
+                materials: ["aluminium"],
+                repetition: "once_per_item",
+              },
+            ],
+          },
+        },
+      }),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Understand this rule" }).hasAttribute("disabled")).toBe(false),
+    );
+    expect(screen.queryByRole("button", { name: "Use this rule" })).toBeNull();
+    expect((input as HTMLTextAreaElement).value).toBe("Pay three points after plastic processing.");
   });
 });

@@ -110,6 +110,37 @@ class InterruptedProvider implements AttackerProvider {
   }
 }
 
+class TerminalThenConcludeProvider implements AttackerProvider {
+  readonly turns: MetaAttackerTurnRecord[] = [];
+
+  async next(input: AttackerProviderInput): Promise<AttackerTurn> {
+    const toolCall = input.requestNumber === 1
+      ? {
+          id: "terminal-batch",
+          name: "act",
+          arguments: { actions: [{ type: "finish" }, { type: "wait" }] },
+        }
+      : {
+          id: "conclude-after-terminal",
+          name: "conclude_no_exploit",
+          arguments: { summary: "No exploit in the executed prefix." },
+        };
+    const strategySummary = "Test a terminal action and report only what the host executed.";
+    this.turns.push({
+      sequence: input.requestNumber,
+      strategySummary,
+      toolCalls: [toolCall],
+      usage: {
+        promptTokens: 40,
+        completionTokens: 10,
+        totalTokens: 50,
+        actualUsd: 0.0001,
+      },
+    });
+    return { strategySummary, toolCalls: [toolCall] };
+  }
+}
+
 const databases = [] as ReturnType<typeof openDatabase>[];
 const servers: Server[] = [];
 
@@ -272,6 +303,17 @@ describe("live browser attack lifecycle", () => {
       attacks.run({ ...policy, clauses: [] }, "browser-attack-conflict"),
     ).rejects.toMatchObject({ code: "IDEMPOTENCY_KEY_REUSED" });
     expect(provider.calls).toBe(1);
+  });
+
+  it("reports only the action prefix the host actually executed", async () => {
+    const { attacks } = createServices(new TerminalThenConcludeProvider());
+
+    const result = await attacks.run(policy, "executed-prefix-report");
+
+    expect(result.report.actionsTested).toBe(1);
+    expect(result.report.attemptedTraces).toEqual([
+      expect.objectContaining({ actions: [{ type: "finish" }] }),
+    ]);
   });
 
   it("exposes the verified lifecycle through the local HTTP API", async () => {

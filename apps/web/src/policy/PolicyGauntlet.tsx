@@ -113,7 +113,7 @@ function EvidenceCard({ label, result }: { readonly label: string; readonly resu
   const blocked = result.attacks.filter((attack) => attack.blocked).length;
   return (
     <article className="gauntlet__score-card">
-      <p className="eyebrow">{label}</p>
+      <b>{label}</b>
       <output aria-label={`${label} honest workflows preserved`}>
         {result.honestWorkflows.passed} / {result.honestWorkflows.total}
       </output>
@@ -143,7 +143,7 @@ export function PolicyGauntlet({
     [patchedPolicy],
   );
   const inspected = patched ?? active;
-  const inspectedLabel = patched ? "Selected patch" : "Active policy";
+  const inspectedLabel = patched ? "Selected repair" : "Active rule";
   const batchResults = useMemo(() => {
     const initialState = createBottleReturnState();
     const summarize = (actions: readonly Action[], selectedPolicy: Policy) => {
@@ -165,15 +165,12 @@ export function PolicyGauntlet({
   return (
     <section className="gauntlet" aria-labelledby="gauntlet-title">
       <div className="gauntlet__heading">
-        <div>
-          <p className="eyebrow">Regression evidence</p>
-          <h2 id="gauntlet-title">Policy gauntlet</h2>
-        </div>
-        <p>Three honest orders plus three disclosed adversarial mechanisms.</p>
+        <h2 id="gauntlet-title">Repair scorecard</h2>
+        <p>Three honest orders plus three known failure mechanisms.</p>
       </div>
       <div className="gauntlet__results">
         <EvidenceCard label="Active" result={active} />
-        {patched && <EvidenceCard label="Selected patch" result={patched} />}
+        {patched && <EvidenceCard label="Selected repair" result={patched} />}
         <ul>
           {inspected.attacks.map((attack) => (
             <li className={attack.blocked ? "is-pass" : "is-fail"} key={attack.id}>
@@ -203,7 +200,6 @@ export function PolicyGauntlet({
       </div>
       <section className="batch-benchmark" aria-labelledby="batch-benchmark-title">
         <div>
-          <p className="eyebrow">Designed interaction benchmark</p>
           <h3 id="batch-benchmark-title">Can a transient hopper state impersonate completed work?</h3>
           <p>
             Individual rewards require processing. A separate five-point bonus fires when the
@@ -213,26 +209,26 @@ export function PolicyGauntlet({
         <div className="batch-benchmark__comparison">
           <article>
             <b>Hopper-count rule</b>
-            <strong>{batchResults.vulnerableExploit.reward} exploit points · {batchResults.vulnerableExploit.usefulItems} useful items</strong>
+            <strong>{batchResults.vulnerableExploit.reward} test points · {batchResults.vulnerableExploit.usefulItems} useful items</strong>
             <span>Honest 3: {batchResults.vulnerableThree.reward} points · honest 6: {batchResults.vulnerableSix.reward}</span>
             <button
               aria-pressed={activePatch === "batchVulnerable"}
               type="button"
               onClick={() => onTestPatch("batchVulnerable")}
             >
-              Target vulnerable batch policy
+              Test hopper-count rule
             </button>
           </article>
           <article>
             <b>Receipt-backed rule</b>
-            <strong>{batchResults.patchedExploit.reward} exploit points · {batchResults.patchedExploit.usefulItems} useful items</strong>
+            <strong>{batchResults.patchedExploit.reward} test points · {batchResults.patchedExploit.usefulItems} useful items</strong>
             <span>Honest 3: {batchResults.patchedThree.reward} points · honest 6: {batchResults.patchedSix.reward}</span>
             <button
               aria-pressed={activePatch === "batchReceipt"}
               type="button"
               onClick={() => onTestPatch("batchReceipt")}
             >
-              Target receipt-backed patch
+              Test receipt-backed repair
             </button>
           </article>
         </div>

@@ -166,4 +166,23 @@ describe("commerce replay", () => {
       }),
     );
   });
+
+  it("removes pending balances when a refunded purchase can no longer release them", () => {
+    const pendingKeepPolicy: CommercePolicy = {
+      ...vulnerablePolicy,
+      referral: {
+        ...vulnerablePolicy.referral,
+        issuance: "pending",
+        refundHandling: "keep",
+      },
+    };
+    const replay = replayCommerce(
+      createCommerceState(),
+      [...refundTrace, { type: "advance_days", days: 30 }],
+      pendingKeepPolicy,
+    );
+
+    expect(replay.state.rewards.every((reward) => reward.status === "reversed")).toBe(true);
+    expect(replay.state.accounts.map((account) => account.pendingCreditUsd)).toEqual([0, 0]);
+  });
 });

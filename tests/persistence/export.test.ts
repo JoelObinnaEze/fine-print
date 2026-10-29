@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { openDatabase } from "../../apps/server/src/persistence/database.js";
 import { verifyRunExport } from "../../apps/server/src/runs/export.js";
 import { RunService } from "../../apps/server/src/runs/service.js";
-import type { Action } from "../../packages/engine/src/index.js";
+import { createBottleReturnState, type Action } from "../../packages/engine/src/index.js";
 import type { Policy } from "../../packages/policy/src/index.js";
 
 const everyDeposit: Policy = {
@@ -59,6 +59,24 @@ async function terminal(service: RunService, runId: string) {
 }
 
 describe("run branches and export", () => {
+  it("replays a branch from its stored initial state", async () => {
+    const database = openDatabase(":memory:");
+    databases.push(database);
+    const service = new RunService(database);
+    const initialState = { ...createBottleReturnState(), seed: "held-out-layout" };
+    const source = service.create(
+      { policy: everyDeposit, actions: [{ type: "finish" }] },
+      "held-out-source",
+      { initialState },
+    );
+    await terminal(service, source.run.id);
+
+    const replay = service.replayUnderPolicy(source.run.id, oncePerItem, "held-out-replay");
+    const completed = await terminal(service, replay.run.id);
+
+    expect(completed.state.seed).toBe("held-out-layout");
+  });
+
   it("preserves both ledgers on a same-policy branch and reconstructs them for a changed policy", async () => {
     const database = openDatabase(":memory:");
     databases.push(database);

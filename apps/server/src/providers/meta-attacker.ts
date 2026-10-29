@@ -9,7 +9,7 @@ import {
   type AttackerToolResult,
   type AttackerTurn,
 } from "../runs/agent.js";
-import { readBoundedJsonResponse } from "./meta-compatibility.js";
+import { metaUsageSchema, readBoundedJsonResponse } from "./meta-compatibility.js";
 
 const maxCompletionTokens = 2_400;
 
@@ -32,12 +32,6 @@ const toolCallSchema = z.object({
   }),
 });
 
-const usageSchema = z.object({
-  prompt_tokens: z.number().int().nonnegative(),
-  completion_tokens: z.number().int().nonnegative(),
-  total_tokens: z.number().int().nonnegative(),
-});
-
 const completionSchema = z.object({
   id: z.string().min(1).max(256),
   choices: z
@@ -53,7 +47,7 @@ const completionSchema = z.object({
       }),
     )
     .length(1),
-  usage: usageSchema,
+  usage: metaUsageSchema,
 });
 
 type ChatMessage =
@@ -169,6 +163,14 @@ export class MetaAttackerProvider implements AttackerProvider {
       scopeId: this.#searchId,
       estimatedUsd,
     });
+    const releaseProviderRequest = this.#budget.claimProviderRequest();
+    if (!releaseProviderRequest) {
+      this.#budget.settle(reservation.id, { state: "released" });
+      throw new MetaAttackerProviderError(
+        "PROVIDER_BUSY",
+        "Another provider request is already in progress.",
+      );
+    }
 
     this.#inFlight = true;
     try {
@@ -225,7 +227,7 @@ export class MetaAttackerProvider implements AttackerProvider {
         );
       }
 
-      const usage = usageSchema.safeParse(
+      const usage = metaUsageSchema.safeParse(
         typeof raw === "object" && raw !== null ? Reflect.get(raw, "usage") : undefined,
       );
       if (!usage.success) {
@@ -308,6 +310,7 @@ export class MetaAttackerProvider implements AttackerProvider {
         toolCalls: parsedToolCalls,
       };
     } finally {
+      releaseProviderRequest();
       this.#inFlight = false;
     }
   }

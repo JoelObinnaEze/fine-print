@@ -1,4 +1,4 @@
-import type { Server } from "node:http";
+import { request as httpRequest, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
@@ -103,6 +103,67 @@ describe("policy interpretation", () => {
 });
 
 describe("Meta policy translator", () => {
+  it("decodes UTF-8 correctly when a character spans request chunks", async () => {
+    let providerBody = "";
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      providerBody = String(init?.body);
+      return new Response(
+        JSON.stringify({
+          id: "chatcmpl-utf8",
+          choices: [{
+            index: 0,
+            message: {
+              role: "assistant",
+              content: JSON.stringify({
+                status: "unsupported",
+                reason: "Outside the supported semantics.",
+                policy: { schemaVersion: 1, clauses: [] },
+              }),
+            },
+            finish_reason: "stop",
+          }],
+          usage: { prompt_tokens: 50, completion_tokens: 20, total_tokens: 70 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    const { budget, config, database, translator } = createServices(fetchMock);
+    const server = createRunServer(new RunService(database), { config, budget, translator });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    servers.push(server);
+    const { port } = server.address() as AddressInfo;
+    const body = Buffer.from(JSON.stringify({ text: "Pay for café." }));
+    const split = body.indexOf(0xc3) + 1;
+
+    const status = await new Promise<number>((resolve, reject) => {
+      const request = httpRequest(
+        {
+          host: "127.0.0.1",
+          port,
+          path: "/api/policies/translate",
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "content-length": body.length,
+            "idempotency-key": "translate-utf8",
+          },
+        },
+        (response) => {
+          response.resume();
+          response.on("end", () => resolve(response.statusCode ?? 0));
+        },
+      );
+      request.on("error", reject);
+      request.flushHeaders();
+      request.write(body.subarray(0, split));
+      setImmediate(() => request.end(body.subarray(split)));
+    });
+
+    expect(status).toBe(200);
+    expect(providerBody).toContain("café");
+    expect(providerBody).not.toContain("�");
+  });
+
   it("sends the documented bounded request, validates the fixture, and replays one idempotent result", async () => {
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       expect(String(input)).toBe("https://api.meta.ai/v1/chat/completions");
@@ -180,6 +241,35 @@ describe("Meta policy translator", () => {
     expect(budget.getUsage().ambiguousUsd).toBeGreaterThan(0);
   });
 
+  it("retains the reservation when provider token totals are inconsistent", async () => {
+    const { budget, translator } = createServices(async () =>
+      new Response(
+        JSON.stringify({
+          id: "chatcmpl-bad-usage",
+          choices: [{
+            index: 0,
+            message: {
+              role: "assistant",
+              content: JSON.stringify({
+                status: "unsupported",
+                reason: "Outside the supported semantics.",
+                policy: { schemaVersion: 1, clauses: [] },
+              }),
+            },
+            finish_reason: "stop",
+          }],
+          usage: { prompt_tokens: 50, completion_tokens: 20, total_tokens: 1 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+
+    await expect(
+      translator.translate("Pay for bottles.", "translate-bad-usage"),
+    ).rejects.toMatchObject({ code: "PROVIDER_OUTCOME_UNKNOWN" });
+    expect(budget.getUsage().ambiguousUsd).toBeGreaterThan(0);
+  });
+
   it("settles known usage but refuses truncated output", async () => {
     const fetchMock = vi.fn<typeof fetch>(async () =>
       new Response(
@@ -241,6 +331,48 @@ describe("Meta policy translator", () => {
     await expect(
       translator.translate("Pay for every item processed.", "concurrency-2"),
     ).rejects.toThrow("already in progress");
+    release();
+    await expect(first).resolves.toMatchObject({ interpretation: { status: "unsupported" } });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("serializes provider requests across service instances", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let requests = 0;
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      requests += 1;
+      if (requests === 1) await gate;
+      return new Response(
+        JSON.stringify({
+          id: `chatcmpl-global-${requests}`,
+          choices: [{
+            index: 0,
+            message: {
+              role: "assistant",
+              content: JSON.stringify({
+                status: "unsupported",
+                reason: "Outside the supported semantics.",
+                policy: { schemaVersion: 1, clauses: [] },
+              }),
+            },
+            finish_reason: "stop",
+          }],
+          usage: { prompt_tokens: 50, completion_tokens: 20, total_tokens: 70 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    const { budget, config, database, translator } = createServices(fetchMock);
+    const secondTranslator = new MetaPolicyTranslator(database, config, budget, fetchMock);
+    const first = translator.translate("Pay for bottles.", "global-concurrency-1");
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+
+    await expect(
+      secondTranslator.translate("Pay for cans.", "global-concurrency-2"),
+    ).rejects.toMatchObject({ code: "PROVIDER_BUSY" });
     release();
     await expect(first).resolves.toMatchObject({ interpretation: { status: "unsupported" } });
     expect(fetchMock).toHaveBeenCalledTimes(1);

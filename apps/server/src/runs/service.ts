@@ -146,6 +146,7 @@ interface RegressionCaseRow {
 }
 
 export interface RunCreateMetadata {
+  readonly initialState?: WorldState;
   readonly parentRunId?: string | null;
   readonly branchTick?: number | null;
   readonly provenance?: RunProvenance;
@@ -181,14 +182,14 @@ export class RunService {
     metadata: RunCreateMetadata = {},
   ): { readonly run: RunView; readonly replayed: boolean } {
     if (this.#isShutDown) throw new Error("Run service is shut down.");
-    const initialState = createBottleReturnState();
+    const initialState = structuredClone(metadata.initialState ?? createBottleReturnState());
     const provenance = runProvenanceSchema.parse(metadata.provenance ?? "manual");
     const limits = this.#parseLimits(metadata.limits ?? { maxTicksPerTrial: initialState.horizon });
     const parentRunId = metadata.parentRunId ?? null;
     const branchTick = metadata.branchTick ?? null;
     const modelId = metadata.modelId ?? null;
     const requestHash = createHash("sha256")
-      .update(JSON.stringify({ input, parentRunId, branchTick, provenance, modelId, limits }))
+      .update(JSON.stringify({ input, initialState, parentRunId, branchTick, provenance, modelId, limits }))
       .digest("hex");
     const policyJson = JSON.stringify(input.policy);
     const policyId = createHash("sha256").update(policyJson).digest("hex");
@@ -207,7 +208,7 @@ export class RunService {
       limits,
       status: "queued",
       initialState,
-      state: initialState,
+      state: structuredClone(initialState),
       policy: input.policy,
       actions: input.actions,
       events: [queuedEvent],
@@ -302,6 +303,7 @@ export class RunService {
       {
         parentRunId: source.id,
         branchTick: input.branchTick,
+        initialState: source.initialState,
         provenance: "manual",
         limits: { maxTicksPerTrial: source.initialState.horizon },
       },
@@ -323,6 +325,7 @@ export class RunService {
       {
         parentRunId: source.id,
         branchTick: 0,
+        initialState: source.initialState,
         provenance: "manual",
         limits: { maxTicksPerTrial: source.initialState.horizon },
       },

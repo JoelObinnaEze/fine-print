@@ -50,7 +50,6 @@ export function PolicyLab({
     <section className="policy-lab" aria-labelledby="policy-lab-title">
       <div className="policy-lab__heading">
         <div>
-          <p className="eyebrow">Technical evidence</p>
           <h2 id="policy-lab-title">Policy Lab</h2>
         </div>
         <p>Observed traces, not a safety guarantee.</p>

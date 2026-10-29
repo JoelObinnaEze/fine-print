@@ -14,7 +14,11 @@ export function ReplayControls(props: ReplayControlsProps) {
   return (
     <section className="replay-controls" aria-label="Replay controls">
       <button className="primary-control" type="button" onClick={props.onPlayToggle}>
-        {props.isPlaying ? "Pause replay" : "Play replay"}
+        {props.isPlaying
+          ? "Pause replay"
+          : props.frame === props.frameCount - 1
+            ? "Replay from start"
+            : "Play replay"}
       </button>
       <button
         type="button"

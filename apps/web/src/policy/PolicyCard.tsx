@@ -22,8 +22,7 @@ export function PolicyCard({
   const prematureReward = policy.clauses.some((clause) => clause.trigger === "deposit");
   return (
     <section className="paper-card policy-card" aria-labelledby="policy-title">
-      <p className="eyebrow">Active policy · v1</p>
-      <h2 id="policy-title">The fine print</h2>
+      <h2 id="policy-title">Your active rule</h2>
       <blockquote>{sourceText}</blockquote>
       {policy.clauses.length > 0 ? (
         policy.clauses.map((clause) => (
@@ -53,20 +52,20 @@ export function PolicyCard({
         <pre>{JSON.stringify(policy, null, 2)}</pre>
       </details>
       <div className="patch-actions" aria-label="Manual patch presets">
-        <h3>Test a patch</h3>
+        <h3>Compare repairs</h3>
         <button
           aria-pressed={activePatch === "oncePerItem"}
           type="button"
           onClick={() => onTestPatch("oncePerItem")}
         >
-          Test once-per-item patch
+          Try once-per-item repair
         </button>
         <button
           aria-pressed={activePatch === "eligibleProcessing"}
           type="button"
           onClick={() => onTestPatch("eligibleProcessing")}
         >
-          Test eligible-processing patch
+          Try processing-backed repair
         </button>
       </div>
     </section>

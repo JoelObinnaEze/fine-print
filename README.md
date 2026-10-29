@@ -1,8 +1,12 @@
 # Fine Print
 
-Fine Print is an incentive-system design and red-team workbench. A policy can pay exactly what it says while rewarding behavior its author did not intend. Meta translates plain language and searches for candidate traces; deterministic host code validates every policy, transaction, payout, and final claim.
+Fine Print helps teams test reward rules before launch. A rule can pay exactly what it says while rewarding behavior its author never intended. Meta Muse translates plain language and searches for failure cases; deterministic host code validates every transaction, payout, and final claim.
 
-The primary workbench investigates a referral-credit programme across purchases, promotional credit, returns, and refunds. It separates the actual policy from its intended business outcome, minimizes a host-verified exploit, compares ordinary customers, bargain hunters, and coordinated adversaries, ranks three tested repairs by owner priority, and fresh-attacks the selected repair. Bottle Return remains a second 3D domain using the same proposal-versus-verification boundary.
+The primary workbench investigates a referral-credit programme across purchases, promotional credit, returns, and refunds. It separates the written rule from the intended business outcome, reduces a confirmed failure to its shortest proof, and compares repairs by customer delay and legitimate rewards preserved. Bottle Return demonstrates the same proposal-versus-verification boundary in a 3D recycling system.
+
+- **Live judge build:** [joelobinnaeze.github.io/fine-print](https://joelobinnaeze.github.io/fine-print/)
+- **60-second judge path:** [docs/judge-guide.md](docs/judge-guide.md)
+- **Three-minute recording package:** [script](docs/demo-script.md) · [production plan](docs/demo-production-plan.md)
 
 ## Verified result
 
@@ -12,9 +16,9 @@ The primary workbench investigates a referral-credit programme across purchases,
 - The scripted trace pays 30 points for one bottle deposited three times while recycling zero items.
 - A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
 - The once-per-item patch removes repeat rewards but still fails on eligibility and completion: the disclosed gauntlet preserves 3/3 honest workflows while blocking only 1/3 known failures. A fresh Muse search verified an ineligible-item payout of 10 points with zero useful recycling in 8 requests at $0.052854.
-- The eligible-processing patch preserves 3/3 honest workflows and blocks all 3 disclosed failures. A separate 12-request Muse search found no exploit within its bounded budget at $0.098851; that is evidence from one search, not a proof of safety.
+- The eligible-processing patch preserves 3/3 honest workflows and blocks all 3 disclosed failures. A separate 12-request Muse search found no failure within its bounded budget at $0.098851; that is evidence from one search, not a proof of safety.
 - The designed batch benchmark pays 15 points for cycling a transient three-item hopper while doing zero useful processing. Its receipt-backed patch pays zero on that trace while preserving 35 points for one honest batch and 70 for two.
-- In the frozen discovery suite, Muse found the premature-deposit flaw 2/2 and the interacting batch flaw 1/2, with no verified exploit in 4/4 blocked-control runs. The simple beam-search baseline found both flaws 3/3 and both controls 0/3; every attempt remains in the report.
+- In the frozen discovery suite, Muse found the premature-deposit flaw 2/2 and the interacting batch flaw 1/2, with no confirmed failure in 4/4 blocked-control runs. The simple beam-search baseline found both flaws 3/3 and both controls 0/3; every attempt remains in the report.
 - An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
 - Verified attacks can be saved as durable SQLite regression cases and are replayed automatically against the selected policy.
 - [artifacts/commerce-investigation-live.json](artifacts/commerce-investigation-live.json) and [artifacts/commerce-repair-live.json](artifacts/commerce-repair-live.json) preserve the live commerce search and fresh repair test. [artifacts/attacker-batch-bonus.json](artifacts/attacker-batch-bonus.json), [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json), and [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserve the Bottle Return evidence; [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
@@ -44,7 +48,7 @@ The local API runs at `http://127.0.0.1:8787`:
 npm run start:server
 ```
 
-Live calls are disabled in `.env.example`. To enable them, add your Meta key to the untracked `.env`, confirm available event credits, and set positive app/session/search caps. The server still serializes provider calls, reserves worst-case usage before each request, and retains ambiguous reservations after unverifiable outcomes.
+Live calls are disabled in `.env.example`. To enable them, add your Meta key to the untracked `.env`, confirm available event credits, and set positive app/session/search caps. The usable app allowance keeps the larger of $1 or 10% in reserve. The server serializes provider calls, reserves worst-case usage before each request, and retains ambiguous reservations after unverifiable outcomes.
 
 ## Useful commands
 
@@ -78,6 +82,10 @@ The model never receives credentials, filesystem access, database handles, hidde
 
 - [Evaluation report](docs/evaluation.md)
 - [Three-minute demo script](docs/demo-script.md)
+- [Demo production plan](docs/demo-production-plan.md)
+- [Paste-ready submission copy](docs/submission-copy.md)
+- [One-minute judge guide](docs/judge-guide.md)
+- [Honest usability protocol](docs/usability-protocol.md)
 - [Competition expansion brief](docs/ideas/red-team-arena.md)
 - [Opera GX verification capture](artifacts/opera-fine-print.png)
 - [Opera GX commerce workbench](artifacts/opera-commerce-workbench.png)
@@ -86,7 +94,7 @@ The model never receives credentials, filesystem access, database handles, hidde
 - [Implementation ledger](tasks/todo.md)
 - [Original build brief](creation.md)
 
-The application is local-only. Public deployment, repository publication, video recording, usability participants, hackathon submission, and legal acceptance have not been performed.
+The public judge build is a static, deterministic replay with no key or paid endpoint in the browser. Live Muse requests remain local and budget-capped. Video recording, usability participants, portal submission, and legal acceptance still require human action.
 
 ## Attribution and license
 

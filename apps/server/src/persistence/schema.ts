@@ -189,5 +189,25 @@ export function recoverUnfinishedRuns(database: AppDatabase, timestamp: string):
       update.run(message, timestamp, run.id);
       insertEvent.run(run.id, run.last_sequence + 1, JSON.stringify({ message }));
     }
+    database
+      .prepare(
+        "UPDATE usage_reservations SET state = 'ambiguous', updated_at = ? WHERE state = 'reserved'",
+      )
+      .run(timestamp);
+    database
+      .prepare(
+        "UPDATE policy_translations SET state = 'ambiguous', updated_at = ? WHERE state = 'claimed'",
+      )
+      .run(timestamp);
+    database
+      .prepare(
+        "UPDATE agent_searches SET status = 'incomplete', updated_at = ? WHERE status = 'claimed'",
+      )
+      .run(timestamp);
+    database
+      .prepare(
+        "UPDATE commerce_investigations SET state = 'incomplete', updated_at = ? WHERE state = 'claimed'",
+      )
+      .run(timestamp);
   })();
 }

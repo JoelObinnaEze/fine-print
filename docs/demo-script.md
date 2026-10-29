@@ -1,35 +1,26 @@
-# Three-minute demo script
+# Fine Print — exact three-minute narration
 
-Use **Load verified example** for a reliable offline commerce demo. Use **Investigate with Muse** or **Fresh-attack with Muse** only when the API is connected and event credits are available. Recorded, live-model, and host-computed evidence remain visibly distinct.
+Target runtime: **2:50–2:57** at 125–130 words per minute. Record this as one clean landscape webcam take. The editor will keep your voice continuously and replace the middle with the app screencast.
 
-## 0:00–0:20 — The problem
+## Teleprompter copy
 
-Open on **What behaviour are you actually paying for?** Point to `$20` spendable credit, `$0` retained revenue, and three required transactions. Say: “The policy did exactly what it said and failed what its owner meant.”
+Reward programmes can fail in a strange way: the software follows every written rule, but still pays for behaviour the business never wanted. Fine Print lets policy owners test that gap before launch.
 
-## 0:20–0:45 — Separate rules from intent
+Here is a simple referral rule. When a referred customer spends twenty dollars, both people receive ten dollars in credit. The business expects to keep at least twenty dollars of real revenue, and it wants to preserve the honest customer reward.
 
-Show the proposed rewards programme, minimum retained revenue, and restrictions as separate fields. Inspect the supported mapping and unsupported-condition column. Say: “Fine Print refuses conditions it cannot represent instead of silently approximating them.”
+Muse reads those plain-English requirements and proposes concrete transaction tests. But Fine Print never trusts an AI explanation on its own. In this real run, Muse proposed four transactions. A deterministic simulator replayed them, removed one unnecessary step, and confirmed the shortest sequence: refer, purchase, then refund. The business keeps zero dollars, while twenty dollars of reward remains spendable.
 
-## 0:45–1:15 — Inspect the verified exploit
+Fine Print then compares repairs instead of simply shutting the programme down. With fast rewards as the priority, it recommends reversing credit after a refund. That keeps the full twenty-dollar honest reward with no delay. A separate Muse recheck tried five transactions against that repaired rule. The simulator found zero reward paid without lasting value. That is useful bounded evidence—not a claim that the rule can never fail.
 
-Show the model hypothesis beside the host verdict. Walk through referral, purchase, and refund; point to the policy clause and ledger effect on each step. Say: “Muse proposed four actions. The host replay reduced that to three and verified `$20` spendable credit with `$0` retained revenue.”
+This is not a one-off referral demo. The Bottle Return lab applies the same method to a physical reward system. Muse found that one bottle could be deposited repeatedly for thirty points while nothing was recycled. The three-dimensional replay makes every action and payout inspectable. The recommended rule pays once, only after an eligible item is actually processed, while preserving the honest workflow.
 
-## 1:15–1:40 — Compare participant strategies
+Under the hood, Muse proposes hypotheses and actions through bounded tools. Strict schemas validate every request. Deterministic simulators decide every payout and final result. Verified traces can be saved and replayed as permanent checks. The evaluation reports every attempt, including failures, and compares Muse with a simple search baseline instead of selecting only the best run.
 
-Show ordinary customers, bargain hunters, and coordinated adversaries. Call out the disclosed assumptions and say: “These are deterministic strategy traces, not a forecast of real fraud rates.”
+Fine Print helps teams answer one question before launch: are we rewarding the behaviour we actually want? It turns vague incentive rules into reproducible evidence and repairs that keep honest users whole.
 
-## 1:40–2:10 — Choose a repair
+## Speaking notes
 
-Switch between owner priorities and compare leakage, honest reward, retained revenue, delay, and complexity. Select **Reverse credit on refund** under fast rewards. It preserves the immediate `$20` honest reward and blocks the known trace.
-
-## 2:10–2:30 — Fresh-attack the chosen design
-
-Show the green result: **Known trace blocked**, `$0` unintended payout, `$20` honest reward, `0 day` delay, and **Fresh Muse attempt · host verified**. Say: “This separate attempt cost `$0.010456`. No exploit was observed in five proposed actions; that is not a proof of safety.”
-
-## 2:30–2:50 — Switch domains
-
-Click **Bottle Return evidence**. Show the 3D depot, replay receipts, interacting hopper benchmark, saved regressions, and Policy Lab. Say: “The same boundary holds in another domain: untrusted model proposal, strict schemas, deterministic replay, durable evidence.”
-
-## 2:50–3:00 — Close
-
-“Fine Print helps policy owners decide what behaviour they are buying before launch—by turning vague incentives into inspectable failures, comparable repairs, and reproducible evidence.”
+- Say **Muse** as “muse,” not as individual letters.
+- Pause briefly after “zero dollars” and “nothing was recycled.” Those are the two visual reveals.
+- Keep the final sentence slower than the rest.
+- Do not improvise stronger safety claims. “Bounded evidence” is deliberate.

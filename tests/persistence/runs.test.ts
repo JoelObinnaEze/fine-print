@@ -124,6 +124,54 @@ describe("persistent runs", () => {
     expect(reopened.prepare("SELECT count(*) AS count FROM runs").get()).toEqual({ count: 1 });
   });
 
+  it("marks unfinished paid work ambiguous or incomplete after restart", () => {
+    const database = createDatabase();
+    new RunService(database);
+    const timestamp = "2026-10-27T00:00:00.000Z";
+    database
+      .prepare(`
+        INSERT INTO usage_reservations
+          (id, run_id, session_id, scope_id, reserved_micros, actual_micros, state, created_at, updated_at)
+        VALUES ('reservation-1', NULL, 'session-1', 'translation-1', 1000, NULL, 'reserved', ?, ?)
+      `)
+      .run(timestamp, timestamp);
+    database
+      .prepare(`
+        INSERT INTO policy_translations
+          (id, idempotency_key, request_hash, state, reservation_id, result_json, created_at, updated_at)
+        VALUES ('translation-1', 'translation-key', 'hash', 'claimed', 'reservation-1', NULL, ?, ?)
+      `)
+      .run(timestamp, timestamp);
+    database
+      .prepare(`
+        INSERT INTO agent_searches
+          (id, run_id, model_id, provenance, prompt_version, limits_json, status, result_json, created_at, updated_at)
+        VALUES ('search-1', NULL, 'muse-spark-1.3', 'live_model', 'attacker-v1', '{}', 'claimed', NULL, ?, ?)
+      `)
+      .run(timestamp, timestamp);
+    database
+      .prepare(`
+        INSERT INTO commerce_investigations
+          (id, idempotency_key, request_hash, state, result_json, created_at, updated_at)
+        VALUES ('commerce-1', 'commerce-key', 'hash', 'claimed', NULL, ?, ?)
+      `)
+      .run(timestamp, timestamp);
+    database.close();
+
+    const reopened = openDatabase(database.name);
+    databases.push(reopened);
+    new RunService(reopened);
+
+    expect(reopened.prepare("SELECT state FROM usage_reservations WHERE id = 'reservation-1'").get())
+      .toEqual({ state: "ambiguous" });
+    expect(reopened.prepare("SELECT state FROM policy_translations WHERE id = 'translation-1'").get())
+      .toEqual({ state: "ambiguous" });
+    expect(reopened.prepare("SELECT status FROM agent_searches WHERE id = 'search-1'").get())
+      .toEqual({ status: "incomplete" });
+    expect(reopened.prepare("SELECT state FROM commerce_investigations WHERE id = 'commerce-1'").get())
+      .toEqual({ state: "incomplete" });
+  });
+
   it("persists a verified discovery and replays it against a patched policy after restart", async () => {
     const database = createDatabase();
     const service = new RunService(database);

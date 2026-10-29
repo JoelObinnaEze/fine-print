@@ -63,16 +63,17 @@ function sendError(response: ServerResponse, status: number, code: string, messa
 
 async function readJson(request: IncomingMessage): Promise<unknown> {
   let size = 0;
-  let text = "";
+  const chunks: Buffer[] = [];
   for await (const chunk of request) {
-    size += Buffer.byteLength(chunk);
-    if (size <= maxBodyBytes) text += chunk.toString();
-  }
-  if (size > maxBodyBytes) {
-    throw new RequestError(413, "PAYLOAD_TOO_LARGE", "Request body exceeds 65536 bytes.");
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    size += buffer.length;
+    if (size > maxBodyBytes) {
+      throw new RequestError(413, "PAYLOAD_TOO_LARGE", "Request body exceeds 65536 bytes.");
+    }
+    chunks.push(buffer);
   }
   try {
-    return JSON.parse(text);
+    return JSON.parse(Buffer.concat(chunks, size).toString("utf8"));
   } catch {
     throw new RequestError(400, "INVALID_JSON", "Request body must be valid JSON.");
   }

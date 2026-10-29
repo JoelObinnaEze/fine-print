@@ -11,13 +11,14 @@ import {
 } from "../providers/meta-attacker.js";
 import type { Policy } from "../../../../packages/policy/src/schema.js";
 import { parsePolicy } from "../../../../packages/policy/src/schema.js";
-import { actionSchema, type Action } from "../../../../packages/engine/src/actions.js";
+import type { Action } from "../../../../packages/engine/src/actions.js";
 import { canonicalHash } from "../../../../packages/engine/src/canonical-hash.js";
 import { createBottleReturnState } from "../../../../packages/engine/src/scenario.js";
 import {
   ATTACKER_LIMITS,
   BoundedAttackerSession,
   runBoundedAttacker,
+  type AttackerExecutionAudit,
   type AttackerProvider,
   type AttackerSearchResult,
 } from "./agent.js";
@@ -80,6 +81,7 @@ export class LiveAttackServiceError extends Error {
     readonly code:
       | "IDEMPOTENCY_KEY_REUSED"
       | "ATTACK_ALREADY_RUNNING"
+      | "ATTACK_ALREADY_ATTEMPTED"
       | "PROVIDER_BUSY"
       | "LIVE_DISABLED",
     message: string,
@@ -116,47 +118,13 @@ function usage(turns: readonly MetaAttackerTurnRecord[]): LiveAttackResult["usag
 
 function searchReport(
   verification: AttackerSearchResult,
-  turns: readonly MetaAttackerTurnRecord[],
+  audit: AttackerExecutionAudit,
 ): LiveAttackResult["report"] {
-  let trial = 1;
-  const attemptedTraces: LiveAttackResult["report"]["attemptedTraces"][number][] = [];
-  for (const turn of turns) {
-    for (const call of turn.toolCalls) {
-      if (call.name === "reset_trial") {
-        trial = Math.min(trial + 1, ATTACKER_LIMITS.maxTrials);
-        continue;
-      }
-      if (call.name !== "act" && call.name !== "submit_candidate") continue;
-      const rawActions =
-        typeof call.arguments === "object" && call.arguments !== null
-          ? Reflect.get(call.arguments, "actions")
-          : undefined;
-      if (!Array.isArray(rawActions)) continue;
-      const actions: Action[] = [];
-      for (const rawAction of rawActions) {
-        const parsed = actionSchema.safeParse(rawAction);
-        if (!parsed.success) {
-          actions.length = 0;
-          break;
-        }
-        actions.push(parsed.data);
-      }
-      if (actions.length === 0) continue;
-      attemptedTraces.push({
-        request: turn.sequence,
-        trial,
-        kind: call.name === "submit_candidate" ? "candidate" : "trial",
-        hypothesis: turn.strategySummary,
-        actions,
-      });
-    }
-  }
-
   const common = {
     requestsUsed: verification.requestsUsed,
-    trialsCompleted: trial,
-    actionsTested: attemptedTraces.reduce((total, trace) => total + trace.actions.length, 0),
-    attemptedTraces,
+    trialsCompleted: audit.trialsCompleted,
+    actionsTested: audit.actionsTested,
+    attemptedTraces: audit.attemptedTraces,
   };
   switch (verification.status) {
     case "exploit_verified":
@@ -246,8 +214,10 @@ export class LiveAttackService {
         };
       }
       throw new LiveAttackServiceError(
-        "ATTACK_ALREADY_RUNNING",
-        "This attack is already running.",
+        existing.status === "claimed" ? "ATTACK_ALREADY_RUNNING" : "ATTACK_ALREADY_ATTEMPTED",
+        existing.status === "claimed"
+          ? "This attack is already running."
+          : "This attack was interrupted and will not be sent again.",
       );
     }
     if (this.#inFlight) {
@@ -276,9 +246,11 @@ export class LiveAttackService {
     const provider = this.#createProvider(searchId);
     try {
       let verification: AttackerSearchResult;
+      const initialState = createBottleReturnState();
+      const session = new BoundedAttackerSession(initialState, policy);
       try {
         verification = await runBoundedAttacker(
-          new BoundedAttackerSession(createBottleReturnState(), policy),
+          session,
           provider,
         );
       } catch {
@@ -298,6 +270,7 @@ export class LiveAttackService {
             provenance: "live_model",
             modelId: this.#config.provider.modelId,
             limits: ATTACKER_LIMITS,
+            initialState,
           },
         );
         let run = created.run;
@@ -317,7 +290,7 @@ export class LiveAttackService {
         verification,
         turns: publicTurns(provider.turns),
         usage: usage(provider.turns),
-        report: searchReport(verification, provider.turns),
+        report: searchReport(verification, session.audit),
       };
       const finishedAt = new Date().toISOString();
       this.#database.transaction(() => {

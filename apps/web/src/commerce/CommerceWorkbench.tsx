@@ -7,13 +7,16 @@ import {
   createCommerceGoal,
   rankCommerceCandidates,
   recordedCommerceInvestigation,
+  recordedCommerceRepairTest,
   type CommerceInvestigationView,
   type CommercePriority,
 } from "./recorded-investigation.js";
+import { handleTabKeyDown } from "../tab-navigation.js";
+import { isStaticDemo } from "../static-demo.js";
 
 const priorityLabels: Readonly<Record<CommercePriority, string>> = {
-  low_leakage: "lowest leakage",
-  fast_rewards: "fast rewards",
+  low_leakage: "strongest protection",
+  fast_rewards: "fastest reward",
   simple_operations: "simple operations",
   least_disruption: "least disruption",
 };
@@ -22,17 +25,16 @@ function dollars(value: number): string {
   return `$${value}`;
 }
 
-type CommerceView = "policy" | "exploit" | "population" | "repairs";
+type CommerceView = "policy" | "exploit" | "repairs";
 
 const commerceViews: readonly {
   readonly id: CommerceView;
   readonly label: string;
   readonly description: string;
 }[] = [
-  { id: "policy", label: "Policy", description: "Rules and intent" },
-  { id: "exploit", label: "Exploit", description: "Verified failure" },
-  { id: "population", label: "Audience", description: "Who optimizes what" },
-  { id: "repairs", label: "Repairs", description: "Choose a tradeoff" },
+  { id: "policy", label: "Step 1 · Your rule", description: "What should happen" },
+  { id: "exploit", label: "Step 2 · What went wrong", description: "Confirmed replay" },
+  { id: "repairs", label: "Step 3 · Best repair", description: "Keep honest rewards" },
 ];
 
 export function CommerceWorkbench() {
@@ -40,36 +42,36 @@ export function CommerceWorkbench() {
   const [minimumRevenue, setMinimumRevenue] = useState("20");
   const [restrictions, setRestrictions] = useState(commerceRestrictions);
   const [connection, setConnection] = useState<"checking" | "ready" | "offline">("checking");
-  const [availableBudget, setAvailableBudget] = useState<number | null>(null);
   const [investigation, setInvestigation] = useState<CommerceInvestigationView>(
     recordedCommerceInvestigation,
   );
-  const [priority, setPriority] = useState<CommercePriority>("low_leakage");
+  const [priority, setPriority] = useState<CommercePriority>("fast_rewards");
   const [isRunning, setIsRunning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [freshTest, setFreshTest] = useState<{
     readonly label: string;
+    readonly verdict: "Known failure blocked" | "No failure found in this attempt" | "Test could not be replayed" | "Failure still present";
     readonly leakage: number;
     readonly honestReward: number;
     readonly delay: number | null;
-    readonly provenance: "host" | "live";
-  } | null>(null);
+    readonly provenance: "host" | "live" | "recorded";
+  } | null>(recordedCommerceRepairTest);
   const [activeView, setActiveView] = useState<CommerceView>("exploit");
 
   useEffect(() => {
+    if (isStaticDemo) {
+      setConnection("offline");
+      return;
+    }
     let active = true;
-    void Promise.all([fetch("/api/health"), fetch("/api/usage")])
-      .then(async ([healthResponse, usageResponse]) => {
-        if (!healthResponse.ok || !usageResponse.ok) throw new Error("Server unavailable");
+    void fetch("/api/health")
+      .then(async (healthResponse) => {
+        if (!healthResponse.ok) throw new Error("Server unavailable");
         const health = (await healthResponse.json()) as {
           readonly liveAgent?: { readonly isEnabled?: boolean };
         };
-        const usage = (await usageResponse.json()) as { readonly availableAppUsd?: number };
         if (!active) return;
         setConnection(health.liveAgent?.isEnabled ? "ready" : "offline");
-        setAvailableBudget(
-          typeof usage.availableAppUsd === "number" ? usage.availableAppUsd : null,
-        );
       })
       .catch(() => active && setConnection("offline"));
     return () => {
@@ -82,6 +84,29 @@ export function CommerceWorkbench() {
     [investigation.candidates, priority],
   );
   const recommended = rankedCandidates[0] ?? null;
+  const attackStatus = investigation.attack?.verification.status;
+  const attackOutcome =
+    attackStatus === "exploit_verified"
+      ? {
+          label: "Failure confirmed",
+          title: `${dollars(investigation.attack!.verification.availableRewardUsd)} was rewarded after the business kept ${dollars(investigation.attack!.verification.retainedRevenueUsd)}.`,
+          trace: `${investigation.attack!.proposedActionCount} proposed → ${investigation.attack!.minimizedActions.length} needed`,
+        }
+      : attackStatus === "candidate_invalid"
+        ? {
+            label: "Test could not be replayed",
+            title: "The simulator rejected this transaction sequence.",
+            trace: `${investigation.attack!.proposedActionCount} proposed · not executable`,
+          }
+        : {
+            label: "No failure found",
+            title: "This attempt did not show a reward without lasting value.",
+            trace: `${investigation.attack?.proposedActionCount ?? 0} proposed · ${investigation.attack?.minimizedActions.length ?? 0} replayed`,
+          };
+  const mappedPolicy = investigation.mapping.policy;
+  const mappedSummary = mappedPolicy
+    ? `${dollars(mappedPolicy.referral.rewardUsd)} each after a ${dollars(mappedPolicy.referral.qualifyingPurchaseUsd)} purchase; ${mappedPolicy.referral.issuance.replaceAll("_", " ")}; rewards ${mappedPolicy.referral.refundHandling === "reverse" ? "reversed" : "kept"} after a refund.`
+    : investigation.mapping.reason;
 
   const requestInvestigation = async (
     text: string,
@@ -93,8 +118,9 @@ export function CommerceWorkbench() {
       setMessage("Minimum retained revenue must be a whole-dollar amount from 1 to 10000.");
       return;
     }
+    if (mode === "fresh") setFreshTest(null);
     setIsRunning(true);
-    setMessage(mode === "primary" ? "Muse is mapping and attacking the programme…" : "Muse is fresh-attacking the selected design…");
+    setMessage(mode === "primary" ? "Muse is mapping and testing the programme…" : "Muse is rechecking the selected repair…");
     try {
       const response = await fetch("/api/commerce/investigations", {
         method: "POST",
@@ -109,6 +135,7 @@ export function CommerceWorkbench() {
             .split("\n")
             .map((restriction) => restriction.trim())
             .filter(Boolean),
+          ...(mode === "fresh" ? { mode: "attack_only" } : {}),
         }),
       });
       const payload = (await response.json()) as CommerceInvestigationView & {
@@ -123,11 +150,20 @@ export function CommerceWorkbench() {
         setFreshTest(null);
         setActiveView(liveResult.attack ? "exploit" : "policy");
       } else {
+        if (!liveResult.attack) {
+          throw new Error(`Fresh recheck could not run: ${liveResult.mapping.reason}`);
+        }
         const ordinaryResult = liveResult.population?.strategies.find(
           (strategy) => strategy.id === "ordinary",
         );
         setFreshTest({
           label: freshLabel ?? "Selected design",
+          verdict:
+            liveResult.attack.verification.status === "exploit_verified"
+              ? "Failure still present"
+              : liveResult.attack.verification.status === "candidate_invalid"
+                ? "Test could not be replayed"
+                : "No failure found in this attempt",
           leakage: liveResult.attack?.verification.unintendedPayoutUsd ?? 0,
           honestReward: ordinaryResult?.metrics.availableRewardUsd ?? 0,
           delay: ordinaryResult?.metrics.rewardDelayDays ?? null,
@@ -138,15 +174,6 @@ export function CommerceWorkbench() {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Commerce investigation failed.");
     } finally {
-      try {
-        const usageResponse = await fetch("/api/usage");
-        if (usageResponse.ok) {
-          const usage = (await usageResponse.json()) as { readonly availableAppUsd?: number };
-          if (typeof usage.availableAppUsd === "number") setAvailableBudget(usage.availableAppUsd);
-        }
-      } catch {
-        // Keep the last known budget when the local usage endpoint is unavailable.
-      }
       setIsRunning(false);
     }
   };
@@ -155,21 +182,17 @@ export function CommerceWorkbench() {
     <section className="commerce" id="commerce" aria-labelledby="commerce-title">
       <header className="commerce__hero">
         <div className="commerce__hero-copy">
-          <h2 id="commerce-title">Find where rewards detach from value.</h2>
-          <p>Muse proposes the attack. Fine Print replays the ledger, minimizes the failure, and tests repairs without hiding the customer cost.</p>
-          <div className="commerce__hero-actions">
-            <button type="button" onClick={() => setActiveView("policy")}>Test your policy</button>
-            <button type="button" onClick={() => setActiveView("repairs")}>Compare fixes</button>
-          </div>
+          <h2 id="commerce-title">Test whether rewards outlive value.</h2>
+          <p>Fine Print asks Muse how a reward rule could fail, replays the idea in a deterministic simulator, and compares repairs that still reward honest customers.</p>
         </div>
         <dl className="commerce__headline-metrics">
-          <div><dt>Unintended credit</dt><dd>{dollars(investigation.attack?.verification.unintendedPayoutUsd ?? 0)}</dd></div>
-          <div><dt>Value retained</dt><dd>{dollars(investigation.attack?.verification.retainedRevenueUsd ?? 0)}</dd></div>
-          <div><dt>Shortest exploit</dt><dd>{investigation.attack?.minimizedActions.length ?? 0}<small> steps</small></dd></div>
+          <div><dt>Reward paid</dt><dd>{attackStatus === "candidate_invalid" ? "—" : dollars(investigation.attack?.verification.unintendedPayoutUsd ?? 0)}</dd></div>
+          <div><dt>Value kept</dt><dd>{attackStatus === "candidate_invalid" ? "—" : dollars(investigation.attack?.verification.retainedRevenueUsd ?? 0)}</dd></div>
+          <div><dt>Shortest proof</dt><dd>{attackStatus === "exploit_verified" ? investigation.attack?.minimizedActions.length : "—"}{attackStatus === "exploit_verified" && <small> steps</small>}</dd></div>
         </dl>
       </header>
 
-      <nav className="commerce__steps" aria-label="Commerce investigation" role="tablist">
+      <nav className="commerce__steps" aria-label="Commerce investigation" role="tablist" onKeyDown={handleTabKeyDown}>
         {commerceViews.map((view) => (
           <button
             aria-controls={`commerce-panel-${view.id}`}
@@ -196,33 +219,33 @@ export function CommerceWorkbench() {
           <div className="commerce__policy-workspace">
             <section className="commerce__input" aria-labelledby="commerce-input-title">
               <div className="commerce__section-heading">
-                <h3 id="commerce-input-title">Write the programme and the outcome separately</h3>
+                <h3 id="commerce-input-title">Describe the rule and what success means</h3>
                 <p className={`commerce__connection commerce__connection--${connection}`} role="status">
                   {connection === "ready"
-                    ? `Live ready${availableBudget === null ? "" : ` · $${availableBudget.toFixed(2)} left`}`
-                    : connection === "checking" ? "Checking connection" : "Recorded mode"}
+                    ? "Ready"
+                    : connection === "checking" ? "Checking connection" : isStaticDemo ? "Recorded demo" : "Recorded mode"}
                 </p>
               </div>
               <div className="commerce__form-grid">
                 <label className="commerce__policy-field">
-                  <span>Actual reward rule</span>
+                  <span>Rewards rule</span>
                   <textarea rows={5} maxLength={4_000} value={sourceText} onChange={(event) => setSourceText(event.target.value)} />
                 </label>
                 <label htmlFor="commerce-minimum-revenue">
-                  <span>Value that must remain</span>
-                  <span className="commerce__money-input"><b aria-hidden="true">$</b><input aria-label="Minimum retained revenue" id="commerce-minimum-revenue" min="1" max="10000" step="1" type="number" value={minimumRevenue} onChange={(event) => setMinimumRevenue(event.target.value)} /></span>
+                  <span>Minimum value the business must keep</span>
+                  <span className="commerce__money-input"><b aria-hidden="true">$</b><input aria-label="Minimum value the business must keep" id="commerce-minimum-revenue" min="1" max="10000" step="1" type="number" value={minimumRevenue} onChange={(event) => setMinimumRevenue(event.target.value)} /></span>
                 </label>
                 <label>
-                  <span>Customer promise to preserve</span>
+                  <span>Honest customer promise to preserve</span>
                   <textarea rows={3} maxLength={3_000} value={restrictions} onChange={(event) => setRestrictions(event.target.value)} />
                 </label>
               </div>
               <div className="commerce__actions">
                 <button type="button" disabled={connection !== "ready" || isRunning || sourceText.trim().length === 0} onClick={() => void requestInvestigation(sourceText, "primary")}>
-                  {isRunning ? "Investigating…" : "Investigate with Muse"}
+                  {isRunning ? "Testing…" : "Test my rule"}
                 </button>
-                <button type="button" onClick={() => { setInvestigation(recordedCommerceInvestigation); setMessage(null); setFreshTest(null); setActiveView("exploit"); }}>
-                  Load verified example
+                <button type="button" onClick={() => { setInvestigation(recordedCommerceInvestigation); setMessage(null); setFreshTest(recordedCommerceRepairTest); setActiveView("exploit"); }}>
+                  Load example
                 </button>
                 {message && <p aria-live="polite">{message}</p>}
               </div>
@@ -230,35 +253,44 @@ export function CommerceWorkbench() {
 
             <section className="commerce__mapping" aria-labelledby="mapping-title">
               <div className="commerce__section-heading">
-                <h3 id="mapping-title">What the simulator can enforce</h3>
-                <strong>{investigation.mapping.status === "candidate" ? "Ready to replay" : "Needs wider support"}</strong>
+                <h3 id="mapping-title">How Fine Print understood it</h3>
+                <strong>{investigation.mapping.status === "candidate" ? "Ready to test" : "Needs wider support"}</strong>
               </div>
-              <p>{investigation.mapping.reason}</p>
-              <div className="commerce__mapping-lists">
-                <div><b>Represented</b><ul>{investigation.mapping.supportedClauses.map((clause) => <li key={clause}>{clause}</li>)}</ul></div>
-                <div><b>Unsupported</b>{investigation.mapping.unsupportedConditions.length === 0 ? <p>Nothing material.</p> : <ul>{investigation.mapping.unsupportedConditions.map((condition) => <li key={condition}>{condition}</li>)}</ul>}</div>
-              </div>
-              {investigation.mapping.policy && (
-                <dl className="commerce__policy-map">
-                  <div><dt>Reward</dt><dd>{dollars(investigation.mapping.policy.referral.rewardUsd)} each</dd></div>
-                  <div><dt>Threshold</dt><dd>{dollars(investigation.mapping.policy.referral.qualifyingPurchaseUsd)}</dd></div>
-                  <div><dt>Basis</dt><dd>{investigation.mapping.policy.referral.qualificationBasis.replaceAll("_", " ")}</dd></div>
-                  <div><dt>Issuance</dt><dd>{investigation.mapping.policy.referral.issuance.replaceAll("_", " ")}</dd></div>
-                  <div><dt>Refund</dt><dd>{investigation.mapping.policy.referral.refundHandling}</dd></div>
-                  <div><dt>Window</dt><dd>{investigation.mapping.policy.referral.returnWindowDays} days</dd></div>
-                </dl>
-              )}
+              <p className="commerce__policy-summary">{mappedSummary}</p>
+              {investigation.mapping.unsupportedConditions.length > 0 && <p><b>Not represented:</b> {investigation.mapping.unsupportedConditions.join(", ")}.</p>}
+              <details className="commerce__technical">
+                <summary>Show technical rule mapping</summary>
+                <p>{investigation.mapping.reason}</p>
+                <div className="commerce__mapping-lists">
+                  <div><b>Represented</b><ul>{investigation.mapping.supportedClauses.map((clause) => <li key={clause}>{clause}</li>)}</ul></div>
+                  <div><b>Unsupported</b>{investigation.mapping.unsupportedConditions.length === 0 ? <p>Nothing material.</p> : <ul>{investigation.mapping.unsupportedConditions.map((condition) => <li key={condition}>{condition}</li>)}</ul>}</div>
+                </div>
+                {mappedPolicy && (
+                  <dl className="commerce__policy-map">
+                    <div><dt>Reward</dt><dd>{dollars(mappedPolicy.referral.rewardUsd)} each</dd></div>
+                    <div><dt>Purchase needed</dt><dd>{dollars(mappedPolicy.referral.qualifyingPurchaseUsd)}</dd></div>
+                    <div><dt>Basis</dt><dd>{mappedPolicy.referral.qualificationBasis.replaceAll("_", " ")}</dd></div>
+                    <div><dt>Timing</dt><dd>{mappedPolicy.referral.issuance.replaceAll("_", " ")}</dd></div>
+                    <div><dt>After refund</dt><dd>{mappedPolicy.referral.refundHandling}</dd></div>
+                    <div><dt>Return window</dt><dd>{mappedPolicy.referral.returnWindowDays} days</dd></div>
+                  </dl>
+                )}
+              </details>
             </section>
           </div>
         )}
 
         {activeView === "exploit" && (investigation.attack ? (
-          <section className="commerce__counterexample" aria-label="Verified counterexample">
+          <section className="commerce__counterexample" aria-label="Investigation outcome">
             <div className="commerce__counterexample-intro">
-              <div className="commerce__verdict-row"><span>Host verified</span><strong>{investigation.attack.proposedActionCount} proposed → {investigation.attack.minimizedActions.length} required</strong></div>
-              <h3>{investigation.attack.verification.status === "exploit_verified" ? "The reward survives after the value disappears." : "The proposed exploit did not verify."}</h3>
-              <p><b>Model hypothesis · unverified wording</b>{investigation.attack.hypothesis}</p>
-              <p><b>Host verdict</b>{investigation.attack.verification.reason}</p>
+              <div className="commerce__verdict-row"><span>{attackOutcome.label}</span><strong>{attackOutcome.trace}</strong></div>
+              <h3>{attackOutcome.title}</h3>
+              <p>These are the shortest transactions the simulator needed to confirm what happened.</p>
+              <details className="commerce__technical commerce__technical--dark">
+                <summary>Show verification details</summary>
+                <p><b>AI test idea</b>{investigation.attack.hypothesis}</p>
+                <p><b>Simulator result</b>{investigation.attack.verification.reason}</p>
+              </details>
             </div>
             <ol className="commerce__trace">
               {investigation.attack.events.map((event) => (
@@ -267,47 +299,69 @@ export function CommerceWorkbench() {
             </ol>
           </section>
         ) : (
-          <div className="commerce__empty"><h3>No verified exploit yet</h3><p>Start with a policy and a measurable intended outcome.</p><button type="button" onClick={() => setActiveView("policy")}>Write a policy</button></div>
+          <div className="commerce__empty"><h3>No confirmed failure yet</h3><p>Start with a rule and the value the business must keep.</p><button type="button" onClick={() => setActiveView("policy")}>Write a rule</button></div>
         ))}
-
-        {activeView === "population" && (investigation.population ? (
-          <section className="commerce__population" aria-label="Participant population">
-            <div className="commerce__section-heading"><h3>How each audience responds</h3><p>{investigation.population.assumption}</p></div>
-            <div className="commerce__population-table" role="table" aria-label="Population outcomes">
-              <div className="commerce__population-header" role="row"><span role="columnheader">Strategy</span><span role="columnheader">People</span><span role="columnheader">Legitimate reward</span><span role="columnheader">Unintended payout</span><span role="columnheader">Value retained</span><span role="columnheader">Delay</span></div>
-              {investigation.population.strategies.map((strategy) => (
-                <div role="row" key={strategy.id}><span role="cell"><b>{strategy.label}</b><small>{strategy.objective}</small></span><span role="cell">{strategy.participants}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd === 0 ? strategy.metrics.availableRewardUsd : 0)}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd)}</span><span role="cell">{dollars(strategy.metrics.retainedRevenueUsd)}</span><span role="cell">{strategy.metrics.rewardDelayDays ?? "—"} days</span></div>
-              ))}
-            </div>
-          </section>
-        ) : <div className="commerce__empty"><h3>No audience simulation yet</h3><button type="button" onClick={() => setActiveView("policy")}>Write a policy</button></div>)}
 
         {activeView === "repairs" && (recommended ? (
           <section className="commerce__repairs" aria-labelledby="repairs-title">
             <div className="commerce__section-heading">
-              <h3 id="repairs-title">Choose what matters most</h3>
+              <h3 id="repairs-title">Choose the best repair for your programme</h3>
+            </div>
+            <div className="commerce__recommendation" role="region" aria-label="Recommended repair">
+              <div className="commerce__recommendation-copy">
+                <h3>{recommended.label}</h3>
+                <p><b>Best match: {priorityLabels[priority]}.</b> {recommended.tradeoff}</p>
+              </div>
+              <dl>
+                <div><dt>Paid without value</dt><dd>{dollars(recommended.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div>
+                <div><dt>Honest reward</dt><dd>{dollars(recommended.evaluation.honest.availableRewardUsd)}</dd></div>
+                <div><dt>Customer wait</dt><dd>{recommended.evaluation.honest.rewardDelayDays ?? "—"} day{recommended.evaluation.honest.rewardDelayDays === 1 ? "" : "s"}</dd></div>
+              </dl>
+              <div className="commerce__candidate-actions">
+                <button type="button" onClick={() => setFreshTest({ label: recommended.label, verdict: recommended.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "Known failure blocked" : "Failure still present", leakage: recommended.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: recommended.evaluation.honest.availableRewardUsd, delay: recommended.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>
+                {isStaticDemo
+                  ? <small className="commerce__static-note">Live rechecks are disabled in the public demo.</small>
+                  : <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(recommended.policy), "fresh", recommended.label)}>Run fresh recheck</button>}
+              </div>
+            </div>
+            {message && <p aria-live="polite">{message}</p>}
+            {freshTest && <div className="commerce__fresh-test" role="status" aria-label="Fresh repair test"><b>{freshTest.verdict}</b><span>{freshTest.label}</span><span>{dollars(freshTest.leakage)} paid without value</span><span>{dollars(freshTest.honestReward)} honest reward</span><span>{freshTest.delay ?? "—"} day wait</span><small>{freshTest.provenance === "live" ? "Fresh AI recheck · simulator replayed" : freshTest.provenance === "recorded" ? "Recorded AI recheck · simulator replayed" : "Simulator regression replay"}</small></div>}
+            <details className="commerce__technical commerce__repair-options">
+              <summary>Compare all repairs</summary>
               <div className="commerce__priorities" aria-label="Policy owner priorities">
                 {(Object.keys(priorityLabels) as CommercePriority[]).map((value) => <button key={value} type="button" aria-pressed={priority === value} onClick={() => setPriority(value)}>{priorityLabels[value]}</button>)}
               </div>
-            </div>
-            <div className="commerce__recommendation" role="region" aria-label="Recommended design"><span>Recommended for {priorityLabels[priority]}</span><b>{recommended.label}</b><p>{recommended.tradeoff}</p></div>
-            <div className="commerce__candidate-grid">
-              {rankedCandidates.map((candidate) => (
-                <article key={candidate.id}>
-                  <div><span className="commerce__complexity">Complexity {candidate.complexity} / 3</span><h3>{candidate.label}</h3><p>{candidate.tradeoff}</p></div>
-                  <dl><div><dt>Leakage</dt><dd>{dollars(candidate.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div><div><dt>Honest reward</dt><dd>{dollars(candidate.evaluation.honest.availableRewardUsd)}</dd></div><div><dt>Value retained</dt><dd>{dollars(candidate.evaluation.honest.retainedRevenueUsd)}</dd></div><div><dt>Delay</dt><dd>{candidate.evaluation.honest.rewardDelayDays ?? "—"} days</dd></div></dl>
-                  <div className="commerce__candidate-actions"><button type="button" onClick={() => setFreshTest({ label: candidate.label, leakage: candidate.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: candidate.evaluation.honest.availableRewardUsd, delay: candidate.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known attack</button><button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(candidate.policy), "fresh", candidate.label)}>Fresh Muse attack</button></div>
-                </article>
-              ))}
-            </div>
-            {freshTest && <div className="commerce__fresh-test" role="status" aria-label="Fresh repair test"><b>{freshTest.leakage === 0 ? "Known trace blocked" : "Leakage remains"}</b><span>{freshTest.label}</span><span>{dollars(freshTest.leakage)} unintended</span><span>{dollars(freshTest.honestReward)} honest reward</span><span>{freshTest.delay ?? "—"} day delay</span><small>{freshTest.provenance === "live" ? "Fresh Muse attempt · host verified" : "Host regression replay"}</small></div>}
+              <div className="commerce__candidate-grid">
+                {rankedCandidates.map((candidate) => (
+                  <article key={candidate.id}>
+                    <div><h3>{candidate.label}</h3><span className="commerce__complexity">Complexity {candidate.complexity} / 3</span><p>{candidate.tradeoff}</p></div>
+                    <dl><div><dt>Paid without value</dt><dd>{dollars(candidate.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div><div><dt>Honest reward</dt><dd>{dollars(candidate.evaluation.honest.availableRewardUsd)}</dd></div><div><dt>Value kept</dt><dd>{dollars(candidate.evaluation.honest.retainedRevenueUsd)}</dd></div><div><dt>Customer wait</dt><dd>{candidate.evaluation.honest.rewardDelayDays ?? "—"} days</dd></div></dl>
+                    <div className="commerce__candidate-actions"><button type="button" onClick={() => setFreshTest({ label: candidate.label, verdict: candidate.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "Known failure blocked" : "Failure still present", leakage: candidate.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: candidate.evaluation.honest.availableRewardUsd, delay: candidate.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>{!isStaticDemo && <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(candidate.policy), "fresh", candidate.label)}>Run fresh recheck</button>}</div>
+                  </article>
+                ))}
+              </div>
+            </details>
+            {investigation.population && (
+              <details className="commerce__technical commerce__audience-details">
+                <summary>Show audience simulation</summary>
+                <section className="commerce__population" aria-label="Participant population">
+                  <div className="commerce__section-heading"><h3>How each audience responds</h3><p>{investigation.population.assumption}</p></div>
+                  <div className="commerce__population-table" role="table" aria-label="Population outcomes">
+                    <div className="commerce__population-header" role="row"><span role="columnheader">Strategy</span><span role="columnheader">People</span><span role="columnheader">Honest reward</span><span role="columnheader">Paid without value</span><span role="columnheader">Value kept</span><span role="columnheader">Wait</span></div>
+                    {investigation.population.strategies.map((strategy) => (
+                      <div role="row" key={strategy.id}><span role="cell"><b>{strategy.label}</b><small>{strategy.objective}</small></span><span role="cell">{strategy.participants}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd === 0 ? strategy.metrics.availableRewardUsd : 0)}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd)}</span><span role="cell">{dollars(strategy.metrics.retainedRevenueUsd)}</span><span role="cell">{strategy.metrics.rewardDelayDays ?? "—"} days</span></div>
+                    ))}
+                  </div>
+                </section>
+              </details>
+            )}
           </section>
-        ) : <div className="commerce__empty"><h3>No repairs to compare yet</h3><button type="button" onClick={() => setActiveView("policy")}>Write a policy</button></div>)}
+        ) : <div className="commerce__empty"><h3>No repairs to compare yet</h3><button type="button" onClick={() => setActiveView("policy")}>Write a rule</button></div>)}
       </div>
 
       <footer className="commerce__footer">
-        <p>{investigation.provenance === "live" ? "Live Muse investigation" : "Recorded Muse investigation"} · host replayed{investigation.usage.actualUsd > 0 ? ` · $${investigation.usage.actualUsd.toFixed(4)} model cost` : ""}</p>
-        <p>Only host-computed observations count as evidence.</p>
+        <p>AI proposes transaction tests. The simulator decides what happened.</p>
+        <details className="commerce__run-details"><summary>Show run details</summary><p>{investigation.provenance === "live" ? "Live Muse run" : "Recorded Muse run"} · {attackStatus === "candidate_invalid" ? "simulator rejected the sequence" : "simulator replayed the sequence"}{investigation.usage.actualUsd > 0 ? ` · $${investigation.usage.actualUsd.toFixed(4)} model cost` : ""}</p></details>
       </footer>
     </section>
   );

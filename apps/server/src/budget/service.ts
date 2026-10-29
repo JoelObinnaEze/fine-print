@@ -85,6 +85,7 @@ export class BudgetService {
   readonly #database: AppDatabase;
   readonly #config: ServerConfig;
   readonly #sessionId: string;
+  #providerRequestInFlight = false;
 
   constructor(
     database: AppDatabase,
@@ -152,6 +153,17 @@ export class BudgetService {
       };
     });
     return transaction.immediate();
+  }
+
+  claimProviderRequest(): (() => void) | null {
+    if (this.#providerRequestInFlight) return null;
+    this.#providerRequestInFlight = true;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.#providerRequestInFlight = false;
+    };
   }
 
   settle(reservationId: string, settlement: ReservationSettlement): UsageReservation {

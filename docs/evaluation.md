@@ -59,9 +59,9 @@ The simple baseline is a deterministic beam search with seeds 17, 29, and 43, a 
 | Frozen policy | Expected | Simple search | Muse attempt 1 | Muse attempt 2 | Honest reward |
 | --- | --- | ---: | --- | --- | ---: |
 | Eligible deposit before processing | flawed | 3 / 3 found | verified · 9 requests · 17 actions | verified · 8 requests · 18 actions | 60 / 60 |
-| Eligible processing receipt | blocked | 0 / 3 found | completed, no exploit · 12 requests · 19 actions | completed, no exploit · 12 requests · 14 actions | 60 / 60 |
-| Hopper-count batch bonus | flawed | 3 / 3 found | completed, no exploit · 12 requests · 31 actions | verified · 12 requests · 76 actions | 70 / 70 |
-| Processed-receipt batch bonus | blocked | 0 / 3 found | completed, no exploit · 12 requests · 12 actions | completed, no exploit · 12 requests · 13 actions | 70 / 70 |
+| Eligible processing receipt | blocked | 0 / 3 found | completed, no failure found · 12 requests · 19 actions | completed, no failure found · 12 requests · 14 actions | 60 / 60 |
+| Hopper-count batch bonus | flawed | 3 / 3 found | completed, no failure found · 12 requests · 31 actions | verified · 12 requests · 76 actions | 70 / 70 |
+| Processed-receipt batch bonus | blocked | 0 / 3 found | completed, no failure found · 12 requests · 12 actions | completed, no failure found · 12 requests · 13 actions | 70 / 70 |
 
 Muse found the simple premature-payment flaw reliably and the interacting batch flaw in one of two attempts. The baseline found both more reliably on this small deterministic world. That comparison is intentionally retained: Muse's value here is an inspectable natural-language hypothesis/tool workflow, not a claim that it beats search on a tiny state space. Independent verification rejected no submitted candidates in these eight runs.
 

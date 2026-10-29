@@ -176,6 +176,18 @@ export interface AttackerSearchResult extends VerificationResult {
     | null;
 }
 
+export interface AttackerExecutionAudit {
+  readonly trialsCompleted: number;
+  readonly actionsTested: number;
+  readonly attemptedTraces: readonly {
+    readonly request: number;
+    readonly trial: number;
+    readonly kind: "trial" | "candidate";
+    readonly hypothesis: string;
+    readonly actions: readonly Action[];
+  }[];
+}
+
 interface AttackerRunOptions {
   readonly maxInferenceRequests?: number;
   readonly requestTimeoutMs?: number;
@@ -222,6 +234,7 @@ export class BoundedAttackerSession {
   #replay: ReplayResult;
   #final: VerificationResult | null = null;
   #cancelled = false;
+  readonly #attemptedTraces: AttackerExecutionAudit["attemptedTraces"][number][] = [];
   readonly #cancelController = new AbortController();
 
   constructor(initialState: WorldState, policy: Policy) {
@@ -244,6 +257,15 @@ export class BoundedAttackerSession {
 
   get final(): VerificationResult | null {
     return this.#final;
+  }
+
+  get audit(): AttackerExecutionAudit {
+    const attemptedTraces = structuredClone(this.#attemptedTraces);
+    return {
+      trialsCompleted: this.#trial,
+      actionsTested: attemptedTraces.reduce((total, trace) => total + trace.actions.length, 0),
+      attemptedTraces,
+    };
   }
 
   observation(): AttackerObservation {
@@ -274,7 +296,10 @@ export class BoundedAttackerSession {
     return this.#final;
   }
 
-  execute(call: AttackerToolCall): AttackerToolResult {
+  execute(
+    call: AttackerToolCall,
+    context?: { readonly request: number; readonly hypothesis: string },
+  ): AttackerToolResult {
     if (this.#final || this.#cancelled) return this.#error(call, "SEARCH_ENDED", "Search has ended.");
     if (!/^[A-Za-z0-9._:-]{1,64}$/.test(call.id)) {
       return this.#error(call, "INVALID_CALL_ID", "Tool call ID is invalid.");
@@ -288,9 +313,19 @@ export class BoundedAttackerSession {
       if (!emptyArgumentsSchema.safeParse(call.arguments).success) return this.#invalidArguments(call);
       return this.#success(call, this.observation());
     }
-    if (call.name === "act") return this.#act(call);
+    if (call.name === "act") {
+      const trial = this.#trial;
+      const result = this.#act(call);
+      this.#recordAttempt(call, result, context, trial);
+      return result;
+    }
     if (call.name === "reset_trial") return this.#reset(call);
-    if (call.name === "submit_candidate") return this.#submit(call);
+    if (call.name === "submit_candidate") {
+      const trial = this.#trial;
+      const result = this.#submit(call);
+      this.#recordAttempt(call, result, context, trial);
+      return result;
+    }
     if (call.name === "conclude_no_exploit") return this.#conclude(call);
     return this.#error(call, "UNKNOWN_TOOL", "Tool name is not available.");
   }
@@ -349,6 +384,34 @@ export class BoundedAttackerSession {
     if (!concludeArgumentsSchema.safeParse(call.arguments).success) return this.#invalidArguments(call);
     this.#final = emptyVerification("no_exploit_found_within_budget");
     return this.#success(call, this.#final);
+  }
+
+  #recordAttempt(
+    call: AttackerToolCall,
+    result: AttackerToolResult,
+    context: { readonly request: number; readonly hypothesis: string } | undefined,
+    trial: number,
+  ): void {
+    if (!context || !result.ok) return;
+    const parsed = call.name === "act"
+      ? actArgumentsSchema.safeParse(call.arguments)
+      : submitArgumentsSchema.safeParse(call.arguments);
+    if (!parsed.success) return;
+    const count = Number(
+      Reflect.get(
+        result.output as object,
+        call.name === "act" ? "executedActionCount" : "verifiedActionCount",
+      ),
+    );
+    const actions = parsed.data.actions.slice(0, count);
+    if (actions.length === 0) return;
+    this.#attemptedTraces.push({
+      request: context.request,
+      trial,
+      kind: call.name === "act" ? "trial" : "candidate",
+      hypothesis: context.hypothesis,
+      actions,
+    });
   }
 
   #invalidArguments(call: AttackerToolCall): AttackerToolResult {
@@ -460,7 +523,12 @@ export async function runBoundedAttacker(
     if (!parsedTurn.success) {
       return withRequests(session.fail(), requestsUsed, "malformed_response");
     }
-    previousToolResults = parsedTurn.data.toolCalls.map((call) => session.execute(call));
+    previousToolResults = parsedTurn.data.toolCalls.map((call) =>
+      session.execute(call, {
+        request: requestsUsed,
+        hypothesis: parsedTurn.data.strategySummary,
+      }),
+    );
     const final = session.final;
     if (final) return withRequests(final, requestsUsed);
   }

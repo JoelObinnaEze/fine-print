@@ -22,6 +22,17 @@ const modelListSchema = z.object({
   data: z.array(z.object({ id: z.string().min(1).max(128) })).max(1_000),
 });
 
+export const metaUsageSchema = z
+  .object({
+    prompt_tokens: z.number().int().nonnegative(),
+    completion_tokens: z.number().int().nonnegative(),
+    total_tokens: z.number().int().nonnegative(),
+  })
+  .refine(
+    (usage) => usage.total_tokens === usage.prompt_tokens + usage.completion_tokens,
+    { message: "total_tokens must equal prompt_tokens plus completion_tokens" },
+  );
+
 export interface MetaCompatibilityConfig {
   readonly apiKey: string;
   readonly baseUrl: string;

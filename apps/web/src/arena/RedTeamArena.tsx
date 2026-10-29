@@ -8,6 +8,7 @@ import {
   startingPolicySourceText,
 } from "../replay-data.js";
 import { PolicyComposer } from "./PolicyComposer.js";
+import { isStaticDemo } from "../static-demo.js";
 
 export interface RunEvidence {
   readonly provenance: "scripted_fixture" | "recorded_model_replay" | "live_model";
@@ -70,17 +71,25 @@ interface RegressionEvaluation {
 }
 
 const attemptTitles: Record<AttackAttempt["status"], string> = {
-  running: "Search in progress",
-  verified_exploit: "Exploit verified",
-  candidate_rejected: "Candidate rejected",
-  search_completed: "Search completed",
-  search_interrupted: "Search interrupted",
+  running: "Test in progress",
+  verified_exploit: "Failure confirmed",
+  candidate_rejected: "Test could not be replayed",
+  search_completed: "No failure found in this attempt",
+  search_interrupted: "Test interrupted",
 };
 
 function actionLabel(action: Action): string {
   if (action.type === "move") return `move ${action.direction}`;
   if ("itemId" in action) return `${action.type} ${action.itemId}`;
   return action.type;
+}
+
+function plainLanguage(text: string): string {
+  return text
+    .replace(/\bexploits\b/gi, "failures")
+    .replace(/\bexploit\b/gi, "failure")
+    .replace(/\battacking\b/gi, "testing")
+    .replace(/\battack\b/gi, "test");
 }
 
 export const scriptedEvidence: RunEvidence = {
@@ -91,7 +100,7 @@ export const scriptedEvidence: RunEvidence = {
   actualUsd: 0,
   runId: null,
   verdict: "Deterministic teaching trace",
-  summary: "A known repeated-deposit loophole demonstrates the audit workflow without inference.",
+  summary: "A known repeated-deposit failure demonstrates the workflow without inference.",
 };
 
 const recordedEvidence: RunEvidence = {
@@ -101,7 +110,7 @@ const recordedEvidence: RunEvidence = {
   totalTokens: 50_120,
   actualUsd: 0.070258,
   runId: "74e918a0-786b-4046-b415-9de2e665a6df",
-  verdict: "Exploit independently verified",
+  verdict: "Failure independently confirmed",
   summary: "Muse found a 30-point trace with zero useful recycling; the host preserved two rejected actions.",
   reasoning: {
     hypothesis: "The deposit trigger may pay repeatedly before useful processing is proven.",
@@ -136,6 +145,10 @@ export function RedTeamArena({
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isStaticDemo) {
+      setConnection("offline");
+      return;
+    }
     let active = true;
     void fetch("/api/health")
       .then(async (healthResponse) => {
@@ -164,6 +177,10 @@ export function RedTeamArena({
   };
 
   useEffect(() => {
+    if (isStaticDemo) {
+      setRegressions([]);
+      return;
+    }
     let active = true;
     setSaveMessage(null);
     void fetch("/api/regressions/evaluate", {
@@ -235,6 +252,7 @@ export function RedTeamArena({
       }
       const traces = (result.report.attemptedTraces ?? []).map((trace) => ({
         ...trace,
+        hypothesis: plainLanguage(trace.hypothesis),
         actions: trace.actions.map(parseAction),
       }));
       const strategySummaries = (result.turns ?? [])
@@ -244,7 +262,7 @@ export function RedTeamArena({
       setAttempt({
         status: result.report.outcome,
         target: attackTarget.label,
-        detail: result.report.reason ?? "The host did not provide an outcome reason.",
+        detail: plainLanguage(result.report.reason ?? "The simulator did not provide an outcome reason."),
         requests: result.report.requestsUsed ?? result.usage.requests ?? 0,
         trials: result.report.trialsCompleted ?? 0,
         actions: result.report.actionsTested ?? 0,
@@ -271,8 +289,8 @@ export function RedTeamArena({
           runId: result.runId,
           verdict:
             result.verification.status === "exploit_verified"
-              ? "Exploit independently verified"
-              : "Bounded search completed",
+              ? "Failure independently confirmed"
+              : "Bounded test completed",
           summary: `${result.verification.totalReward ?? 0} reward points versus ${result.verification.usefulItems ?? 0} useful items.`,
           ...(candidateTrace
             ? {
@@ -280,7 +298,7 @@ export function RedTeamArena({
                   hypothesis: candidateTrace.hypothesis,
                   test: candidateTrace.actions.map(actionLabel).join(" → "),
                   observation: `${result.verification.totalReward ?? 0} reward points · ${result.verification.usefulItems ?? 0} useful items`,
-                  verdict: result.report.reason ?? "Host verification completed.",
+                  verdict: plainLanguage(result.report.reason ?? "Simulator verification completed."),
                 },
               }
             : {}),
@@ -290,7 +308,7 @@ export function RedTeamArena({
       setAttempt({
         status: "verified_exploit",
         target: attackTarget.label,
-        detail: "The exact model trace is loaded below. Every reward was recomputed by the host.",
+        detail: "The exact transaction trace is ready in Step 2. Every reward was recomputed by the simulator.",
         requests: result.report.requestsUsed ?? result.usage.requests ?? 0,
         trials: result.report.trialsCompleted ?? 0,
         actions: result.report.actionsTested ?? 0,
@@ -302,7 +320,7 @@ export function RedTeamArena({
       setAttempt({
         status: "search_interrupted",
         target: attackTarget.label,
-        detail: error instanceof Error ? error.message : "The live attack failed.",
+        detail: plainLanguage(error instanceof Error ? error.message : "The live test failed."),
       });
     } finally {
       setIsRunning(false);
@@ -316,39 +334,22 @@ export function RedTeamArena({
       const response = await fetch("/api/regressions", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ runId: attempt.runId, label: `${attempt.target} exploit` }),
+        body: JSON.stringify({ runId: attempt.runId, label: `${attempt.target} failure` }),
       });
       const result = await response.json() as {
         readonly error?: { readonly message?: string };
         readonly regressionCase?: { readonly label?: string };
       };
       if (!response.ok) throw new Error(result.error?.message ?? "Regression case could not be saved.");
-      setSaveMessage(`Saved regression case: ${result.regressionCase?.label ?? attempt.target}.`);
+      setSaveMessage(`Saved permanent check: ${plainLanguage(result.regressionCase?.label ?? attempt.target)}.`);
       await refreshRegressions();
     } catch (error) {
-      setSaveMessage(error instanceof Error ? error.message : "Regression case could not be saved.");
+      setSaveMessage(plainLanguage(error instanceof Error ? error.message : "Regression case could not be saved."));
     }
   };
 
   return (
-    <section className="arena" aria-labelledby="arena-title">
-      <div className="arena__intro">
-        <p className="eyebrow">Fine Print · red-team arena</p>
-        <h2 id="arena-title">Can you earn rewards without recycling anything?</h2>
-        <p className="arena__result">30 points paid. 0 items recycled.</p>
-        <p>
-          The starting rule rewards deposits before recycling is proven. Patch it, then send Muse
-          back in and let the host verify every claimed exploit.
-        </p>
-      </div>
-
-      <ol className="arena__steps" aria-label="Audit workflow">
-        <li><b>01</b><span>Write a policy</span></li>
-        <li><b>02</b><span>Muse attacks</span></li>
-        <li><b>03</b><span>Host verifies</span></li>
-        <li><b>04</b><span>Patch & replay</span></li>
-      </ol>
-
+    <section className="arena" aria-label="Rule test">
       <PolicyComposer
         connection={connection}
         sourceText={activeSourceText}
@@ -358,67 +359,55 @@ export function RedTeamArena({
       <div className="arena__proof">
         {attempt && (
           <div
-            aria-label="Latest live attempt"
+            aria-label="Latest test result"
             className={`arena__attempt arena__attempt--${attempt.status}`}
             role="status"
           >
-            <p className="eyebrow">Latest live attempt</p>
-            <strong>
-              {attemptTitles[attempt.status]}
-            </strong>
-            <dl>
-              <div><dt>Target</dt><dd>{attempt.target}</dd></div>
-              <div><dt>Provenance</dt><dd>Live Meta search</dd></div>
-              {attempt.requests !== undefined && <div><dt>Requests</dt><dd>{attempt.requests} requests</dd></div>}
-              {attempt.trials !== undefined && <div><dt>Trials</dt><dd>{attempt.trials} trials</dd></div>}
-              {attempt.actions !== undefined && <div><dt>Actions tested</dt><dd>{attempt.actions} actions</dd></div>}
-            </dl>
+            <strong>{attemptTitles[attempt.status]}</strong>
+            <span>{attempt.target}</span>
             <p>{attempt.detail}</p>
-            {attempt.traces && attempt.traces.length > 0 && (
-              <details className="arena__traces">
-                <summary>Inspect {attempt.traces.length} attempted trace{attempt.traces.length === 1 ? "" : "s"}</summary>
+            <details className="commerce__technical commerce__technical--dark arena__details">
+              <summary>Show test details</summary>
+              <dl>
+                <div><dt>Target</dt><dd>{attempt.target}</dd></div>
+                <div><dt>Provenance</dt><dd>Live Meta test</dd></div>
+                {attempt.requests !== undefined && <div><dt>Requests</dt><dd>{attempt.requests} requests</dd></div>}
+                {attempt.trials !== undefined && <div><dt>Trials</dt><dd>{attempt.trials} trials</dd></div>}
+                {attempt.actions !== undefined && <div><dt>Actions tested</dt><dd>{attempt.actions} actions</dd></div>}
+              </dl>
+              {attempt.traces && attempt.traces.length > 0 && (
+                <div className="arena__traces">
+                  <h3>{attempt.traces.length} attempted trace{attempt.traces.length === 1 ? "" : "s"}</h3>
                 <ol>
                   {attempt.traces.map((trace) => (
                     <li key={`${trace.request}-${trace.trial}-${trace.kind}`}>
                       <b>Request {trace.request} · trial {trace.trial} · {trace.kind}</b>
-                      <small>Model hypothesis</small>
+                      <small>AI test idea</small>
                       <span>{trace.hypothesis}</span>
                       <small>Test actions</small>
                       <code>{trace.actions.map(actionLabel).join(" → ")}</code>
                       {trace.kind === "candidate" && attempt.observation && (
                         <>
-                          <small>Host observation</small>
+                          <small>Simulator result</small>
                           <span>{attempt.observation}</span>
-                          <small>Host verdict</small>
+                          <small>Verdict</small>
                           <span>{attempt.detail}</span>
                         </>
                       )}
                     </li>
                   ))}
                 </ol>
-              </details>
-            )}
+                </div>
+              )}
+            </details>
             {attempt.status === "verified_exploit" && attempt.runId && (
               <button className="arena__save-regression" type="button" onClick={() => void saveRegression()}>
-                Save as regression case
+                Save as permanent check
               </button>
             )}
             {saveMessage && <p aria-live="polite">{saveMessage}</p>}
           </div>
         )}
-        <section className="arena__loaded-evidence" aria-label="Loaded replay evidence">
-          <p className="eyebrow">Loaded replay evidence</p>
-          <strong>{evidence.verdict}</strong>
-          <p>{evidence.summary}</p>
-          <p className="arena__target">Next search: {attackTarget.label}</p>
-          {/* shortcut: mirrors fixed server limits; expose them from /api/health if they become configurable. */}
-          <p>Search budget: up to 12 requests · 4 trials · 120 ticks per trial · 2 minutes.</p>
-          {connection !== "ready" && (
-            <p className={`arena__status arena__status--${connection}`} role="status">
-              {connection === "checking" ? "Checking Meta connection" : "Offline replay mode"}
-            </p>
-          )}
-        </section>
         <button
           className="arena__primary"
           type="button"
@@ -426,10 +415,10 @@ export function RedTeamArena({
           onClick={() => void runLiveAttack()}
         >
           {isRunning
-            ? `Muse is attacking ${attackTarget.label}…`
+            ? `Muse is testing ${attackTarget.label}…`
             : attackTarget.label === "active policy"
-              ? "Run fresh Muse attack"
-              : `Fresh-attack ${attackTarget.label}`}
+              ? "Test my rule"
+              : `Recheck ${plainLanguage(attackTarget.label)}`}
         </button>
         <button
           className="arena__secondary"
@@ -442,35 +431,55 @@ export function RedTeamArena({
             })
           }
         >
-          Load recorded starting-policy run
+          Load recorded case
         </button>
+        <details className="commerce__technical commerce__technical--dark arena__details">
+          <summary>Show current evidence and limits</summary>
+          <section className="arena__loaded-evidence" aria-label="Current evidence and limits">
+            <strong>{plainLanguage(evidence.verdict)}</strong>
+            <p>{plainLanguage(evidence.summary)}</p>
+            <p className="arena__target">Next test: {plainLanguage(attackTarget.label)}</p>
+            {/* shortcut: mirrors fixed server limits; expose them from /api/health if they become configurable. */}
+            <p>Search budget: up to 12 requests · 4 trials · 120 ticks per trial · 2 minutes.</p>
+            {connection !== "ready" && (
+              <p className={`arena__status arena__status--${connection}`} role="status">
+                {connection === "checking" ? "Checking Meta connection" : isStaticDemo ? "Recorded demo" : "Offline replay mode"}
+              </p>
+            )}
+          </section>
+        </details>
       </div>
       {regressions.length > 0 && (
-        <section className="arena__regressions" aria-labelledby="regressions-title">
-          <div>
-            <p className="eyebrow">Accumulated evidence</p>
-            <h3 id="regressions-title">Saved regression cases</h3>
-            <p>Replayed automatically against {attackTarget.label}.</p>
-          </div>
-          <ul>
-            {regressions.map((regression) => (
-              <li className={regression.blocked ? "is-pass" : "is-fail"} key={regression.id}>
-                <b>{regression.blocked ? "Blocked" : "Still pays"}</b>
-                <span>{regression.label}</span>
-                <small>
-                  Expected {regression.expectedExcessReward} excess · now {regression.current.excessReward}
-                </small>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <details className="commerce__technical commerce__technical--dark arena__wide-details">
+          <summary>Show saved checks</summary>
+          <section className="arena__regressions" aria-label="Saved checks">
+            <div>
+              <h3>Saved checks</h3>
+              <p>Replayed automatically against {plainLanguage(attackTarget.label)}.</p>
+            </div>
+            <ul>
+              {regressions.map((regression) => (
+                <li className={regression.blocked ? "is-pass" : "is-fail"} key={regression.id}>
+                  <b>{regression.blocked ? "Passed" : "Still pays"}</b>
+                  <span>{plainLanguage(regression.label)}</span>
+                  <small>
+                    Expected {regression.expectedExcessReward} extra · now {regression.current.excessReward}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </details>
       )}
       {strategies.length > 0 && (
-        <div className="arena__activity" aria-live="polite">
-          {strategies.map((strategy, index) => (
-            <p key={`${index}-${strategy}`}><b>Turn {index + 1}</b> {strategy}</p>
-          ))}
-        </div>
+        <details className="commerce__technical commerce__technical--dark arena__wide-details">
+          <summary>Show Muse test activity</summary>
+          <div className="arena__activity" aria-live="polite">
+            {strategies.map((strategy, index) => (
+              <p key={`${index}-${strategy}`}><b>Turn {index + 1}</b> {plainLanguage(strategy)}</p>
+            ))}
+          </div>
+        </details>
       )}
     </section>
   );

@@ -19,7 +19,6 @@ const rate = z
 
 const budgetEnvironmentSchema = z.object({
   APP_BUDGET_USD: usd.default(0),
-  DATABASE_PATH: z.string().min(1).max(260).default("fine-print.db"),
   EVENT_CREDITS_CONFIRMED: z.enum(["true", "false"]).default("false"),
   EVENT_CREDITS_REMAINING_USD: usd.default(0),
   LIVE_AGENT_ENABLED: z.enum(["true", "false"]).default("false"),
@@ -58,12 +57,12 @@ export interface ServerConfig {
 }
 
 export function readServerConfig(environment: Record<string, string | undefined>): ServerConfig {
+  const databasePath = z.string().min(1).max(260).catch("fine-print.db").parse(environment.DATABASE_PATH);
   const budgetResult = budgetEnvironmentSchema.safeParse(environment);
   const values = budgetResult.success
     ? budgetResult.data
     : {
         APP_BUDGET_USD: 0,
-        DATABASE_PATH: "fine-print.db",
         EVENT_CREDITS_CONFIRMED: "false" as const,
         EVENT_CREDITS_REMAINING_USD: 0,
         LIVE_AGENT_ENABLED: "false" as const,
@@ -80,10 +79,11 @@ export function readServerConfig(environment: Record<string, string | undefined>
     provider = null;
   }
 
-  const effectiveAppUsd = Math.min(
+  const allowanceUsd = Math.min(
     values.APP_BUDGET_USD,
     values.EVENT_CREDITS_REMAINING_USD,
   );
+  const effectiveAppUsd = Math.max(0, allowanceUsd - Math.max(1, allowanceUsd * 0.1));
   const reasons: string[] = [];
   if (!budgetResult.success) reasons.push("Budget configuration is invalid.");
   if (values.LIVE_AGENT_ENABLED !== "true") reasons.push("Live agent is disabled.");
@@ -105,7 +105,7 @@ export function readServerConfig(environment: Record<string, string | undefined>
   if (!provider) reasons.push("Meta credentials are not configured.");
 
   return {
-    databasePath: values.DATABASE_PATH,
+    databasePath,
     provider,
     budgets: {
       appUsd: values.APP_BUDGET_USD,
