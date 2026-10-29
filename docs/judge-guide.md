@@ -26,6 +26,8 @@ Muse cannot set a result, edit a rule, access credentials, or execute code. Reco
 
 Fresh repair checks do not reinterpret the repair. The host loads the exact stored policy and starting state, Muse proposes transactions, and a separately labelled bounded action search covers the small deterministic state space when needed.
 
+The live workbench retries once only when a completed provider response fails the declared output schema. That retry receives a new request identity and remains a separate retained attempt. Timeouts, unknown outcomes, budget failures, and rejected requests are never retried automatically.
+
 The repair card's exposure is the highest value observed across applicable confirmed cases, not a guaranteed maximum. A blocked replay means only that one trace was blocked; a bounded miss, invalid sequence, and provider/schema failure remain distinct outcomes and do not erase earlier evidence.
 
 The repository's designed `fine-print-eval-v4` suite contains 12 frozen failure/control cases plus a separate six-case interpretation matrix. The three-minute video should not enumerate them: show the commerce recommendation update, transfer to Bottle Return, and leave the complete attempt table—including misses—to `docs/evaluation.md`.

@@ -176,7 +176,7 @@ const policyJsonSchema = {
   type: "object",
   properties: {
     schemaVersion: { const: 1 },
-    name: { type: "string" },
+    name: { type: "string", minLength: 1, maxLength: 80 },
     referral: {
       type: "object",
       properties: {
@@ -206,14 +206,19 @@ const policyJsonSchema = {
   additionalProperties: false,
 } as const;
 
+const identifierJsonSchema = {
+  type: "string",
+  pattern: "^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$",
+} as const;
+
 const actionJsonSchema = {
   oneOf: [
     {
       type: "object",
       properties: {
         type: { const: "refer" },
-        referrerId: { type: "string" },
-        customerId: { type: "string" },
+        referrerId: identifierJsonSchema,
+        customerId: identifierJsonSchema,
       },
       required: ["type", "referrerId", "customerId"],
       additionalProperties: false,
@@ -222,10 +227,10 @@ const actionJsonSchema = {
       type: "object",
       properties: {
         type: { const: "purchase" },
-        accountId: { type: "string" },
-        purchaseId: { type: "string" },
-        priceUsd: { type: "integer" },
-        promoCreditUsd: { type: "integer" },
+        accountId: identifierJsonSchema,
+        purchaseId: identifierJsonSchema,
+        priceUsd: { type: "integer", minimum: 1, maximum: 10_000 },
+        promoCreditUsd: { type: "integer", minimum: 0, maximum: 10_000 },
       },
       required: ["type", "accountId", "purchaseId", "priceUsd", "promoCreditUsd"],
       additionalProperties: false,
@@ -234,15 +239,18 @@ const actionJsonSchema = {
       type: "object",
       properties: {
         type: { const: "refund" },
-        accountId: { type: "string" },
-        purchaseId: { type: "string" },
+        accountId: identifierJsonSchema,
+        purchaseId: identifierJsonSchema,
       },
       required: ["type", "accountId", "purchaseId"],
       additionalProperties: false,
     },
     {
       type: "object",
-      properties: { type: { const: "advance_days" }, days: { type: "integer" } },
+      properties: {
+        type: { const: "advance_days" },
+        days: { type: "integer", minimum: 1, maximum: 365 },
+      },
       required: ["type", "days"],
       additionalProperties: false,
     },
@@ -253,20 +261,30 @@ const responseJsonSchema = {
   type: "object",
   properties: {
     status: { enum: ["candidate", "unsupported"] },
-    reason: { type: "string" },
+    reason: { type: "string", minLength: 1, maxLength: 1_000 },
     policy: { anyOf: [policyJsonSchema, { type: "null" }] },
-    supportedClauses: { type: "array", items: { type: "string" } },
-    unsupportedConditions: { type: "array", items: { type: "string" } },
-    attackHypothesis: { type: "string" },
-    attackActions: { type: "array", items: actionJsonSchema },
+    supportedClauses: {
+      type: "array",
+      items: { type: "string", minLength: 1, maxLength: 300 },
+      maxItems: 12,
+    },
+    unsupportedConditions: {
+      type: "array",
+      items: { type: "string", minLength: 1, maxLength: 300 },
+      maxItems: 12,
+    },
+    attackHypothesis: { type: "string", maxLength: 1_000 },
+    attackActions: { type: "array", items: actionJsonSchema, maxItems: 40 },
     candidates: {
       type: "array",
+      maxItems: 3,
+      anyOf: [{ maxItems: 0 }, { minItems: 3 }],
       items: {
         type: "object",
         properties: {
-          id: { type: "string" },
-          label: { type: "string" },
-          tradeoff: { type: "string" },
+          id: { type: "string", pattern: "^[a-z0-9][a-z0-9_-]{0,31}$" },
+          label: { type: "string", minLength: 1, maxLength: 120 },
+          tradeoff: { type: "string", minLength: 1, maxLength: 500 },
           complexity: { type: "integer", minimum: 1, maximum: 3 },
           policy: policyJsonSchema,
         },
@@ -291,9 +309,9 @@ const responseJsonSchema = {
 const recheckResponseJsonSchema = {
   type: "object",
   properties: {
-    reason: { type: "string" },
-    attackHypothesis: { type: "string" },
-    attackActions: { type: "array", items: actionJsonSchema },
+    reason: { type: "string", minLength: 1, maxLength: 1_000 },
+    attackHypothesis: { type: "string", maxLength: 1_000 },
+    attackActions: { type: "array", items: actionJsonSchema, maxItems: 40 },
   },
   required: ["reason", "attackHypothesis", "attackActions"],
   additionalProperties: false,

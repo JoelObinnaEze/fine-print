@@ -28,7 +28,7 @@ The video is a product demonstration, not a pitch deck. The face-camera take pro
 | 0:00–0:14 | Webcam | None | The problem and product are understandable immediately |
 | 0:14–0:35 | Commerce · Step 1 | Start on the prefilled rule and its mapped summary | Rule, intended retained value, and honest-user promise are separate |
 | 0:35–1:13 | Commerce · Step 2 | Click **What went wrong**; hold on `$20`, `$0`, and the three-event trace | Muse proposed four actions; simulator reduced and confirmed three |
-| 1:13–1:56 | Commerce · Step 3 | Click **Best repair**; hold on the rejected immediate reversal, case count, and updated recommendation | `$10` unrecovered in the recheck; applicable cases re-rank the repairs; recommended repair has `$0` observed exposure, preserves `$20`, and waits 30 days |
+| 1:13–1:56 | Commerce · Step 3 | Click **Best repair**; first hold on immediate reversal at `$10` exposed, then hold on the changed recommendation at `$0` exposed / `$20` honest reward / `30 days` | The first repair fails, its confirmed case re-ranks every repair, and the stronger recommendation preserves the intended reward at an explicit customer cost |
 | 1:56–2:10 | Commerce · Step 3 | Open **Compare all repairs**, then close it | Competing repairs and tradeoffs exist without crowding the main story |
 | 2:10–2:38 | Bottle Return · Step 2 | Switch domains and click **What went wrong**; hold on `30 points / 0 recycled`, then click **Replay from start** at 2× | Same method transfers to a visibly different system |
 | 2:38–2:47 | Bottle Return · Step 3 | Click **Best repair** | Processing-backed recommendation is obvious |
@@ -48,6 +48,7 @@ The video is a product demonstration, not a pitch deck. The face-camera take pro
 
 - Primary path: recorded Muse evidence bundled into the public build.
 - If a click is mistimed, cut to the same scene from a second screencast take; never show loading.
+- Keep the recommendation-change sequence in one uninterrupted screen capture so the ranking change reads as one causal story, not two unrelated examples.
 - The 3D scene opens on its final state so the result is never hidden; the replay is supporting motion, not required evidence.
 - Do not run a fresh paid request in the submitted video. The exact live run IDs and costs remain available under run details and in the repository.
 

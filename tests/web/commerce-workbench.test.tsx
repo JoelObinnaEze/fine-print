@@ -388,6 +388,73 @@ describe("commerce incentive workbench", () => {
     expect(screen.queryByText("This trace was blocked")).toBeNull();
   });
 
+  it("retries one settled schema-invalid response with a new request key", async () => {
+    const requestKeys: string[] = [];
+    let investigationCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (input, init) => {
+        if (String(input) === "/api/health") {
+          return Response.json({ liveAgent: { isEnabled: true } });
+        }
+        investigationCalls += 1;
+        requestKeys.push(new Headers(init?.headers).get("idempotency-key") ?? "");
+        if (investigationCalls === 1) {
+          return Response.json(
+            {
+              error: {
+                code: "PROVIDER_OUTPUT_INVALID",
+                message: "Meta response did not match the commerce investigation schema.",
+              },
+            },
+            { status: 502 },
+          );
+        }
+        return Response.json(recordedCommerceInvestigation, { status: 201 });
+      }),
+    );
+    const user = userEvent.setup();
+    render(<CommerceWorkbench />);
+
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    await user.click(screen.getByRole("button", { name: "Test my rule" }));
+
+    expect(await screen.findByText("Failure confirmed")).toBeTruthy();
+    expect(investigationCalls).toBe(2);
+    expect(requestKeys[0]).not.toBe(requestKeys[1]);
+    expect(screen.queryByText(/did not match the commerce investigation schema/)).toBeNull();
+  });
+
+  it("does not retry when the provider outcome is unknown", async () => {
+    let investigationCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (input) => {
+        if (String(input) === "/api/health") {
+          return Response.json({ liveAgent: { isEnabled: true } });
+        }
+        investigationCalls += 1;
+        return Response.json(
+          {
+            error: {
+              code: "PROVIDER_OUTCOME_UNKNOWN",
+              message: "Meta request outcome is unknown; the reserved cost was retained.",
+            },
+          },
+          { status: 502 },
+        );
+      }),
+    );
+    const user = userEvent.setup();
+    render(<CommerceWorkbench />);
+
+    await user.click(screen.getByRole("tab", { name: /Your rule/ }));
+    await user.click(screen.getByRole("button", { name: "Test my rule" }));
+
+    expect(await screen.findByText(/Meta request outcome is unknown/)).toBeTruthy();
+    expect(investigationCalls).toBe(1);
+  });
+
   it("presents a rejected sequence as rejection rather than verified evidence", async () => {
     vi.stubGlobal(
       "fetch",

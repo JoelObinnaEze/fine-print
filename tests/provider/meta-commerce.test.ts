@@ -126,6 +126,21 @@ describe("Meta commerce investigation", () => {
         reasoning_effort: "low",
         response_format: { type: "json_schema", json_schema: { strict: false } },
       });
+      const responseSchema = (
+        body.response_format as {
+          json_schema: {
+            schema: {
+              properties: Record<string, Record<string, unknown>>;
+            };
+          };
+        }
+      ).json_schema.schema;
+      expect(responseSchema.properties.reason).toMatchObject({ minLength: 1, maxLength: 1_000 });
+      expect(responseSchema.properties.attackActions).toMatchObject({ maxItems: 40 });
+      expect(responseSchema.properties.candidates).toMatchObject({
+        maxItems: 3,
+        anyOf: [{ maxItems: 0 }, { minItems: 3 }],
+      });
       expect(JSON.stringify(body)).toContain(request.sourceText);
       expect(JSON.stringify(body)).toContain(commerceGoal.description);
       expect(JSON.stringify(body)).toContain("Self-referral is invalid");

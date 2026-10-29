@@ -661,3 +661,15 @@
 
 **Verification:** Opera GX verified `$22` at `$0` retained value, then `$11` unrecovered on immediate reversal, then the delayed repair at `$0` observed exposure with `$22` honest reward and a 2,610-state bounded search.
 
+## Task 40: Remove manual recovery from schema-only misses
+
+**Description:** Make Meta's declared commerce response schema match the host validator and recover once from a completed schema-invalid response without retrying uncertain provider outcomes.
+
+**Acceptance criteria:**
+- [x] JSON Schema limits for text, identifiers, actions, and repair counts match the host-side Zod contract.
+- [x] The workbench retries `PROVIDER_OUTPUT_INVALID` once with a new idempotency key.
+- [x] Unknown outcomes, budget failures, and other provider errors are not retried automatically.
+- [x] The three-minute video still uses recorded evidence and shows the failed repair → changed recommendation as one causal sequence.
+
+**Verification:** Provider and component regression tests inspect the outbound schema, prove the one-retry boundary, and prove that an unknown outcome stops after one request. The complete 160-test suite, strict typecheck, production build, offline evaluation, and high-severity audit pass. Opera GX shows the existing failed-repair → changed-recommendation view with no console warnings or errors.
+

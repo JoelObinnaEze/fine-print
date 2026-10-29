@@ -123,37 +123,50 @@ export function CommerceWorkbench() {
     setIsRunning(true);
     setMessage(mode === "primary" ? "Muse is mapping and testing the programme…" : "Muse is rechecking the selected repair…");
     try {
-      const response = await fetch("/api/commerce/investigations", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "idempotency-key": `commerce-${crypto.randomUUID()}`,
-        },
-        body: JSON.stringify({
-          sourceText: text.trim(),
-          goal: createCommerceGoal(minimumUsd),
-          restrictions: restrictions
-            .split("\n")
-            .map((restriction) => restriction.trim())
-            .filter(Boolean),
-          ...(mode === "fresh" && freshCandidate
-            ? {
-                mode: "attack_only",
-                evidenceContext: {
-                  evidenceSetId: investigation.evidenceSetId,
-                  testedCandidateId: freshCandidate.id,
-                  expectedPolicyHash: freshCandidate.policyHash,
-                },
-              }
-            : {}),
-        }),
+      const body = JSON.stringify({
+        sourceText: text.trim(),
+        goal: createCommerceGoal(minimumUsd),
+        restrictions: restrictions
+          .split("\n")
+          .map((restriction) => restriction.trim())
+          .filter(Boolean),
+        ...(mode === "fresh" && freshCandidate
+          ? {
+              mode: "attack_only",
+              evidenceContext: {
+                evidenceSetId: investigation.evidenceSetId,
+                testedCandidateId: freshCandidate.id,
+                expectedPolicyHash: freshCandidate.policyHash,
+              },
+            }
+          : {}),
       });
-      const payload = (await response.json()) as CommerceInvestigationView & {
-        readonly error?: { readonly message?: string };
-      };
-      if (!response.ok || !payload.mapping) {
-        throw new Error(payload.error?.message ?? "Commerce investigation failed.");
+      let payload: (CommerceInvestigationView & {
+        readonly error?: { readonly code?: string; readonly message?: string };
+      }) | null = null;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const response = await fetch("/api/commerce/investigations", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "idempotency-key": `commerce-${crypto.randomUUID()}`,
+          },
+          body,
+        });
+        const attemptPayload = (await response.json()) as CommerceInvestigationView & {
+          readonly error?: { readonly code?: string; readonly message?: string };
+        };
+        if (response.ok && attemptPayload.mapping) {
+          payload = attemptPayload;
+          break;
+        }
+        if (attempt === 0 && attemptPayload.error?.code === "PROVIDER_OUTPUT_INVALID") {
+          setMessage("Muse returned an invalid format. Retrying once…");
+          continue;
+        }
+        throw new Error(attemptPayload.error?.message ?? "Commerce investigation failed.");
       }
+      if (!payload) throw new Error("Commerce investigation failed.");
       const liveResult = { ...payload, provenance: "live" as const };
       if (mode === "primary") {
         setInvestigation(liveResult);
