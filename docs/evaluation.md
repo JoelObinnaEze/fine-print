@@ -100,7 +100,7 @@ Automated acceptance coverage links each behavior to its reproducible test: supp
 ## Not run
 
 - Volunteer usability study: **not run**; participants = 0.
-- Fresh v4 public-deployment check: **pending this commit**; the local Opera GX path passed.
+- Public deployment: **CI-deployed and Opera GX-checked**; the public build is the static recorded demo and contains no live key or inference control.
 - Cross-seed scenario evaluation: **not run**; Bottle Return currently has one named deterministic seed.
 - Hosted latency/load testing: **not run**; the service is localhost-only.
 
