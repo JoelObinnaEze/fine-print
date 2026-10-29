@@ -11,7 +11,7 @@ The primary workbench investigates a referral-credit programme across purchases,
 ## Verified result
 
 - A live `muse-spark-1.3` commerce investigation proposed four transactions; the host reduced them to the three required steps and verified `$20` spendable referral credit against `$0` retained revenue. The call cost `$0.013197`.
-- Muse proposed three materially different repairs. With fast rewards prioritized, **Reverse credit on refund** preserves `$20` honest reward with zero-day delay. A separate fresh Muse attempt submitted five actions; host replay found `$0` unintended payout at `$0.010456`. This is a bounded result, not a proof of safety.
+- Muse proposed three materially different repairs. A separate five-action recheck spent `$10` of reward before refund; the strengthened verifier now counts that reversal debt as `$10` of unrecovered value and rejects immediate reversal. **Pay after return window** is the recommended tested repair: `$0` reward value exposed, `$20` honest reward preserved, and a disclosed 30-day wait.
 - The commerce population view reports ordinary customers, bargain hunters, and coordinated adversaries under disclosed deterministic assumptions. It is not a forecast of real fraud rates.
 - The scripted trace pays 30 points for one bottle deposited three times while recycling zero items.
 - A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
@@ -20,8 +20,8 @@ The primary workbench investigates a referral-credit programme across purchases,
 - The designed batch benchmark pays 15 points for cycling a transient three-item hopper while doing zero useful processing. Its receipt-backed patch pays zero on that trace while preserving 35 points for one honest batch and 70 for two.
 - In the frozen discovery suite, Muse found the premature-deposit flaw 2/2 and the interacting batch flaw 1/2, with no confirmed failure in 4/4 blocked-control runs. The simple beam-search baseline found both flaws 3/3 and both controls 0/3; every attempt remains in the report.
 - An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
-- Verified attacks can be saved as durable SQLite regression cases and are replayed automatically against the selected policy.
-- [artifacts/commerce-investigation-live.json](artifacts/commerce-investigation-live.json) and [artifacts/commerce-repair-live.json](artifacts/commerce-repair-live.json) preserve the live commerce search and fresh repair test. [artifacts/attacker-batch-bonus.json](artifacts/attacker-batch-bonus.json), [artifacts/attacker-once-per-item.json](artifacts/attacker-once-per-item.json), and [artifacts/attacker-live-arena.json](artifacts/attacker-live-arena.json) preserve the Bottle Return evidence; [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
+- Confirmed failures can be saved as durable SQLite regression cases and are replayed automatically against the selected policy.
+- [artifacts/commerce-investigation-live.json](artifacts/commerce-investigation-live.json) and [artifacts/commerce-repair-live.json](artifacts/commerce-repair-live.json) preserve the original live runs; [artifacts/commerce-repair-reverified.json](artifacts/commerce-repair-reverified.json) records the corrected deterministic verdict without making a new model call. [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
 
 These are observations from bounded traces, not a proof that a policy is safe.
 

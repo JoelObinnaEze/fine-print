@@ -307,6 +307,7 @@ export interface CommerceInvestigationResult {
       | {
           readonly status: "candidate_invalid";
           readonly availableRewardUsd: 0;
+          readonly unrecoveredRewardUsd: 0;
           readonly retainedRevenueUsd: 0;
           readonly unintendedPayoutUsd: 0;
           readonly reason: string;
@@ -678,6 +679,7 @@ export class MetaCommerceInvestigator {
         verification: {
           status: "candidate_invalid",
           availableRewardUsd: 0,
+          unrecoveredRewardUsd: 0,
           retainedRevenueUsd: 0,
           unintendedPayoutUsd: 0,
           reason: "The host rejected the proposed transaction sequence.",

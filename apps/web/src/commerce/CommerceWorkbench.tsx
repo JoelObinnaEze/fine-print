@@ -54,6 +54,7 @@ export function CommerceWorkbench() {
     readonly leakage: number;
     readonly honestReward: number;
     readonly delay: number | null;
+    readonly note?: string;
     readonly provenance: "host" | "live" | "recorded";
   } | null>(recordedCommerceRepairTest);
   const [activeView, setActiveView] = useState<CommerceView>("exploit");
@@ -310,10 +311,10 @@ export function CommerceWorkbench() {
             <div className="commerce__recommendation" role="region" aria-label="Recommended repair">
               <div className="commerce__recommendation-copy">
                 <h3>{recommended.label}</h3>
-                <p><b>Best match: {priorityLabels[priority]}.</b> {recommended.tradeoff}</p>
+                <p><b>Lowest observed exposure, then {priorityLabels[priority]}.</b> {recommended.tradeoff}</p>
               </div>
               <dl>
-                <div><dt>Paid without value</dt><dd>{dollars(recommended.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div>
+                <div><dt>Reward value exposed</dt><dd>{dollars(recommended.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div>
                 <div><dt>Honest reward</dt><dd>{dollars(recommended.evaluation.honest.availableRewardUsd)}</dd></div>
                 <div><dt>Customer wait</dt><dd>{recommended.evaluation.honest.rewardDelayDays ?? "—"} day{recommended.evaluation.honest.rewardDelayDays === 1 ? "" : "s"}</dd></div>
               </dl>
@@ -325,7 +326,7 @@ export function CommerceWorkbench() {
               </div>
             </div>
             {message && <p aria-live="polite">{message}</p>}
-            {freshTest && <div className="commerce__fresh-test" role="status" aria-label="Fresh repair test"><b>{freshTest.verdict}</b><span>{freshTest.label}</span><span>{dollars(freshTest.leakage)} paid without value</span><span>{dollars(freshTest.honestReward)} honest reward</span><span>{freshTest.delay ?? "—"} day wait</span><small>{freshTest.provenance === "live" ? "Fresh AI recheck · simulator replayed" : freshTest.provenance === "recorded" ? "Recorded AI recheck · simulator replayed" : "Simulator regression replay"}</small></div>}
+            {freshTest && <div className={`commerce__fresh-test${freshTest.verdict === "Failure still present" ? " commerce__fresh-test--failure" : ""}`} role="status" aria-label="Fresh repair test"><b>{freshTest.verdict}</b><span>{freshTest.label}</span><span>{dollars(freshTest.leakage)} reward value exposed</span><span>{dollars(freshTest.honestReward)} honest reward</span><span>{freshTest.delay ?? "—"} day wait</span>{freshTest.note && <span>{freshTest.note}</span>}<small>{freshTest.provenance === "live" ? "Fresh AI recheck · simulator replayed" : freshTest.provenance === "recorded" ? "Recorded AI recheck · simulator replayed" : "Simulator regression replay"}</small></div>}
             <details className="commerce__technical commerce__repair-options">
               <summary>Compare all repairs</summary>
               <div className="commerce__priorities" aria-label="Policy owner priorities">
@@ -335,7 +336,7 @@ export function CommerceWorkbench() {
                 {rankedCandidates.map((candidate) => (
                   <article key={candidate.id}>
                     <div><h3>{candidate.label}</h3><span className="commerce__complexity">Complexity {candidate.complexity} / 3</span><p>{candidate.tradeoff}</p></div>
-                    <dl><div><dt>Paid without value</dt><dd>{dollars(candidate.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div><div><dt>Honest reward</dt><dd>{dollars(candidate.evaluation.honest.availableRewardUsd)}</dd></div><div><dt>Value kept</dt><dd>{dollars(candidate.evaluation.honest.retainedRevenueUsd)}</dd></div><div><dt>Customer wait</dt><dd>{candidate.evaluation.honest.rewardDelayDays ?? "—"} days</dd></div></dl>
+                    <dl><div><dt>Reward value exposed</dt><dd>{dollars(candidate.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div><div><dt>Honest reward</dt><dd>{dollars(candidate.evaluation.honest.availableRewardUsd)}</dd></div><div><dt>Value kept</dt><dd>{dollars(candidate.evaluation.honest.retainedRevenueUsd)}</dd></div><div><dt>Customer wait</dt><dd>{candidate.evaluation.honest.rewardDelayDays ?? "—"} days</dd></div></dl>
                     <div className="commerce__candidate-actions"><button type="button" onClick={() => setFreshTest({ label: candidate.label, verdict: candidate.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "Known failure blocked" : "Failure still present", leakage: candidate.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: candidate.evaluation.honest.availableRewardUsd, delay: candidate.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>{!isStaticDemo && <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(candidate.policy), "fresh", candidate.label)}>Run fresh recheck</button>}</div>
                   </article>
                 ))}
@@ -347,9 +348,9 @@ export function CommerceWorkbench() {
                 <section className="commerce__population" aria-label="Participant population">
                   <div className="commerce__section-heading"><h3>How each audience responds</h3><p>{investigation.population.assumption}</p></div>
                   <div className="commerce__population-table" role="table" aria-label="Population outcomes">
-                    <div className="commerce__population-header" role="row"><span role="columnheader">Strategy</span><span role="columnheader">People</span><span role="columnheader">Honest reward</span><span role="columnheader">Paid without value</span><span role="columnheader">Value kept</span><span role="columnheader">Wait</span></div>
+                    <div className="commerce__population-header" role="row"><span role="columnheader">Strategy</span><span role="columnheader">People</span><span role="columnheader">Honest reward</span><span role="columnheader">Reward value exposed</span><span role="columnheader">Value kept</span><span role="columnheader">Wait</span></div>
                     {investigation.population.strategies.map((strategy) => (
-                      <div role="row" key={strategy.id}><span role="cell"><b>{strategy.label}</b><small>{strategy.objective}</small></span><span role="cell">{strategy.participants}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd === 0 ? strategy.metrics.availableRewardUsd : 0)}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd)}</span><span role="cell">{dollars(strategy.metrics.retainedRevenueUsd)}</span><span role="cell">{strategy.metrics.rewardDelayDays ?? "—"} days</span></div>
+                    <div role="row" key={strategy.id}><span role="cell"><b>{strategy.label}</b><small>{strategy.objective}</small></span><span role="cell">{strategy.participants}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd === 0 ? strategy.metrics.availableRewardUsd : 0)}</span><span role="cell">{dollars(strategy.metrics.verifiedUnintendedPayoutUsd)}</span><span role="cell">{dollars(strategy.metrics.retainedRevenueUsd)}</span><span role="cell">{strategy.metrics.rewardDelayDays ?? "—"} days</span></div>
                     ))}
                   </div>
                 </section>

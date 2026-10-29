@@ -24,13 +24,15 @@ Reward programmes often fail even when the implementation matches the written po
 
 A policy owner supplies the reward rule, the business outcome that must remain true, and the honest-user promise that a repair should preserve. Meta Muse maps the language into a supported simulator, proposes concrete transaction sequences through bounded tools, and generates competing repairs. Strict host schemas validate every call. Deterministic simulators alone execute transactions, calculate payouts, minimize successful traces, and decide the final result.
 
-The primary commerce workbench demonstrates a real Muse run that reduced four proposed actions to three and confirmed twenty dollars of spendable referral credit against zero retained revenue. A separate Muse recheck of the recommended refund-reversal repair produced zero payout without lasting value while preserving the full honest reward with no delay. The Bottle Return lab demonstrates the same proposal-versus-verification boundary in a three-dimensional recycling environment.
+The primary commerce workbench demonstrates a real Muse run that reduced four proposed actions to three and confirmed twenty dollars of spendable referral credit against zero retained revenue. A separate Muse recheck spent ten dollars before refund; host replay counts that reversal debt as unrecovered value and rejects immediate reversal. The recommended pay-after-window design exposes zero reward value in that replay while preserving the full honest reward after thirty days. The Bottle Return lab demonstrates the same proposal-versus-verification boundary in a three-dimensional recycling environment.
 
 Every run records provenance, limits, actions, tokens, cost, and host observations. Confirmed traces can become permanent regression checks. A frozen evaluation reports all repeated attempts and compares Muse with a deterministic search baseline rather than selecting only successful examples.
 
 ## How Meta AI is essential
 
 Muse performs the open-ended work that fixed tests cannot: interpreting unfamiliar policy wording, forming hypotheses about interacting clauses, proposing executable sequences, and generating repairs with different business tradeoffs. Fine Print deliberately does not let Muse set scores, modify policies, or declare success. The model proposes; deterministic host code verifies.
+
+The small benchmark does not show superior discovery frequency: its deterministic search baseline found the seeded failures more consistently. Muse's demonstrated contribution is connecting unfamiliar language to inspectable tests and repair choices.
 
 ## Technical execution
 
@@ -46,7 +48,7 @@ Muse performs the open-ended work that fixed tests cannot: interpreting unfamili
 ## Verified results
 
 - Commerce: 4 Muse-proposed transactions reduced to 3; `$20` reward remained after refund while retained revenue was `$0`.
-- Commerce repair: a separate 5-action Muse recheck produced `$0` unintended payout while preserving `$20` honest reward with no delay.
+- Commerce repair: a separate 5-action Muse recheck exposed `$10` of spent, unrecovered reward value. Pay-after-window reduced that tested value to `$0` while preserving `$20` honest reward after 30 days.
 - Bottle Return: Muse found premature deposit payment in 2/2 runs and an interacting batch failure in 1/2 runs.
 - Blocked controls: no confirmed failure in 4/4 bounded Muse runs.
 - All attempts, including unsuccessful ones, are preserved in `artifacts/evaluation.json`.

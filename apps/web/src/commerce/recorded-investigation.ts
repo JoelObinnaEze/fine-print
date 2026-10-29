@@ -40,6 +40,7 @@ export interface CommerceInvestigationView {
     readonly verification: {
       readonly status: "exploit_verified" | "no_exploit" | "candidate_invalid";
       readonly availableRewardUsd: number;
+      readonly unrecoveredRewardUsd: number;
       readonly retainedRevenueUsd: number;
       readonly unintendedPayoutUsd: number;
       readonly reason: string;
@@ -81,7 +82,7 @@ const recordedMuseCandidates = [
   {
     id: "c1",
     label: "Reverse credit on refund",
-    tradeoff: "Preserves the immediate $10 reward for both people, but requires credit reversal after a refund.",
+    tradeoff: "Preserves immediate rewards, but spent credit can remain as unrecovered reversal debt.",
     complexity: 1,
     policy: {
       ...vulnerableCommercePolicy,
@@ -128,6 +129,14 @@ const recordedMuseCandidates = [
   readonly policy: CommercePolicy;
 }[];
 
+const recordedRepairRecheckActions = [
+  { type: "refer", referrerId: "A", customerId: "B" },
+  { type: "purchase", accountId: "B", purchaseId: "p1", priceUsd: 20, promoCreditUsd: 0 },
+  { type: "purchase", accountId: "A", purchaseId: "p2", priceUsd: 10, promoCreditUsd: 10 },
+  { type: "refund", accountId: "B", purchaseId: "p1" },
+  { type: "advance_days", days: 31 },
+] as const satisfies readonly CommerceAction[];
+
 function createRecordedInvestigation(): CommerceInvestigationView {
   const minimizedActions = minimizeCommerceExploit(
     createCommerceState(),
@@ -172,7 +181,7 @@ function createRecordedInvestigation(): CommerceInvestigationView {
       evaluation: evaluateCommerceDesign(
         candidate.policy,
         commerceGoal,
-        minimizedActions,
+        recordedRepairRecheckActions,
         createHonestCustomerActions(vulnerableCommercePolicy),
       ),
       population: evaluateCommercePopulation(candidate.policy, commerceGoal),
@@ -184,12 +193,22 @@ function createRecordedInvestigation(): CommerceInvestigationView {
 
 export const recordedCommerceInvestigation = createRecordedInvestigation();
 
+const recordedRepairVerification = verifyCommerceExploit(
+  replayCommerce(
+    createCommerceState(),
+    recordedRepairRecheckActions,
+    recordedMuseCandidates[0].policy,
+  ),
+  commerceGoal,
+);
+
 export const recordedCommerceRepairTest = {
   label: "Reverse credit on refund",
-  verdict: "No failure found in this attempt",
-  leakage: 0,
+  verdict: "Failure still present",
+  leakage: recordedRepairVerification.unintendedPayoutUsd,
   honestReward: 20,
   delay: 0,
+  note: "$10 had already been spent, so reversal left $10 of unrecovered reward value.",
   provenance: "recorded",
 } as const;
 
@@ -198,6 +217,10 @@ export function rankCommerceCandidates(
   priority: CommercePriority,
 ): readonly CommerceInvestigationView["candidates"][number][] {
   return [...candidates].sort((left, right) => {
+    const leakage =
+      left.evaluation.attack.verifiedUnintendedPayoutUsd -
+      right.evaluation.attack.verifiedUnintendedPayoutUsd;
+    if (leakage !== 0) return leakage;
     const leftDelay = left.evaluation.honest.rewardDelayDays ?? 999;
     const rightDelay = right.evaluation.honest.rewardDelayDays ?? 999;
     if (priority === "fast_rewards" && leftDelay !== rightDelay) return leftDelay - rightDelay;
@@ -208,10 +231,6 @@ export function rankCommerceCandidates(
       const preserved = Number(right.evaluation.honestRewardsPreserved) - Number(left.evaluation.honestRewardsPreserved);
       if (preserved !== 0) return preserved;
     }
-    const leakage =
-      left.evaluation.attack.verifiedUnintendedPayoutUsd -
-      right.evaluation.attack.verifiedUnintendedPayoutUsd;
-    if (leakage !== 0) return leakage;
     if (left.complexity !== right.complexity) return left.complexity - right.complexity;
     return leftDelay - rightDelay;
   });

@@ -1,3 +1,6 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -24,6 +27,7 @@ describe("commerce referral/refund benchmark", () => {
     expect(verification).toEqual({
       status: "exploit_verified",
       availableRewardUsd: 20,
+      unrecoveredRewardUsd: 0,
       retainedRevenueUsd: 0,
       unintendedPayoutUsd: 20,
       reason: "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
@@ -33,6 +37,58 @@ describe("commerce referral/refund benchmark", () => {
       "purchase qualification + credit issuance",
       "refund handling keeps issued credit",
     ]);
+  });
+
+  it("counts reward value spent before reversal as unrecovered", () => {
+    const reversiblePolicy = {
+      ...vulnerableCommercePolicy,
+      referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+    };
+    const replay = replayCommerce(
+      createCommerceState(),
+      [
+        { type: "refer", referrerId: "A", customerId: "B" },
+        { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 0 },
+        { type: "purchase", accountId: "A", purchaseId: "P2", priceUsd: 10, promoCreditUsd: 10 },
+        { type: "refund", accountId: "B", purchaseId: "P1" },
+      ],
+      reversiblePolicy,
+    );
+
+    expect(verifyCommerceExploit(replay, commerceGoal)).toEqual({
+      status: "exploit_verified",
+      availableRewardUsd: 0,
+      unrecoveredRewardUsd: 10,
+      retainedRevenueUsd: 0,
+      unintendedPayoutUsd: 10,
+      reason: "$10 of issued reward had already been spent and remained unrecovered while retained revenue was $0, below the $20 intended outcome.",
+    });
+  });
+
+  it("keeps the corrected repair evidence reproducible", () => {
+    const artifact = JSON.parse(
+      readFileSync("artifacts/commerce-repair-reverified.json", "utf8"),
+    ) as {
+      readonly actions: Parameters<typeof replayCommerce>[1];
+      readonly result: ReturnType<typeof verifyCommerceExploit>;
+      readonly sourceArtifactSha256: string;
+    };
+    const reversiblePolicy = {
+      ...vulnerableCommercePolicy,
+      referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+    };
+
+    expect(
+      verifyCommerceExploit(
+        replayCommerce(createCommerceState(), artifact.actions, reversiblePolicy),
+        commerceGoal,
+      ),
+    ).toEqual(artifact.result);
+    expect(
+      createHash("sha256")
+        .update(readFileSync("artifacts/commerce-repair-live.json"))
+        .digest("hex"),
+    ).toBe(artifact.sourceArtifactSha256);
   });
 
   it("removes an unnecessary action but preserves every required counterexample step", () => {

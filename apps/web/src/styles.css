@@ -144,6 +144,8 @@ h3 { font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; }
 .commerce__candidate-actions button:first-child { background: var(--ink); color: var(--paper); }
 .commerce__fresh-test { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: 1rem; padding: .8rem; border-top: 4px solid var(--green); background: var(--green-pale); }
 .commerce__fresh-test b { color: var(--green); text-transform: uppercase; }
+.commerce__fresh-test--failure { border-color: var(--amber); background: var(--amber-pale); }
+.commerce__fresh-test--failure b { color: #77380d; }
 .commerce__fresh-test small { margin-left: auto; }
 .commerce__audience-details { margin-top: 1rem; }
 .commerce__empty { display: grid; justify-items: start; gap: .5rem; padding: 2rem; border: 1px solid var(--line); background: var(--paper); }

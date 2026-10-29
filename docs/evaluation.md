@@ -1,6 +1,6 @@
 # Evaluation report
 
-Status: completed locally on October 27, 2026. The machine-readable source is [`artifacts/evaluation.json`](../artifacts/evaluation.json).
+Status: completed locally on October 27, 2026, with commerce value-accounting corrected on October 29. The Bottle Return machine-readable source is [`artifacts/evaluation.json`](../artifacts/evaluation.json).
 
 ## Commerce incentive investigation
 
@@ -9,11 +9,14 @@ The commerce workbench accepts the payout policy, intended retained-revenue outc
 | Attempt | Muse proposal | Host result | Honest customer result | Model cost |
 | --- | ---: | --- | --- | ---: |
 | Referral/refund policy | 4 actions → 3 required | `$20` unintended spendable credit, `$0` retained revenue | `$20` reward on `$20` retained revenue, 0-day delay | `$0.013197` |
-| Reverse-credit repair | 5 actions | `$0` unintended payout observed | `$20` reward on `$20` retained revenue, 0-day delay | `$0.010456` |
+| Reverse-credit recheck | 5 actions | `$10` already spent and unrecovered, `$0` retained revenue | `$20` reward on `$20` retained revenue, 0-day delay | `$0.010456` |
+| Pay-after-window repair | Same 5-action replay | `$0` reward value exposed | `$20` reward on `$20` retained revenue, 30-day delay | No new model call |
 
-The original durable investigation ID is `243986a6-b49a-4b16-9930-bee96912b6e4`; the fresh repair attempt is `c7191265-4e4c-41ca-8940-52b724211a8d`. Exact structured results are preserved in [`commerce-investigation-live.json`](../artifacts/commerce-investigation-live.json) and [`commerce-repair-live.json`](../artifacts/commerce-repair-live.json).
+The original durable investigation ID is `243986a6-b49a-4b16-9930-bee96912b6e4`; the repair recheck is `c7191265-4e4c-41ca-8940-52b724211a8d`. The original live artifacts remain unchanged. [`commerce-repair-reverified.json`](../artifacts/commerce-repair-reverified.json) binds the source artifact hash to the corrected host verdict: reward marked reversed is not treated as recovered when an account still carries reversal debt.
 
 Population traces are deliberately small and deterministic: ordinary customers keep a wanted purchase, bargain hunters spend earned promotional credit on another kept purchase, and two coordinated accounts purchase then refund. Their results describe these disclosed traces, not real-world fraud prevalence. A repair that rejects a later attack action is scored on every accepted prefix, so leakage before rejection is still counted.
+
+The discovery comparison does not claim Muse outperforms ordinary search. Muse found the premature-deposit case in 2/2 attempts and the interacting batch case in 1/2; the deterministic beam-search baseline found both in 3/3. Muse's demonstrated role is interpreting policy text, proposing inspectable hypotheses, and generating repair options, while host replay supplies the evidence.
 
 ## Offline matrix
 

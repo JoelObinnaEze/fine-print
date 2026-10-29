@@ -7,7 +7,7 @@ Fine Print is designed to make its core claim reviewable without spending credit
 1. Open the live demo. It starts on **Commerce · What went wrong**.
 2. Read the three headline metrics: `$20` reward, `$0` retained value, `3` required transactions.
 3. Follow the three replay events: referral → purchase → refund.
-4. Open **Best repair**. The default recommendation preserves `$20` of honest reward with a `0` day wait, and the recorded separate recheck shows `$0` paid without value.
+4. Open **Best repair**. The recorded recheck shows why immediate reversal still leaves `$10` unrecovered; the recommended pay-after-window design exposes `$0`, preserves `$20` of honest reward, and discloses a 30-day wait.
 5. Switch to **Bottle Return lab** to see the same method transfer to a 3D processing-reward system.
 
 ## Trust boundary

@@ -524,7 +524,7 @@
 - [x] The selected repair is fresh-tested and the result is distinguishable from the original evidence.
 - [x] Full tests, typecheck, production build, audit, secret scan, and responsive browser checks pass.
 
-**Verification:** Live run `243986a6-b49a-4b16-9930-bee96912b6e4` cost `$0.013197`; Muse proposed four actions and the host minimized them to referral → `$20` purchase → refund, verifying `$20` spendable credit at `$0` retained revenue. The selected zero-delay reversal repair was fresh-attacked in run `c7191265-4e4c-41ca-8940-52b724211a8d` for `$0.010456`; five actions produced no verified unintended payout while the ordinary-customer trace preserved `$20` honest reward. Opera GX showed the fresh result separately as **Fresh Muse attempt · host verified** with no console warnings or errors. `npm test` passed 117 tests in 27 files; typecheck, production build, `npm audit --audit-level=high`, `git diff --check`, exact-key secret scan, 1474×768 rendering, and 320×800 responsive layout checks all passed.
+**Verification:** Live run `243986a6-b49a-4b16-9930-bee96912b6e4` cost `$0.013197`; Muse proposed four actions and the host minimized them to referral → `$20` purchase → refund, verifying `$20` spendable credit at `$0` retained revenue. Run `c7191265-4e4c-41ca-8940-52b724211a8d` then spent `$10` before refund. The corrected verifier counts the resulting `$10` reversal debt as unrecovered reward value and rejects immediate reversal; pay-after-window exposes `$0` on that replay while preserving `$20` honest reward after 30 days. The original artifact is preserved, and `artifacts/commerce-repair-reverified.json` binds its SHA-256 to the corrected deterministic result.
 
 **Dependencies:** Task 29
 

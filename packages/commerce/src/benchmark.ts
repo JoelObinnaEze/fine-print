@@ -123,6 +123,7 @@ export const commerceRepairCandidates: readonly CommerceRepairCandidate[] = [
 export interface CommerceExploitVerification {
   readonly status: "exploit_verified" | "no_exploit";
   readonly availableRewardUsd: number;
+  readonly unrecoveredRewardUsd: number;
   readonly retainedRevenueUsd: number;
   readonly unintendedPayoutUsd: number;
   readonly reason: string;
@@ -139,16 +140,26 @@ export function verifyCommerceExploit(
   goal: CommerceGoal,
 ): CommerceExploitVerification {
   const available = availableRewardUsd(replay);
+  const unrecovered = replay.state.accounts.reduce(
+    (total, account) => total + account.reversalDebtUsd,
+    0,
+  );
   const retained = replay.state.retainedRevenueUsd;
-  const isExploit = retained < goal.minimumUsd && available > 0;
+  const exposedReward = available + unrecovered;
+  const isExploit = retained < goal.minimumUsd && exposedReward > 0;
   return {
     status: isExploit ? "exploit_verified" : "no_exploit",
     availableRewardUsd: available,
+    unrecoveredRewardUsd: unrecovered,
     retainedRevenueUsd: retained,
-    unintendedPayoutUsd: isExploit ? available : 0,
+    unintendedPayoutUsd: isExploit ? exposedReward : 0,
     reason: isExploit
-      ? `$${available} became spendable while retained revenue was $${retained}, below the $${goal.minimumUsd} intended outcome.`
-      : `No spendable reward was observed below the $${goal.minimumUsd} retained-revenue outcome.`,
+      ? unrecovered > 0 && available === 0
+        ? `$${unrecovered} of issued reward had already been spent and remained unrecovered while retained revenue was $${retained}, below the $${goal.minimumUsd} intended outcome.`
+        : unrecovered === 0
+          ? `$${available} became spendable while retained revenue was $${retained}, below the $${goal.minimumUsd} intended outcome.`
+          : `$${exposedReward} remained spendable or unrecovered while retained revenue was $${retained}, below the $${goal.minimumUsd} intended outcome.`
+      : `No spendable or unrecovered reward value was observed below the $${goal.minimumUsd} retained-revenue outcome.`,
   };
 }
 
@@ -188,6 +199,7 @@ export function minimizeCommerceExploit(
 
 export interface CommerceStrategyMetrics {
   readonly availableRewardUsd: number;
+  readonly unrecoveredRewardUsd: number;
   readonly pendingRewardUsd: number;
   readonly reversedRewardUsd: number;
   readonly retainedRevenueUsd: number;
@@ -212,6 +224,7 @@ export function calculateCommerceStrategyMetrics(
   const available = availableRewards.reduce((total, reward) => total + reward.amountUsd, 0);
   return {
     availableRewardUsd: available,
+    unrecoveredRewardUsd: verification.unrecoveredRewardUsd,
     pendingRewardUsd: rewards
       .filter((reward) => reward.status === "pending" || reward.status === "scheduled")
       .reduce((total, reward) => total + reward.amountUsd, 0),

@@ -60,12 +60,16 @@ describe("commerce incentive workbench", () => {
 
     await user.click(screen.getByRole("tab", { name: /Best repair/ }));
     const recommendation = screen.getByRole("region", { name: "Recommended repair" });
-    expect(within(recommendation).getByRole("heading", { name: "Reverse credit on refund" })).toBeTruthy();
-    expect(within(recommendation).getByText("Paid without value")).toBeTruthy();
+    expect(within(recommendation).getByRole("heading", { name: "Pay after return window" })).toBeTruthy();
+    expect(within(recommendation).getByText("Reward value exposed")).toBeTruthy();
     expect(within(recommendation).getByText("Honest reward")).toBeTruthy();
-    expect(within(recommendation).getByText("0 days")).toBeTruthy();
+    expect(within(recommendation).getByText("30 days")).toBeTruthy();
     const recordedRecheck = screen.getByRole("status", { name: "Fresh repair test" });
-    expect(within(recordedRecheck).getByText("No failure found in this attempt")).toBeTruthy();
+    expect(recordedRecheck.classList.contains("commerce__fresh-test--failure")).toBe(true);
+    expect(within(recordedRecheck).getByText("Failure still present")).toBeTruthy();
+    expect(within(recordedRecheck).getByText("Reverse credit on refund")).toBeTruthy();
+    expect(within(recordedRecheck).getByText("$10 reward value exposed")).toBeTruthy();
+    expect(within(recordedRecheck).getByText(/spent.*unrecovered reward value/i)).toBeTruthy();
     expect(within(recordedRecheck).getByText("Recorded AI recheck · simulator replayed")).toBeTruthy();
     expect(screen.getByText("Compare all repairs").closest("details")?.hasAttribute("open")).toBe(false);
 
@@ -87,7 +91,7 @@ describe("commerce incentive workbench", () => {
     await user.click(screen.getByText("Compare all repairs"));
     await user.click(screen.getByRole("button", { name: "simple operations" }));
     const recommendation = screen.getByRole("region", { name: "Recommended repair" });
-    expect(within(recommendation).getByText("Reverse credit on refund")).toBeTruthy();
+    expect(within(recommendation).getByText("Pay after return window")).toBeTruthy();
 
     const candidate = screen.getAllByRole("article").find((article) =>
       within(article).queryByRole("heading", { name: "Pay after return window" }),
@@ -96,7 +100,7 @@ describe("commerce incentive workbench", () => {
     await user.click(within(candidate!).getByRole("button", { name: "Replay known failure" }));
     const retest = screen.getByRole("status", { name: "Fresh repair test" });
     expect(within(retest).getByText("Known failure blocked")).toBeTruthy();
-    expect(within(retest).getByText("$0 paid without value")).toBeTruthy();
+    expect(within(retest).getByText("$0 reward value exposed")).toBeTruthy();
     expect(within(retest).getByText("$20 honest reward")).toBeTruthy();
     expect(within(retest).getByText("30 day wait")).toBeTruthy();
   });
@@ -258,7 +262,7 @@ describe("commerce incentive workbench", () => {
     await user.click(screen.getByRole("tab", { name: /Best repair/ }));
     await user.click(screen.getByText("Compare all repairs"));
     const freshButton = screen.getAllByRole("button", { name: "Run fresh recheck" })[0]!;
-    await screen.findByText(/Best match: fastest reward/);
+    await screen.findByText(/Lowest observed exposure, then fastest reward/);
     await user.click(freshButton);
 
     expect(await screen.findByText("Fresh recheck could not run: The selected condition is outside this simulator.")).toBeTruthy();
