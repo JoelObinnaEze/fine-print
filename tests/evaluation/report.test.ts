@@ -50,7 +50,7 @@ describe("evaluation artifact", () => {
       usage: { requests: 10, actualUsd: 0.070258 },
     });
     expect(report.usabilityStudy).toEqual({ status: "not_run", participants: 0 });
-    expect(report.frozenBenchmark.suiteVersion).toBe("fine-print-eval-v3");
+    expect(report.frozenBenchmark.suiteVersion).toBe("fine-print-eval-v4");
     expect(report.frozenBenchmark.suiteHash).toMatch(/^[a-f0-9]{64}$/);
     expect(report.frozenBenchmark.cases).toHaveLength(12);
     expect(
@@ -60,6 +60,6 @@ describe("evaluation artifact", () => {
           item.referenceResult.protectedBehaviorPreserved,
       ),
     ).toBe(true);
-    expect(report.frozenBenchmark.interpretation.status).toBe("not_run");
+    expect(report.frozenBenchmark.interpretation.status).toBe("completed");
   });
 });

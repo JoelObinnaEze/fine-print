@@ -14,6 +14,7 @@ import {
   type CommerceGoal,
   type CommercePolicy,
   type CommercePopulationResult,
+  type CommerceState,
 } from "../../../../packages/commerce/src/index.js";
 
 export const commerceSourceText =
@@ -25,11 +26,12 @@ export interface CommerceInvestigationView {
   readonly id: string;
   readonly replayed: boolean;
   readonly modelId: string;
+  readonly initialState: CommerceState;
   readonly provenance?: "recorded" | "live";
   readonly policyHash: string | null;
   readonly evidenceSetId: string;
   readonly testedCandidateId: string | null;
-  readonly attemptOutcome: "verified_failure" | "no_failure_found" | "candidate_invalid" | "unsupported";
+  readonly attemptOutcome: "verified_failure" | "no_failure_found" | "candidate_invalid" | "mapped" | "unsupported";
   readonly mapping: {
     readonly status: "candidate" | "unsupported";
     readonly reason: string;
@@ -38,6 +40,10 @@ export interface CommerceInvestigationView {
     readonly unsupportedConditions: readonly string[];
   };
   readonly attack: {
+    readonly discoveryMethod: "model" | "deterministic_search" | "none";
+    readonly searchExpandedStates: number;
+    readonly searchOutcome: "failure_found" | "no_failure_found" | "not_run";
+    readonly modelProposalStatus: "verified_failure" | "no_failure_found" | "candidate_invalid" | "not_provided";
     readonly hypothesis: string;
     readonly proposedActionCount: number;
     readonly minimizedActions: readonly CommerceAction[];
@@ -175,6 +181,7 @@ function createRecordedInvestigation(): CommerceInvestigationView {
     id: "243986a6-b49a-4b16-9930-bee96912b6e4",
     replayed: false,
     modelId: "muse-spark-1.3",
+    initialState: createCommerceState(),
     provenance: "recorded",
     policyHash: recordedPolicyHash,
     evidenceSetId: "243986a6-b49a-4b16-9930-bee96912b6e4",
@@ -195,6 +202,10 @@ function createRecordedInvestigation(): CommerceInvestigationView {
       unsupportedConditions: [],
     },
     attack: {
+      discoveryMethod: "model",
+      searchExpandedStates: 0,
+      searchOutcome: "not_run",
+      modelProposalStatus: "verified_failure",
       hypothesis:
         "A referred customer can qualify both accounts, refund the purchase, and leave the issued credit spendable.",
       proposedActionCount: 4,

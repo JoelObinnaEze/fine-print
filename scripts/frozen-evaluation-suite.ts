@@ -133,9 +133,11 @@ const promoQualificationFlaw: CommercePolicy = {
 };
 const promoQualificationControl: CommercePolicy = {
   ...promoQualificationFlaw,
-  name: "Cash qualifies",
+  name: "Cash qualifies after returns close",
   referral: {
     ...promoQualificationFlaw.referral,
+    qualificationBasis: "cash_paid",
+    issuance: "after_return_window",
     promoCreditCountsTowardThreshold: false,
   },
 };
@@ -163,7 +165,7 @@ function commerceCase(
 }
 
 export const frozenEvaluationSuite = {
-  version: "fine-print-eval-v3",
+  version: "fine-print-eval-v4",
   designedBenchmark: true,
   cases: [
     bottleCase({
@@ -312,9 +314,9 @@ export const frozenEvaluationSuite = {
       id: "commerce-promo-qualification-control",
       mechanism: "promotional_credit_qualification",
       expected: "blocked",
-      sourceText: "Give the referrer and referred customer $10 each immediately after a $20 gross purchase. Promotional credit does not count toward the threshold. Returns are allowed for 30 days, and refunding the purchase reverses its reward.",
+      sourceText: "Give the referrer and referred customer $10 each after a $20 cash purchase survives the 30-day return window. Promotional credit does not count toward the threshold, and refunding the purchase reverses its reward.",
       intendedOutcome: "The qualifying purchase should contribute at least $20 of retained cash revenue.",
-      protectedLegitimateBehavior: "A $20 cash purchase still earns $20 of referral reward.",
+      protectedLegitimateBehavior: "A retained $20 cash purchase still earns $20 of referral reward after 30 days.",
       initialState: promoInitialState,
       policy: promoQualificationControl,
       goal: commerceGoal,

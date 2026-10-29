@@ -541,7 +541,7 @@
 - [x] A later bounded miss never erases an earlier confirmed failure.
 - [x] Evidence from another source-policy hash is excluded.
 
-**Verification:** Commerce benchmark tests reproduce the stale-ranking bug, retain the highest exposure after a later miss, and exclude a different policy hash. The complete suite passes: 151/151 tests across 29 files.
+**Verification:** Commerce benchmark tests reproduce the stale-ranking bug, retain the highest exposure after a later miss, and exclude a different policy hash. The complete suite passes: 158/158 tests across 29 files.
 
 **Dependencies:** Task 30
 
@@ -592,7 +592,7 @@
 - [x] The offline report retains misses/errors and attributes model, baseline, and regression provenance separately.
 - [x] End-to-end acceptance checks cover mapping, verification, minimization, failed repair, stronger repair, recommendation change, unsupported conditions, and bounded-search language.
 
-**Verification:** Frozen-suite tests validate all six failure/control pairs and protected honest behavior. `npm run evaluate` regenerated suite `fine-print-eval-v3` with hash `d9a1360ff04f78964244934adc17dda8556a9904a40159b233b5fb230c04dc3a`; the artifact retains every model attempt, baseline limitation, error, and skipped initial-state case.
+**Verification:** Frozen-suite tests validate all six failure/control pairs and protected honest behavior. The current `fine-print-eval-v4` artifact has hash `1c28ea384c67286441b729347067f1b25d803b2a615d0d7378c13a9182be79b2`, validated starting states, a commerce search baseline, and separate live interpretation results.
 
 **Dependencies:** Tasks 31–33
 
@@ -609,11 +609,55 @@
 - [x] Documentation reports actual checks, all completed attempts, and unvalidated market usefulness honestly.
 - [x] Full tests, typecheck, build, offline evaluation, and local browser inspection pass.
 
-**Verification:** The teleprompter is 368 words (2:50–2:57 at 125–130 wpm). `npm test` passes 151/151 tests, `npm run typecheck` and `npm run build` pass, `npm audit --audit-level=high` reports zero vulnerabilities, `npm run evaluate` succeeds, `git diff --check` is clean, and the tracked-file secret scan finds no credential pattern. Opera GX confirms the three-step repair path and no browser errors.
+**Verification:** The teleprompter is 368 words (2:50–2:57 at 125–130 wpm). `npm test` passes 158/158 tests, `npm run typecheck` and `npm run build` pass, `npm audit --audit-level=high` reports zero vulnerabilities, `npm run evaluate` succeeds, `git diff --check` is clean, and the tracked-file secret scan finds no credential pattern. Opera GX confirms the three-step repair path and no browser errors.
 
 **Dependencies:** Task 34
 
 **Files likely touched:** `README.md`, `docs/evaluation.md`, `docs/judge-guide.md`, `docs/demo-script.md`, `docs/demo-production-plan.md`
 
 **Estimated scope:** Medium
+
+## Task 36: Remove reinterpretation from fresh repair checks
+
+**Description:** Resolve the selected repair from the originating evidence set and give Muse only the immutable policy, hash, state, goal, and action-proposal task.
+
+**Acceptance criteria:**
+- [x] The provider cannot replace or drift the selected repair during a fresh check.
+- [x] The exact policy hash and candidate identity still bind the verdict and persisted evidence.
+- [x] A regression test accepts an action-only provider response.
+
+**Verification:** Provider tests inspect the outbound recheck schema and prompt, then verify the host-supplied policy is the policy replayed.
+
+## Task 37: Add general commerce interaction search
+
+**Description:** Explore bounded combinations of referrals, purchases, promotional-credit spending, refunds, and time advancement without embedding benchmark traces.
+
+**Acceptance criteria:**
+- [x] Search finds spent-before-reversal and promotional-credit qualification failures.
+- [x] Search does not flag any v4 commerce control.
+- [x] Model and search attribution remain distinct.
+
+**Verification:** Commerce unit tests cover both failures, all three v4 controls, the return-window boundary, and search limits.
+
+## Task 38: Complete blocked evaluation runs
+
+**Description:** Accept a validated clean commerce starting state, persist it with counterexamples, run the promotional-credit pair, and execute interpretation separately from discovery.
+
+**Acceptance criteria:**
+- [x] Model and verifier receive the same starting state.
+- [x] The promotional-credit failure/control pair has three retained attempts each.
+- [x] The six-case interpretation matrix runs independently and reports exact-field matches.
+
+**Verification:** `fine-print-eval-v4` reports 12 deterministic cases, all commerce baselines, 6/6 interpretation passes, and every miss, invalid sequence, interruption, and mapping mismatch.
+
+## Task 39: Verify the complete reviewer cycle
+
+**Description:** Repeat the `$11` / `$45` / 7-day scenario from initial investigation through two repair checks without adding demo steps.
+
+**Acceptance criteria:**
+- [x] Immediate reversal gains observed exposure and loses the recommendation.
+- [x] The stronger repair reports a bounded no-find outcome without hiding the rejected Muse proposal.
+- [x] Opera GX shows the result in the existing three-step workbench.
+
+**Verification:** Opera GX verified `$22` at `$0` retained value, then `$11` unrecovered on immediate reversal, then the delayed repair at `$0` observed exposure with `$22` honest reward and a 2,610-state bounded search.
 

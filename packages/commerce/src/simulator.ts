@@ -328,7 +328,7 @@ function stepCommerce(
       if (purchase.status === "refunded") {
         throw new CommerceSimulationError("Purchase was already refunded");
       }
-      if (state.day - purchase.purchasedDay > policy.referral.returnWindowDays) {
+      if (state.day - purchase.purchasedDay >= policy.referral.returnWindowDays) {
         throw new CommerceSimulationError("Return window has closed");
       }
       let nextState: CommerceState = {

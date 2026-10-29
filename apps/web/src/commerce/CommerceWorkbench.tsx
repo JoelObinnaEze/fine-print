@@ -55,7 +55,7 @@ export function CommerceWorkbench() {
     readonly honestReward: number;
     readonly delay: number | null;
     readonly note?: string;
-    readonly provenance: "host" | "live" | "recorded";
+    readonly provenance: "host" | "live" | "recorded" | "search";
   } | null>(recordedCommerceRepairTest);
   const [activeView, setActiveView] = useState<CommerceView>("exploit");
 
@@ -177,7 +177,14 @@ export function CommerceWorkbench() {
           leakage: liveResult.attack?.verification.unintendedPayoutUsd ?? 0,
           honestReward: ordinaryResult?.metrics.availableRewardUsd ?? 0,
           delay: ordinaryResult?.metrics.rewardDelayDays ?? null,
-          provenance: "live",
+          ...(liveResult.attack.modelProposalStatus === "candidate_invalid" &&
+          liveResult.attack.searchOutcome === "no_failure_found"
+            ? {
+                note: `Muse's proposal was rejected; systematic search completed across ${liveResult.attack.searchExpandedStates} states.`,
+              }
+            : {}),
+          provenance:
+            liveResult.attack.searchOutcome !== "not_run" ? "search" : "live",
         });
         if (
           liveResult.evidenceUpdate?.evidenceSetId === investigation.evidenceSetId
@@ -306,7 +313,8 @@ export function CommerceWorkbench() {
               <p>These are the shortest transactions the simulator needed to confirm what happened.</p>
               <details className="commerce__technical commerce__technical--dark">
                 <summary>Show verification details</summary>
-                <p><b>AI test idea</b>{investigation.attack.hypothesis}</p>
+                <p><b>{investigation.attack.discoveryMethod === "deterministic_search" ? "Systematic search" : "AI test idea"}</b>{investigation.attack.hypothesis}</p>
+                {investigation.attack.searchOutcome !== "not_run" && <p><b>Search coverage</b>{investigation.attack.searchExpandedStates} states expanded · {investigation.attack.searchOutcome === "failure_found" ? "failure found" : "no failure found within this attempt"}{investigation.attack.modelProposalStatus === "candidate_invalid" ? " · AI proposal rejected" : ""}</p>}
                 <p><b>Simulator result</b>{investigation.attack.verification.reason}</p>
               </details>
             </div>
@@ -344,7 +352,7 @@ export function CommerceWorkbench() {
               </div>
             </div>
             {message && <p aria-live="polite">{message}</p>}
-            {freshTest && <div className={`commerce__fresh-test${freshTest.verdict === "Failure still present" ? " commerce__fresh-test--failure" : ""}`} role="status" aria-label="Fresh repair test"><b>{freshTest.verdict}</b><span>{freshTest.label}</span><span>{dollars(freshTest.leakage)} reward value exposed</span><span>{dollars(freshTest.honestReward)} honest reward</span><span>{freshTest.delay ?? "—"} day wait</span>{freshTest.note && <span>{freshTest.note}</span>}<small>{freshTest.provenance === "live" ? "Fresh AI recheck · simulator replayed" : freshTest.provenance === "recorded" ? "Recorded AI recheck · simulator replayed" : "Simulator regression replay"}</small></div>}
+            {freshTest && <div className={`commerce__fresh-test${freshTest.verdict === "Failure still present" ? " commerce__fresh-test--failure" : ""}`} role="status" aria-label="Fresh repair test"><b>{freshTest.verdict}</b><span>{freshTest.label}</span><span>{dollars(freshTest.leakage)} reward value exposed</span><span>{dollars(freshTest.honestReward)} honest reward</span><span>{freshTest.delay ?? "—"} day wait</span>{freshTest.note && <span>{freshTest.note}</span>}<small>{freshTest.provenance === "live" ? "Fresh AI recheck · simulator replayed" : freshTest.provenance === "search" ? "Systematic action search · simulator replayed" : freshTest.provenance === "recorded" ? "Recorded AI recheck · simulator replayed" : "Simulator regression replay"}</small></div>}
             <details className="commerce__technical commerce__repair-options">
               <summary>Compare all repairs</summary>
               <div className="commerce__priorities" aria-label="Policy owner priorities">

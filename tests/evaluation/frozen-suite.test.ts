@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { runCommerceActionSearch } from "../../packages/commerce/src/index.js";
 
 import {
   evaluateFrozenCase,
@@ -10,7 +11,7 @@ import {
 
 describe("frozen evaluation suite", () => {
   it("freezes six genuine failure/control pairs with complete inspectable metadata", () => {
-    expect(frozenEvaluationSuite.version).toBe("fine-print-eval-v3");
+    expect(frozenEvaluationSuite.version).toBe("fine-print-eval-v4");
     expect(frozenEvaluationSuite.cases).toHaveLength(12);
     expect(frozenEvaluationSuite.cases.filter((item) => item.expected === "flawed")).toHaveLength(6);
     expect(frozenEvaluationSuite.cases.filter((item) => item.expected === "blocked")).toHaveLength(6);
@@ -32,6 +33,21 @@ describe("frozen evaluation suite", () => {
       expect(result.deterministicReplayAgreement, item.id).toBe(true);
     }
   });
+
+  it("gives generic commerce search flawed cases without false-positive controls", () => {
+    for (const item of frozenEvaluationSuite.cases) {
+      if (item.domain !== "commerce") continue;
+      const result = runCommerceActionSearch(
+        item.initialState,
+        item.policy,
+        item.goal,
+        { maxActions: 5, maxExpandedStates: 5_000 },
+      );
+      expect(result.status, item.id).toBe(
+        item.expected === "flawed" ? "failure_found" : "no_failure_found",
+      );
+    }
+  }, 10_000);
 
   it("keeps expected labels and reference traces out of model inputs", () => {
     expect(frozenModelInputs).toHaveLength(12);

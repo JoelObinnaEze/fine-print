@@ -22,6 +22,7 @@ export {
   honestCustomerActions,
   minimizeCommerceExploit,
   refundAttackActions,
+  runCommerceActionSearch,
   verifyCommerceExploit,
   vulnerableCommercePolicy,
 } from "./benchmark.js";
@@ -46,6 +47,7 @@ export type {
   CommerceEvidenceEvaluation,
   CommerceExploitVerification,
   CommerceRepairCandidate,
+  CommerceActionSearchResult,
   CommerceStrategyMetrics,
 } from "./benchmark.js";
 export type {

@@ -197,6 +197,90 @@ export function minimizeCommerceExploit(
   return actions;
 }
 
+export interface CommerceActionSearchResult {
+  readonly status: "failure_found" | "no_failure_found";
+  readonly actions: readonly CommerceAction[];
+  readonly verification: CommerceExploitVerification;
+  readonly expandedStates: number;
+}
+
+function nextCommerceActions(
+  state: CommerceState,
+  policy: CommercePolicy,
+): readonly CommerceAction[] {
+  const actions: CommerceAction[] = [];
+  if (state.referrals.length === 0) {
+    actions.push({ type: "refer", referrerId: state.accounts[0]!.id, customerId: state.accounts[1]!.id });
+  }
+  const purchaseId = `P${state.purchases.length + 1}`;
+  const prices = [...new Set([
+    policy.referral.qualifyingPurchaseUsd,
+    policy.referral.rewardUsd,
+  ])];
+  for (const account of state.accounts) {
+    for (const priceUsd of prices) {
+      const promoOptions = [...new Set([0, Math.min(account.availableCreditUsd, priceUsd)])];
+      for (const promoCreditUsd of promoOptions) {
+        actions.push({ type: "purchase", accountId: account.id, purchaseId, priceUsd, promoCreditUsd });
+      }
+    }
+  }
+  for (const purchase of state.purchases) {
+    if (purchase.status === "active") {
+      actions.push({ type: "refund", accountId: purchase.accountId, purchaseId: purchase.id });
+    }
+  }
+  actions.push({ type: "advance_days", days: 1 });
+  if (policy.referral.returnWindowDays !== 1) {
+    actions.push({ type: "advance_days", days: policy.referral.returnWindowDays });
+  }
+  return actions;
+}
+
+export function runCommerceActionSearch(
+  initialState: CommerceState,
+  policy: CommercePolicy,
+  goal: CommerceGoal,
+  limits: { readonly maxActions: number; readonly maxExpandedStates: number },
+): CommerceActionSearchResult {
+  const initialReplay = replayCommerce(initialState, [], policy);
+  const queue: { readonly state: CommerceState; readonly actions: readonly CommerceAction[] }[] = [
+    { state: initialReplay.state, actions: [] },
+  ];
+  const visited = new Set([JSON.stringify(initialReplay.state)]);
+  let expandedStates = 0;
+  while (queue.length > 0 && expandedStates < limits.maxExpandedStates) {
+    const current = queue.shift()!;
+    if (current.actions.length >= limits.maxActions) continue;
+    expandedStates += 1;
+    for (const action of nextCommerceActions(current.state, policy)) {
+      const actions = [...current.actions, action];
+      let replay: CommerceReplay;
+      try {
+        replay = replayCommerce(initialState, actions, policy);
+      } catch (error) {
+        if (error instanceof CommerceSimulationError) continue;
+        throw error;
+      }
+      const verification = verifyCommerceExploit(replay, goal);
+      if (verification.status === "exploit_verified") {
+        return { status: "failure_found", actions, verification, expandedStates };
+      }
+      const key = JSON.stringify(replay.state);
+      if (!visited.has(key)) {
+        visited.add(key);
+        queue.push({ state: replay.state, actions });
+      }
+    }
+  }
+  return {
+    status: "no_failure_found",
+    actions: [],
+    verification: verifyCommerceExploit(initialReplay, goal),
+    expandedStates,
+  };
+}
+
 export interface CommerceStrategyMetrics {
   readonly availableRewardUsd: number;
   readonly unrecoveredRewardUsd: number;
@@ -217,6 +301,7 @@ export interface CommerceDesignEvaluation {
 export interface CommerceAttackEvidence {
   readonly id: string;
   readonly sourcePolicyHash: string;
+  readonly initialState?: CommerceState;
   readonly actions: readonly CommerceAction[];
 }
 
@@ -262,11 +347,12 @@ export function evaluateCommerceDesign(
   goal: CommerceGoal,
   attackActions: readonly CommerceAction[],
   honestActions: readonly CommerceAction[],
+  initialState: CommerceState = createCommerceState(),
 ): CommerceDesignEvaluation {
-  let attackReplay = replayCommerce(createCommerceState(), [], policy);
+  let attackReplay = replayCommerce(initialState, [], policy);
   for (let length = 1; length <= attackActions.length; length += 1) {
     try {
-      attackReplay = replayCommerce(createCommerceState(), attackActions.slice(0, length), policy);
+      attackReplay = replayCommerce(initialState, attackActions.slice(0, length), policy);
     } catch (error) {
       if (!(error instanceof CommerceSimulationError)) throw error;
       break;
@@ -277,7 +363,7 @@ export function evaluateCommerceDesign(
     goal,
   );
   const honest = calculateCommerceStrategyMetrics(
-    replayCommerce(createCommerceState(), honestActions, policy),
+    replayCommerce(initialState, honestActions, policy),
     goal,
   );
   return {
@@ -300,7 +386,13 @@ export function evaluateCommerceDesignAgainstEvidence(
   const applicable = evidence.filter((attack) => attack.sourcePolicyHash === sourcePolicyHash);
   const evaluations = applicable.map((attack) => ({
     id: attack.id,
-    result: evaluateCommerceDesign(policy, goal, attack.actions, honestActions),
+    result: evaluateCommerceDesign(
+      policy,
+      goal,
+      attack.actions,
+      honestActions,
+      attack.initialState ?? createCommerceState(),
+    ),
   }));
   const fallback = evaluateCommerceDesign(policy, goal, [], honestActions);
   const worst = evaluations.reduce<(typeof evaluations)[number] | null>(

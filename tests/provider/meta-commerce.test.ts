@@ -12,9 +12,11 @@ import {
   type CommerceInvestigationRequest,
 } from "../../apps/server/src/providers/meta-commerce.js";
 import { RunService } from "../../apps/server/src/runs/service.js";
+import { canonicalHash } from "../../packages/engine/src/index.js";
 import {
   commerceGoal,
   commerceRepairCandidates,
+  createCommerceState,
   refundAttackActions,
   vulnerableCommercePolicy,
 } from "../../packages/commerce/src/index.js";
@@ -306,11 +308,9 @@ describe("Meta commerce investigation", () => {
       .mockResolvedValueOnce(completion(fullOutput))
       .mockResolvedValueOnce(
         completion({
-          ...modelOutput,
-          policy: reverseNowPolicy,
+          reason: "Tested the host-supplied repair without remapping it.",
           attackHypothesis: "Spend one issued credit before refunding the qualifying purchase.",
           attackActions: spentBeforeRefund,
-          candidates: [],
         }),
       );
     const { commerce, database } = createServices(fetchMock);
@@ -352,51 +352,165 @@ describe("Meta commerce investigation", () => {
     });
     expect(
       database
-        .prepare("SELECT tested_candidate_id, observed_exposure_usd FROM commerce_counterexamples ORDER BY created_at")
+        .prepare("SELECT tested_candidate_id, observed_exposure_usd, initial_state_json FROM commerce_counterexamples ORDER BY created_at")
         .all(),
-    ).toEqual([
-      { tested_candidate_id: null, observed_exposure_usd: 20 },
-      { tested_candidate_id: "reverse-now", observed_exposure_usd: 10 },
-    ]);
+    ).toEqual(
+      [
+        { tested_candidate_id: null, observed_exposure_usd: 20 },
+        { tested_candidate_id: "reverse-now", observed_exposure_usd: 10 },
+      ].map((row) => ({ ...row, initial_state_json: JSON.stringify(createCommerceState()) })),
+    );
   });
 
-  it("rejects fresh evidence mapped to a different repair version", async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
+  it("passes an immutable repair to a fresh recheck and asks Muse only for actions", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(completion(modelOutput))
-      .mockResolvedValueOnce(
-        completion({
-          ...modelOutput,
-          policy: vulnerableCommercePolicy,
-          candidates: [],
-        }),
-      );
-    const { commerce, database } = createServices(fetchMock);
+      .mockImplementationOnce(async (_input, init) => {
+        const body = JSON.parse(String(init?.body)) as {
+          readonly messages: readonly { readonly content: string }[];
+          readonly response_format: { readonly json_schema: { readonly name: string } };
+        };
+        const prompt = JSON.parse(body.messages[1]!.content) as {
+          readonly immutablePolicy: typeof vulnerableCommercePolicy;
+          readonly immutablePolicyHash: string;
+          readonly sourceText?: string;
+        };
+        expect(prompt.immutablePolicy).toEqual(commerceRepairCandidates[0]!.policy);
+        expect(prompt.immutablePolicyHash).toBe(canonicalHash(commerceRepairCandidates[0]!.policy));
+        expect(prompt).not.toHaveProperty("sourceText");
+        expect(body.response_format.json_schema.name).toBe("commerce_recheck_actions");
+        return completion({
+          reason: "No executable failure found within this attempt.",
+          attackHypothesis: "",
+          attackActions: [],
+        });
+      });
+    const { commerce } = createServices(fetchMock);
     const first = await commerce.investigate(request, "commerce-version-root");
     const selected = first.candidates[0]!;
 
+    await expect(commerce.investigate(
+      {
+        ...request,
+        mode: "attack_only",
+        evidenceContext: {
+          evidenceSetId: first.id,
+          testedCandidateId: selected.id,
+          expectedPolicyHash: selected.policyHash,
+        },
+      },
+      "commerce-version-recheck",
+    )).resolves.toMatchObject({
+      policyHash: selected.policyHash,
+      mapping: { policy: selected.policy },
+      attack: {
+        discoveryMethod: "none",
+        modelProposalStatus: "not_provided",
+        searchOutcome: "no_failure_found",
+        verification: { status: "no_exploit" },
+      },
+    });
+  });
+
+  it("reports a completed bounded search separately from a rejected Muse proposal", async () => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(completion(modelOutput))
+      .mockResolvedValueOnce(completion({
+        reason: "Proposed a refund without creating the purchase.",
+        attackHypothesis: "Refund a missing purchase.",
+        attackActions: [{ type: "refund", accountId: "B", purchaseId: "missing" }],
+      }));
+    const { commerce } = createServices(fetchMock);
+    const first = await commerce.investigate(request, "commerce-rejected-root");
+    const selected = first.candidates[0]!;
+
+    const result = await commerce.investigate(
+      {
+        ...request,
+        mode: "attack_only",
+        evidenceContext: {
+          evidenceSetId: first.id,
+          testedCandidateId: selected.id,
+          expectedPolicyHash: selected.policyHash,
+        },
+      },
+      "commerce-rejected-recheck",
+    );
+
+    expect(result).toMatchObject({
+      attemptOutcome: "no_failure_found",
+      attack: {
+        discoveryMethod: "none",
+        modelProposalStatus: "candidate_invalid",
+        searchOutcome: "no_failure_found",
+        verification: { status: "no_exploit" },
+      },
+    });
+    expect(result.attack!.searchExpandedStates).toBeGreaterThan(0);
+  });
+
+  it("uses the same validated initial state for the model prompt and host replay", async () => {
+    const initialState = {
+      ...createCommerceState(),
+      accounts: createCommerceState().accounts.map((account) =>
+        account.id === "B" ? { ...account, availableCreditUsd: 20 } : account,
+      ),
+    } as NonNullable<CommerceInvestigationRequest["initialState"]>;
+    const promoPolicy = {
+      ...vulnerableCommercePolicy,
+      referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+    };
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      const body = JSON.parse(String(init?.body)) as { readonly messages: readonly { readonly content: string }[] };
+      expect(body.messages[1]?.content).toContain('"availableCreditUsd":20');
+      return completion({
+        ...modelOutput,
+        policy: promoPolicy,
+        attackActions: [
+          { type: "refer", referrerId: "A", customerId: "B" },
+          { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 20 },
+        ],
+        candidates: [],
+      });
+    });
+    const { commerce } = createServices(fetchMock);
+
+    const result = await commerce.investigate(
+      { ...request, mode: "attack_only", initialState },
+      "commerce-initial-state",
+    );
+
+    expect(result.attack?.verification).toMatchObject({
+      status: "exploit_verified",
+      unintendedPayoutUsd: 20,
+      retainedRevenueUsd: 0,
+    });
+  });
+
+  it("maps an interpretation case without generating transactions or repairs", async () => {
+    const { commerce } = createServices(async (_input, init) => {
+      const body = JSON.parse(String(init?.body)) as { readonly messages: readonly { readonly content: string }[] };
+      expect(JSON.parse(body.messages[1]!.content)).toMatchObject({ mode: "interpret_only" });
+      return completion({
+        ...modelOutput,
+        attackHypothesis: "",
+        attackActions: [],
+        candidates: [],
+      });
+    });
+
     await expect(
       commerce.investigate(
-        {
-          ...request,
-          mode: "attack_only",
-          evidenceContext: {
-            evidenceSetId: first.id,
-            testedCandidateId: selected.id,
-            expectedPolicyHash: selected.policyHash,
-          },
-        },
-        "commerce-version-mismatch",
+        { ...request, mode: "interpret_only" },
+        "commerce-interpret-only",
       ),
-    ).rejects.toMatchObject({ code: "PROVIDER_OUTPUT_INVALID" });
-    expect(
-      database.prepare("SELECT COUNT(*) AS count FROM commerce_counterexamples").get(),
-    ).toEqual({ count: 1 });
-    expect(
-      database
-        .prepare("SELECT state, error_code FROM commerce_investigations WHERE idempotency_key = ?")
-        .get("commerce-version-mismatch"),
-    ).toEqual({ state: "incomplete", error_code: "PROVIDER_OUTPUT_INVALID" });
+    ).resolves.toMatchObject({
+      attemptOutcome: "mapped",
+      mapping: { status: "candidate", policy: vulnerableCommercePolicy },
+      attack: null,
+      candidates: [],
+      population: null,
+    });
   });
 
   it("surfaces unsupported conditions without inventing an executable mapping", async () => {

@@ -19,7 +19,11 @@ import {
   replayActions,
 } from "../packages/evaluation/src/index.js";
 import type { Policy, PolicyClause } from "../packages/policy/src/index.js";
-import type { CommercePolicy } from "../packages/commerce/src/index.js";
+import {
+  runCommerceActionSearch,
+  type CommercePolicy,
+} from "../packages/commerce/src/index.js";
+import type { PolicyInterpretation } from "../packages/policy/src/interpret.js";
 import { discoveryBaseline, discoverySuite } from "./discovery-suite.js";
 import {
   evaluateFrozenCase,
@@ -266,6 +270,7 @@ const discoveryBenchmark = {
 };
 
 const frozenAttempts = new Map<string, readonly unknown[]>();
+const interpretationAttempts = new Map<string, unknown>();
 let supersededCommerceAttempts: readonly unknown[] = [];
 if (existsSync(databasePath)) {
   const database = openDatabase(databasePath);
@@ -283,8 +288,62 @@ if (existsSync(databasePath)) {
         readonly error_code: string | null;
         readonly error_message: string | null;
       }[];
+    const translationRows = database
+      .prepare("SELECT idempotency_key, state, result_json FROM policy_translations WHERE idempotency_key LIKE 'interpretation-v1-%' ORDER BY created_at, id")
+      .all() as {
+        readonly idempotency_key: string;
+        readonly state: string;
+        readonly result_json: string | null;
+      }[];
+    for (const item of interpretationSuite) {
+      const idempotencyKey = `interpretation-v1-${item.id}`;
+      if (item.id.startsWith("commerce-")) {
+        const row = commerceRows.find((candidate) => candidate.idempotency_key === idempotencyKey);
+        if (!row) continue;
+        if (!row.result_json) {
+          interpretationAttempts.set(item.id, {
+            outcome: "interrupted",
+            reason: row.error_message ?? row.error_code ?? row.state,
+          });
+          continue;
+        }
+        const result = JSON.parse(row.result_json) as {
+          readonly mapping: { readonly status: string; readonly reason: string; readonly policy: CommercePolicy | null };
+          readonly usage: { readonly actualUsd: number };
+        };
+        interpretationAttempts.set(item.id, {
+          outcome: result.mapping.status,
+          reason: result.mapping.reason,
+          actualFields: result.mapping.policy?.referral ?? {},
+          actualUsd: result.usage.actualUsd,
+        });
+        continue;
+      }
+      const row = translationRows.find((candidate) => candidate.idempotency_key === idempotencyKey);
+      if (!row) continue;
+      if (!row.result_json) {
+        interpretationAttempts.set(item.id, { outcome: "interrupted", reason: row.state });
+        continue;
+      }
+      const result = JSON.parse(row.result_json) as {
+        readonly interpretation: PolicyInterpretation;
+        readonly usage: { readonly actualUsd: number };
+      };
+      interpretationAttempts.set(item.id, {
+        outcome: result.interpretation.status,
+        reason: result.interpretation.reason,
+        actualFields:
+          result.interpretation.status === "candidate"
+            ? result.interpretation.policy.clauses[0] ?? {}
+            : {},
+        actualUsd: result.usage.actualUsd,
+      });
+    }
     supersededCommerceAttempts = commerceRows
-      .filter((row) => row.idempotency_key.startsWith("frozen-v2-commerce-"))
+      .filter((row) =>
+        row.idempotency_key.startsWith("frozen-v2-commerce-") ||
+        row.idempotency_key.startsWith("frozen-v3-commerce-"),
+      )
       .map((row) => {
         const result = row.result_json ? JSON.parse(row.result_json) as {
           readonly id: string;
@@ -297,7 +356,9 @@ if (existsSync(databasePath)) {
           runId: result?.id ?? row.id,
           outcome: result?.attemptOutcome ?? result?.mapping?.status ?? row.error_code ?? row.state,
           actualUsd: result?.usage?.actualUsd ?? null,
-          excludedReason: "Superseded benchmark wording did not preserve the frozen executable mapping.",
+          excludedReason: row.idempotency_key.startsWith("frozen-v2-")
+            ? "Superseded benchmark wording did not preserve the frozen executable mapping."
+            : "Superseded by v4 after the return-window boundary and validated initial-state fixes.",
         };
       });
     for (const item of frozenEvaluationSuite.cases) {
@@ -363,7 +424,7 @@ if (existsSync(databasePath)) {
         frozenAttempts.set(
           item.id,
           commerceRows
-            .filter((row) => row.idempotency_key.startsWith(`frozen-v3-${item.id}-`))
+            .filter((row) => row.idempotency_key.startsWith(`frozen-v4-${item.id}-`))
             .map((row) => {
               if (!row.result_json) {
                 return {
@@ -407,6 +468,27 @@ if (existsSync(databasePath)) {
   }
 }
 
+const interpretationResults = interpretationSuite.map((item) => {
+  const attempt = interpretationAttempts.get(item.id) as {
+    readonly outcome?: string;
+    readonly reason?: string;
+    readonly actualFields?: Readonly<Record<string, unknown>>;
+    readonly actualUsd?: number;
+  } | undefined;
+  const expectedOutcome = item.expectedDisposition === "map" ? "candidate" :
+    item.expectedDisposition === "clarify" ? "ambiguous" : "unsupported";
+  const fieldsMatch = attempt !== undefined && Object.entries(item.expectedFields).every(
+    ([key, value]) => JSON.stringify(attempt.actualFields?.[key]) === JSON.stringify(value),
+  );
+  return {
+    ...item,
+    attempt: attempt ?? null,
+    dispositionMatches: attempt?.outcome === expectedOutcome,
+    expectedFieldsMatch: fieldsMatch,
+    passed: attempt?.outcome === expectedOutcome && fieldsMatch,
+  };
+});
+
 const frozenBenchmark = {
   status: "offline_complete_live_incomplete",
   designedBenchmark: true,
@@ -415,10 +497,15 @@ const frozenBenchmark = {
   attemptsRequestedPerCase: 3,
   supersededCommerceAttempts,
   interpretation: {
-    status: "not_run",
-    attemptsPerCase: 0,
-    cases: interpretationSuite,
-    note: "Expected fields are frozen separately from discovery. No fixture output is counted as a live interpretation result.",
+    status:
+      interpretationAttempts.size === interpretationSuite.length
+        ? "completed"
+        : interpretationAttempts.size > 0
+          ? "partial"
+          : "not_run",
+    attemptsPerCase: interpretationAttempts.size > 0 ? 1 : 0,
+    cases: interpretationResults,
+    note: "Interpretation is run and scored separately from transaction discovery; only persisted live provider results count.",
   },
   cases: frozenEvaluationSuite.cases.map((item) => {
     const reference = evaluateFrozenCase(item);
@@ -456,7 +543,21 @@ const frozenBenchmark = {
               rejectedClaims: result.rejectedClaims,
             };
           })
-        : [];
+        : [(() => {
+            const result = runCommerceActionSearch(
+              item.initialState,
+              item.policy,
+              item.goal,
+              { maxActions: 5, maxExpandedStates: 5_000 },
+            );
+            return {
+              provenance: "baseline_found",
+              outcome: result.status,
+              expandedStates: result.expandedStates,
+              actionsToFirstFailure: result.actions.length || null,
+              rejectedClaims: 0,
+            };
+          })()];
     return {
       id: item.id,
       domain: item.domain,
@@ -471,8 +572,10 @@ const frozenBenchmark = {
       referenceActions: item.referenceActions,
       referenceResult: reference,
       simpleActionSearch: {
-        status: item.domain === "bottle_return" ? "completed" : "not_supported_for_commerce",
-        limits: item.domain === "bottle_return" ? discoveryBaseline : null,
+        status: "completed",
+        limits: item.domain === "bottle_return"
+          ? discoveryBaseline
+          : { maxActions: 5, maxExpandedStates: 5_000, deterministic: true },
         attempts: baselineAttempts,
       },
       muse: {

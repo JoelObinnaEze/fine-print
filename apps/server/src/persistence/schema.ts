@@ -133,6 +133,7 @@ export function initializeRunSchema(database: AppDatabase): void {
       source_policy_hash TEXT NOT NULL,
       tested_policy_hash TEXT NOT NULL,
       tested_candidate_id TEXT,
+      initial_state_json TEXT,
       actions_json TEXT NOT NULL,
       verification_json TEXT NOT NULL,
       observed_exposure_usd INTEGER NOT NULL CHECK (observed_exposure_usd > 0),
@@ -174,6 +175,14 @@ export function initializeRunSchema(database: AppDatabase): void {
   }
   if (!commerceColumns.has("error_message")) {
     database.exec("ALTER TABLE commerce_investigations ADD COLUMN error_message TEXT");
+  }
+  const counterexampleColumns = new Set(
+    (database.pragma("table_info(commerce_counterexamples)") as { readonly name: string }[]).map(
+      (column) => column.name,
+    ),
+  );
+  if (!counterexampleColumns.has("initial_state_json")) {
+    database.exec("ALTER TABLE commerce_counterexamples ADD COLUMN initial_state_json TEXT");
   }
   database.exec(`
     UPDATE runs

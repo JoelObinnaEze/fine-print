@@ -70,11 +70,11 @@ The simple baseline is a deterministic beam search with seeds 17, 29, and 43, a 
 
 Muse found the simple premature-payment flaw reliably and the interacting batch flaw in one of two attempts. The baseline found both more reliably on this small deterministic world. That comparison is intentionally retained: Muse's value here is an inspectable natural-language hypothesis/tool workflow, not a claim that it beats search on a tiny state space. Independent verification rejected no submitted candidates in these eight runs.
 
-The eight original live Bottle Return benchmark attempts cost $0.700546 in raw token usage. At that checkpoint, before the v3 evaluation runs below, the durable ledger recorded $1.694354 settled and $0.004075 ambiguous.
+The eight original live Bottle Return benchmark attempts cost $0.700546 in raw token usage. At that earlier checkpoint, before the expanded commerce evaluation, the durable ledger recorded $1.694354 settled and $0.004075 ambiguous.
 
 ## Versioned 12-case evaluation
 
-`fine-print-eval-v3` is a designed benchmark frozen under SHA-256 `d9a1360ff04f78964244934adc17dda8556a9904a40159b233b5fb230c04dc3a`. It contains six failure/control pairs using only supported Bottle Return and commerce mechanisms. Every case records the exact initial state, executable policy, stated intended outcome, protected honest behavior, deterministic reference trace, expected classification, and replay result in [`artifacts/evaluation.json`](../artifacts/evaluation.json).
+`fine-print-eval-v4` is a designed benchmark frozen under SHA-256 `1c28ea384c67286441b729347067f1b25d803b2a615d0d7378c13a9182be79b2`. It contains six failure/control pairs using only supported Bottle Return and commerce mechanisms. Every case records the exact validated initial state, executable policy, stated intended outcome, protected honest behavior, deterministic reference trace, expected classification, and replay result in [`artifacts/evaluation.json`](../artifacts/evaluation.json).
 
 All 12 reference replays matched their frozen classification and preserved the stated honest behavior. Reference traces and labels were excluded from model inputs. These are designed cases, not observed customer incidents.
 
@@ -83,25 +83,25 @@ All 12 reference replays matched their frozen classification and preserved the s
 | Repeated deposits | 2 / 3 confirmed | 0 / 3 confirmed | 3 / 3; control 0 / 3 | One bounded model miss retained |
 | Ineligible material | 3 / 3 confirmed | 0 / 3 confirmed | 3 / 3; control 0 / 3 | Same processing-backed control |
 | Transient batch bonus | 1 / 3 confirmed | 0 / 3 confirmed | 3 / 3; control 0 / 3 | Two bounded model misses retained |
-| Credit retained after refund | 2 / 2 scored confirmed | 0 / 3 confirmed | Not implemented for commerce | Third failure-case attempt ended in a response-schema error; control had two misses and one invalid sequence |
-| Credit spent before reversal | 0 / 3 confirmed | 0 / 3 confirmed | Not implemented for commerce | Failure case had two misses and one invalid sequence; this is a known discovery miss, not evidence the rule is robust |
-| Promotional-credit qualification | Not run | Not run | Not implemented for commerce | Offline case starts with a disclosed `$20` promotional balance; the live endpoint currently fixes starting credit at `$0` |
+| Credit retained after refund | 2 / 3 confirmed | 0 / 3 confirmed | Failure found; control no failure | One invalid failure-case sequence retained; all control searches completed without a verified failure |
+| Credit spent before reversal | 2 / 3 confirmed | 0 / 3 confirmed | Failure found; control no failure | One invalid sequence on each side retained; this improves the prior model result from 0 / 3 |
+| Promotional-credit qualification | 3 / 3 confirmed | 0 / 1 exact mapping confirmed | Failure found; control no failure | All three control attempts completed without a failure; two mapped to stronger net-retained-spend semantics and are excluded from exact-policy scoring |
 
-Twelve earlier commerce attempts are also retained under `supersededCommerceAttempts`. Their shorter wording allowed material mapping drift, so none was scored against the frozen executable policies. The corrected v3 wording states reward, threshold, qualification basis, issuance, refund handling, return window, and promotional-credit treatment explicitly.
+Thirty earlier v2/v3 commerce attempts are retained under `supersededCommerceAttempts`. The v2 wording allowed material mapping drift; v3 predates validated starting states and the corrected return-window boundary. They cost `$0.324648` and are not silently mixed into v4 results.
 
-Interpretation and discovery are reported separately. The dedicated interpretation matrix freezes expected fields plus clarification and unsupported cases, but its live runs remain **not run**; no fixture output is counted as live evidence. Within v3 commerce discovery, only attempts whose executable mapping matched every material frozen field were scored. Bottle Return uses the existing deterministic beam search at three seeds, 30,000 expanded states, 40-action depth, and width 256. Commerce currently has no equivalent deterministic search baseline, so the report says `not_supported_for_commerce` rather than implying equal compute.
+Interpretation and discovery are reported separately. The dedicated live interpretation matrix passed 6/6: two commerce mappings, one Bottle Return mapping, one deliberate ambiguity, and two unsupported-condition cases. Within v4 commerce discovery, only attempts whose executable mapping matched every material frozen field were scored. Bottle Return uses deterministic beam search at three seeds, 30,000 expanded states, 40-action depth, and width 256. Commerce uses one deterministic breadth-first run per policy with a 5,000-state, five-action limit; model and search attribution remain separate.
 
-The live suite evidence represented `$1.791247` of model calls including earlier persisted Bottle Return attempts. The superseded commerce wording attempts cost `$0.135545`. The current durable ledger records `$2.716904` settled, `$0.004075` ambiguous, no active reservation, and `$6.279021` available under the configured usable app budget.
+The v4 artifact represents `$1.861649` of model calls including earlier persisted Bottle Return attempts; the clean v4 commerce calls cost `$0.193560`. The separate interpretation matrix cost `$0.024883`. After the Opera GX end-to-end checks, the durable ledger records `$3.082171` settled, `$0.028158` ambiguous, no active reservation, and `$5.889671` available under the configured usable app budget.
+
+The reviewer’s `$11` / `$45` / 7-day scenario was also repeated end to end in Opera GX. The initial policy verified `$22` of reward at `$0` retained value. A fresh check loaded the immediate-reversal repair by exact hash, found `$11` of unrecovered spent credit, and moved the recommendation to delayed issuance. A second fresh check rejected Muse’s invalid proposal, then completed a 2,610-state systematic search with no verified failure; the UI reports both facts and does not claim proof of safety.
 
 Automated acceptance coverage links each behavior to its reproducible test: supported mapping, deterministic verification, trace minimization, failure of a superficially plausible repair, preservation under the stronger repair, recommendation refresh, unsupported-condition disclosure, and bounded-miss language. These checks establish software behavior. Policy-owner usefulness, customer demand, adoption, and market value remain unvalidated.
 
 ## Not run
 
 - Volunteer usability study: **not run**; participants = 0.
-- Public deployment/incognito judge access: **not run**.
+- Fresh v4 public-deployment check: **pending this commit**; the local Opera GX path passed.
 - Cross-seed scenario evaluation: **not run**; Bottle Return currently has one named deterministic seed.
 - Hosted latency/load testing: **not run**; the service is localhost-only.
-- Dedicated live interpretation matrix: **not run**; expected fields and dispositions are frozen, but no fixture is reported as live output.
-- Promotional-credit live pair: **not run**; the required disclosed nonzero starting balance is not accepted by the live endpoint.
 
 No user feedback, adoption, revenue, industrial deployment, formal verification, or universal policy-safety claim is made.

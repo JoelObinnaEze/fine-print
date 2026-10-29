@@ -11,6 +11,7 @@ import {
   honestCustomerActions,
   minimizeCommerceExploit,
   refundAttackActions,
+  runCommerceActionSearch,
   verifyCommerceExploit,
   vulnerableCommercePolicy,
 } from "../../packages/commerce/src/index.js";
@@ -64,6 +65,64 @@ describe("commerce referral/refund benchmark", () => {
       unintendedPayoutUsd: 10,
       reason: "$10 of issued reward had already been spent and remained unrecovered while retained revenue was $0, below the $20 intended outcome.",
     });
+  });
+
+  it("systematically finds a spend-before-refund interaction without a supplied trace", () => {
+    const reversiblePolicy = {
+      ...vulnerableCommercePolicy,
+      referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+    };
+
+    const result = runCommerceActionSearch(
+      createCommerceState(),
+      reversiblePolicy,
+      commerceGoal,
+      { maxActions: 4, maxExpandedStates: 2_000 },
+    );
+
+    expect(result.status).toBe("failure_found");
+    expect(result.verification.unintendedPayoutUsd).toBe(10);
+    expect(result.actions.map((action) => action.type)).toEqual([
+      "refer",
+      "purchase",
+      "purchase",
+      "refund",
+    ]);
+  });
+
+  it("uses a disclosed starting balance when searching promotional-credit qualification", () => {
+    const initialState = {
+      ...createCommerceState(),
+      accounts: createCommerceState().accounts.map((account) =>
+        account.id === "B" ? { ...account, availableCreditUsd: 20 } : account,
+      ),
+    };
+    const result = runCommerceActionSearch(
+      initialState,
+      { ...vulnerableCommercePolicy, referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const } },
+      commerceGoal,
+      { maxActions: 2, maxExpandedStates: 200 },
+    );
+
+    expect(result.status).toBe("failure_found");
+    expect(result.actions).toEqual([
+      { type: "refer", referrerId: "A", customerId: "B" },
+      { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 20 },
+    ]);
+  });
+
+  it("closes the refund window when delayed rewards become available", () => {
+    const delayedPolicy = commerceRepairCandidates[0]!.policy;
+    const actions = [
+      { type: "refer", referrerId: "A", customerId: "B" },
+      { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 0 },
+      { type: "advance_days", days: delayedPolicy.referral.returnWindowDays },
+      { type: "refund", accountId: "B", purchaseId: "P1" },
+    ] as const;
+
+    expect(() => replayCommerce(createCommerceState(), actions, delayedPolicy)).toThrow(
+      "Return window has closed",
+    );
   });
 
   it("keeps the corrected repair evidence reproducible", () => {

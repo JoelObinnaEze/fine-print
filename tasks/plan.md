@@ -90,3 +90,9 @@ Key decisions:
 - Report exposure as observed under tested cases, never as a maximum or safety guarantee.
 - Keep hidden reference traces out of model requests and preserve every attempted live run when those runs are later authorized and affordable.
 
+## Repair-recheck completion slice
+
+The fresh recheck must use the selected repair and starting state already stored by the host. Muse proposes transactions only; it does not reinterpret that policy. A bounded deterministic commerce search supplements model proposals and reports its own outcome and state budget. Invalid model proposals, bounded search misses, verified failures, and provider errors remain separate evidence.
+
+Implementation order: reproduce the mapping mismatch → bind rechecks to the immutable candidate → add general interaction search → validate and persist starting state → run interpretation separately → rerun the full reviewer scenario in Opera GX without changing the three-screen demo path.
+

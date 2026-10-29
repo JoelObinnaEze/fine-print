@@ -742,8 +742,8 @@
   "frozenBenchmark": {
     "status": "offline_complete_live_incomplete",
     "designedBenchmark": true,
-    "suiteVersion": "fine-print-eval-v3",
-    "suiteHash": "d9a1360ff04f78964244934adc17dda8556a9904a40159b233b5fb230c04dc3a",
+    "suiteVersion": "fine-print-eval-v4",
+    "suiteHash": "1c28ea384c67286441b729347067f1b25d803b2a615d0d7378c13a9182be79b2",
     "attemptsRequestedPerCase": 3,
     "supersededCommerceAttempts": [
       {
@@ -829,11 +829,137 @@
         "outcome": "no_failure_found",
         "actualUsd": 0.011354,
         "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-refund-retention-flawed-1",
+        "runId": "051efcfd-f3b9-4796-bacb-93db39987554",
+        "outcome": "verified_failure",
+        "actualUsd": 0.011556,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-refund-retention-flawed-2",
+        "runId": "fdb86629-8d8a-4632-a686-7254204307f8",
+        "outcome": "verified_failure",
+        "actualUsd": 0.007527,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-refund-retention-flawed-3",
+        "runId": "d5003de8-8455-4b9f-b8e1-932e48c72c5f",
+        "outcome": "PROVIDER_OUTPUT_INVALID",
+        "actualUsd": null,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-refund-retention-control-1",
+        "runId": "1ece70d0-4bff-4e2e-8534-a3b77e66f2f4",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.008992,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-refund-retention-control-2",
+        "runId": "11ca1707-88aa-44d9-8410-dafd9a35382b",
+        "outcome": "candidate_invalid",
+        "actualUsd": 0.012473,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-refund-retention-control-3",
+        "runId": "ed0146ef-04a8-4017-8675-eb8da936e585",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.009715,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-spent-reversal-flawed-1",
+        "runId": "80267429-bb1c-43e4-8e99-b3636ebe016e",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.013336,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-spent-reversal-flawed-2",
+        "runId": "454ac36e-af6d-4fde-a84e-e528eaac3fe1",
+        "outcome": "candidate_invalid",
+        "actualUsd": 0.011411,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-spent-reversal-flawed-3",
+        "runId": "a55cd56e-7f6e-4bd6-8a2d-d867e5d7e94b",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.014858,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-spent-reversal-control-1",
+        "runId": "7fc49a5e-44d4-4d08-8f8d-f1569a324e78",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.009218,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-spent-reversal-control-2",
+        "runId": "92c378f0-70eb-42c0-8526-cbb4a1271c77",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.009193,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-spent-reversal-control-3",
+        "runId": "8a2b202b-c888-4245-9ccb-015d5d353fa9",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.014879,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-promo-qualification-flawed-1",
+        "runId": "02f15c08-c2e7-42fc-a93d-103d329cdc78",
+        "outcome": "verified_failure",
+        "actualUsd": 0.01067,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-promo-qualification-flawed-2",
+        "runId": "4579adfa-b97c-45f7-a2fe-40f6be296c00",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.016667,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-promo-qualification-flawed-3",
+        "runId": "6c02b7fb-1080-48a8-995d-f481e91fa195",
+        "outcome": "verified_failure",
+        "actualUsd": 0.012672,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-promo-qualification-control-1",
+        "runId": "989fbac9-b30e-4701-872b-9e96cc36229e",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.00964,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-promo-qualification-control-2",
+        "runId": "3a4d234a-f93e-4b5f-9670-ef7f330a2c79",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.016296,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
+      },
+      {
+        "idempotencyKey": "frozen-v3-commerce-promo-qualification-control-3",
+        "runId": "d6d988db-a76f-4713-a10b-458d5fac2ddf",
+        "outcome": "PROVIDER_OUTCOME_UNKNOWN",
+        "actualUsd": null,
+        "excludedReason": "Superseded by v4 after the return-window boundary and validated initial-state fixes."
       }
     ],
     "interpretation": {
-      "status": "not_run",
-      "attemptsPerCase": 0,
+      "status": "completed",
+      "attemptsPerCase": 1,
       "cases": [
         {
           "id": "commerce-explicit-refund",
@@ -844,7 +970,24 @@
             "qualifyingPurchaseUsd": 35,
             "refundHandling": "keep",
             "returnWindowDays": 21
-          }
+          },
+          "attempt": {
+            "outcome": "candidate",
+            "reason": "Interpreted as $9 reward on $35 gross purchase with immediate issuance, keep on refund, 21-day window. Mode is interpret_only so no trace or repairs are returned.",
+            "actualFields": {
+              "rewardUsd": 9,
+              "qualifyingPurchaseUsd": 35,
+              "qualificationBasis": "gross_purchase",
+              "issuance": "immediate",
+              "refundHandling": "keep",
+              "returnWindowDays": 21,
+              "promoCreditCountsTowardThreshold": false
+            },
+            "actualUsd": 0.007194
+          },
+          "dispositionMatches": true,
+          "expectedFieldsMatch": true,
+          "passed": true
         },
         {
           "id": "commerce-explicit-promo",
@@ -855,7 +998,24 @@
             "qualifyingPurchaseUsd": 40,
             "promoCreditCountsTowardThreshold": false,
             "returnWindowDays": 14
-          }
+          },
+          "attempt": {
+            "outcome": "candidate",
+            "reason": "In interpret_only mode: mapped $40 cash-paid threshold, $12 reward, 14-day after_return_window delay. Defaulted unspecified refund handling to reverse.",
+            "actualFields": {
+              "rewardUsd": 12,
+              "qualifyingPurchaseUsd": 40,
+              "qualificationBasis": "cash_paid",
+              "issuance": "after_return_window",
+              "refundHandling": "reverse",
+              "returnWindowDays": 14,
+              "promoCreditCountsTowardThreshold": false
+            },
+            "actualUsd": 0.004557
+          },
+          "dispositionMatches": true,
+          "expectedFieldsMatch": true,
+          "passed": true
         },
         {
           "id": "bottle-explicit-processing",
@@ -868,28 +1028,74 @@
               "aluminium"
             ],
             "repetition": "once_per_item"
-          }
+          },
+          "attempt": {
+            "outcome": "candidate",
+            "reason": "Direct mapping to process trigger for aluminium with 7 points once per item.",
+            "actualFields": {
+              "id": "aluminium-process-7",
+              "enabled": true,
+              "trigger": "process",
+              "points": 7,
+              "eligibleOnly": false,
+              "materials": [
+                "aluminium"
+              ],
+              "repetition": "once_per_item"
+            },
+            "actualUsd": 0.00464325
+          },
+          "dispositionMatches": true,
+          "expectedFieldsMatch": true,
+          "passed": true
         },
         {
           "id": "bottle-ambiguous-good-recycling",
           "sourceText": "Reward good recycling fairly.",
           "expectedDisposition": "clarify",
-          "expectedFields": {}
+          "expectedFields": {},
+          "attempt": {
+            "outcome": "ambiguous",
+            "reason": "Request does not specify trigger, materials, points, eligibility, or repetition needed to build clauses.",
+            "actualFields": {},
+            "actualUsd": 0.0022345
+          },
+          "dispositionMatches": true,
+          "expectedFieldsMatch": true,
+          "passed": true
         },
         {
           "id": "commerce-unsupported-geography",
           "sourceText": "Pay only Canadian customers using a unique device fingerprint.",
           "expectedDisposition": "unsupported",
-          "expectedFields": {}
+          "expectedFields": {},
+          "attempt": {
+            "outcome": "unsupported",
+            "reason": "Material eligibility conditions (Canadian residency and unique device fingerprint) have no representation in the supported referral policy schema, so no faithful candidate mapping can be proposed in interpret_only mode.",
+            "actualFields": {},
+            "actualUsd": 0.003763
+          },
+          "dispositionMatches": true,
+          "expectedFieldsMatch": true,
+          "passed": true
         },
         {
           "id": "bottle-unsupported-dynamic-market-price",
           "sourceText": "Pay the live commodity-market value of each item.",
           "expectedDisposition": "unsupported",
-          "expectedFields": {}
+          "expectedFields": {},
+          "attempt": {
+            "outcome": "unsupported",
+            "reason": "Request requires live commodity-market value payment per item, which cannot be expressed as fixed 0-10 points in the supported schema.",
+            "actualFields": {},
+            "actualUsd": 0.0024915
+          },
+          "dispositionMatches": true,
+          "expectedFieldsMatch": true,
+          "passed": true
         }
       ],
-      "note": "Expected fields are frozen separately from discovery. No fixture output is counted as a live interpretation result."
+      "note": "Interpretation is run and scored separately from transaction discovery; only persisted live provider results count."
     },
     "cases": [
       {
@@ -3246,9 +3452,21 @@
           "honestReward": 20
         },
         "simpleActionSearch": {
-          "status": "not_supported_for_commerce",
-          "limits": null,
-          "attempts": []
+          "status": "completed",
+          "limits": {
+            "maxActions": 5,
+            "maxExpandedStates": 5000,
+            "deterministic": true
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "outcome": "failure_found",
+              "expandedStates": 11,
+              "actionsToFirstFailure": 3,
+              "rejectedClaims": 0
+            }
+          ]
         },
         "muse": {
           "status": "completed",
@@ -3260,37 +3478,37 @@
           "attempts": [
             {
               "provenance": "model_found",
-              "runId": "051efcfd-f3b9-4796-bacb-93db39987554",
+              "runId": "6b77a4a1-d66f-475c-940c-6132254f86a1",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "verified_failure",
               "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
               "requestsUsed": 1,
               "actionsTested": 3,
-              "actualUsd": 0.011556
+              "actualUsd": 0.008739
             },
             {
               "provenance": "model_found",
-              "runId": "fdb86629-8d8a-4632-a686-7254204307f8",
+              "runId": "5c78c9d2-48f8-4683-a86e-9b267655fc55",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "candidate_invalid",
+              "reason": "The host rejected the proposed transaction sequence.",
+              "requestsUsed": 1,
+              "actionsTested": 5,
+              "actualUsd": 0.014175
+            },
+            {
+              "provenance": "model_found",
+              "runId": "43fc2c08-909d-40a3-9eba-1928722ee565",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "verified_failure",
               "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
               "requestsUsed": 1,
               "actionsTested": 3,
-              "actualUsd": 0.007527
-            },
-            {
-              "provenance": "model_found",
-              "runId": "d5003de8-8455-4b9f-b8e1-932e48c72c5f",
-              "mappingMatchesFrozenPolicy": null,
-              "outcome": "PROVIDER_OUTPUT_INVALID",
-              "reason": "Meta response was invalid or truncated.",
-              "requestsUsed": 1,
-              "actionsTested": 0,
-              "actualUsd": null
+              "actualUsd": 0.009113
             }
           ],
           "interpretationMismatches": 0,
-          "discoveryAttemptsScored": 2
+          "discoveryAttemptsScored": 3
         }
       },
       {
@@ -3371,9 +3589,21 @@
           "honestReward": 20
         },
         "simpleActionSearch": {
-          "status": "not_supported_for_commerce",
-          "limits": null,
-          "attempts": []
+          "status": "completed",
+          "limits": {
+            "maxActions": 5,
+            "maxExpandedStates": 5000,
+            "deterministic": true
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "outcome": "no_failure_found",
+              "expandedStates": 2610,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            }
+          ]
         },
         "muse": {
           "status": "completed",
@@ -3385,33 +3615,33 @@
           "attempts": [
             {
               "provenance": "model_found",
-              "runId": "1ece70d0-4bff-4e2e-8534-a3b77e66f2f4",
+              "runId": "98f830b9-6af8-4a67-9928-17f96d03771a",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "no_failure_found",
               "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
               "requestsUsed": 1,
               "actionsTested": 0,
-              "actualUsd": 0.008992
+              "actualUsd": 0.011224
             },
             {
               "provenance": "model_found",
-              "runId": "11ca1707-88aa-44d9-8410-dafd9a35382b",
-              "mappingMatchesFrozenPolicy": true,
-              "outcome": "candidate_invalid",
-              "reason": "The host rejected the proposed transaction sequence.",
-              "requestsUsed": 1,
-              "actionsTested": 3,
-              "actualUsd": 0.012473
-            },
-            {
-              "provenance": "model_found",
-              "runId": "ed0146ef-04a8-4017-8675-eb8da936e585",
+              "runId": "0bd168bf-867c-484a-a7fa-8d989b85c81f",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "no_failure_found",
               "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
               "requestsUsed": 1,
               "actionsTested": 0,
-              "actualUsd": 0.009715
+              "actualUsd": 0.00901
+            },
+            {
+              "provenance": "model_found",
+              "runId": "c19d3c6a-e075-4760-8609-730a43823cad",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 5,
+              "actualUsd": 0.013111
             }
           ],
           "interpretationMismatches": 0,
@@ -3503,9 +3733,21 @@
           "honestReward": 20
         },
         "simpleActionSearch": {
-          "status": "not_supported_for_commerce",
-          "limits": null,
-          "attempts": []
+          "status": "completed",
+          "limits": {
+            "maxActions": 5,
+            "maxExpandedStates": 5000,
+            "deterministic": true
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "outcome": "failure_found",
+              "expandedStates": 72,
+              "actionsToFirstFailure": 4,
+              "rejectedClaims": 0
+            }
+          ]
         },
         "muse": {
           "status": "completed",
@@ -3517,33 +3759,33 @@
           "attempts": [
             {
               "provenance": "model_found",
-              "runId": "80267429-bb1c-43e4-8e99-b3636ebe016e",
-              "mappingMatchesFrozenPolicy": true,
-              "outcome": "no_failure_found",
-              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
-              "requestsUsed": 1,
-              "actionsTested": 0,
-              "actualUsd": 0.013336
-            },
-            {
-              "provenance": "model_found",
-              "runId": "454ac36e-af6d-4fde-a84e-e528eaac3fe1",
+              "runId": "8d95dff1-6adf-4154-86c3-dda922955c6d",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "candidate_invalid",
               "reason": "The host rejected the proposed transaction sequence.",
               "requestsUsed": 1,
-              "actionsTested": 2,
-              "actualUsd": 0.011411
+              "actionsTested": 4,
+              "actualUsd": 0.009542
             },
             {
               "provenance": "model_found",
-              "runId": "a55cd56e-7f6e-4bd6-8a2d-d867e5d7e94b",
+              "runId": "16b449e0-d047-4d9f-a65e-ca009a75c6e7",
               "mappingMatchesFrozenPolicy": true,
-              "outcome": "no_failure_found",
-              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "outcome": "verified_failure",
+              "reason": "$10 of issued reward had already been spent and remained unrecovered while retained revenue was $0, below the $20 intended outcome.",
               "requestsUsed": 1,
-              "actionsTested": 0,
-              "actualUsd": 0.014858
+              "actionsTested": 5,
+              "actualUsd": 0.012937
+            },
+            {
+              "provenance": "model_found",
+              "runId": "317b7fbb-0d6f-414f-8d59-944ed37f3334",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "verified_failure",
+              "reason": "$10 of issued reward had already been spent and remained unrecovered while retained revenue was $0, below the $20 intended outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 4,
+              "actualUsd": 0.014608
             }
           ],
           "interpretationMismatches": 0,
@@ -3635,9 +3877,21 @@
           "honestReward": 20
         },
         "simpleActionSearch": {
-          "status": "not_supported_for_commerce",
-          "limits": null,
-          "attempts": []
+          "status": "completed",
+          "limits": {
+            "maxActions": 5,
+            "maxExpandedStates": 5000,
+            "deterministic": true
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "outcome": "no_failure_found",
+              "expandedStates": 2610,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            }
+          ]
         },
         "muse": {
           "status": "completed",
@@ -3649,33 +3903,33 @@
           "attempts": [
             {
               "provenance": "model_found",
-              "runId": "7fc49a5e-44d4-4d08-8f8d-f1569a324e78",
+              "runId": "fa0e42a3-b8b4-46eb-8b8b-3c953badcd04",
               "mappingMatchesFrozenPolicy": true,
-              "outcome": "no_failure_found",
-              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "outcome": "candidate_invalid",
+              "reason": "The host rejected the proposed transaction sequence.",
               "requestsUsed": 1,
-              "actionsTested": 0,
-              "actualUsd": 0.009218
+              "actionsTested": 6,
+              "actualUsd": 0.014047
             },
             {
               "provenance": "model_found",
-              "runId": "92c378f0-70eb-42c0-8526-cbb4a1271c77",
+              "runId": "5873de83-b5e1-4239-9178-e6f5b04fb0a6",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "no_failure_found",
               "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
               "requestsUsed": 1,
               "actionsTested": 0,
-              "actualUsd": 0.009193
+              "actualUsd": 0.006558
             },
             {
               "provenance": "model_found",
-              "runId": "8a2b202b-c888-4245-9ccb-015d5d353fa9",
+              "runId": "51aa0b63-a31b-44bb-8808-06f35ca55cfd",
               "mappingMatchesFrozenPolicy": true,
               "outcome": "no_failure_found",
               "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
               "requestsUsed": 1,
               "actionsTested": 0,
-              "actualUsd": 0.014879
+              "actualUsd": 0.008071
             }
           ],
           "interpretationMismatches": 0,
@@ -3755,20 +4009,63 @@
           "honestReward": 20
         },
         "simpleActionSearch": {
-          "status": "not_supported_for_commerce",
-          "limits": null,
-          "attempts": []
+          "status": "completed",
+          "limits": {
+            "maxActions": 5,
+            "maxExpandedStates": 5000,
+            "deterministic": true
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "outcome": "failure_found",
+              "expandedStates": 2,
+              "actionsToFirstFailure": 2,
+              "rejectedClaims": 0
+            }
+          ]
         },
         "muse": {
-          "status": "not_run",
+          "status": "completed",
           "limits": {
             "maxInferenceRequests": 1,
             "maxCandidateActions": 40,
             "requestTimeoutMs": 60000
           },
-          "attempts": [],
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "c8128cb8-c27a-4b5a-bd00-f419525ec1be",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "verified_failure",
+              "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 2,
+              "actualUsd": 0.008006
+            },
+            {
+              "provenance": "model_found",
+              "runId": "4771a683-0e73-4e96-8488-581776f2e929",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "verified_failure",
+              "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 2,
+              "actualUsd": 0.012226
+            },
+            {
+              "provenance": "model_found",
+              "runId": "4e8c5586-f495-4bee-a2b6-a0cd69d21cc9",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "verified_failure",
+              "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 2,
+              "actualUsd": 0.009939
+            }
+          ],
           "interpretationMismatches": 0,
-          "discoveryAttemptsScored": 0
+          "discoveryAttemptsScored": 3
         }
       },
       {
@@ -3777,7 +4074,7 @@
         "mechanism": "promotional_credit_qualification",
         "expected": "blocked",
         "intendedOutcome": "The qualifying purchase should contribute at least $20 of retained cash revenue.",
-        "protectedLegitimateBehavior": "A $20 cash purchase still earns $20 of referral reward.",
+        "protectedLegitimateBehavior": "A retained $20 cash purchase still earns $20 of referral reward after 30 days.",
         "initialState": {
           "schemaVersion": 1,
           "day": 0,
@@ -3803,18 +4100,18 @@
         "initialStateHash": "faab0a6f8dbe1f4a567ea77ccd808fa16735763fddb81c32ae1ef5fede155dc7",
         "policy": {
           "schemaVersion": 1,
-          "name": "Cash qualifies",
+          "name": "Cash qualifies after returns close",
           "referral": {
             "rewardUsd": 10,
             "qualifyingPurchaseUsd": 20,
-            "qualificationBasis": "gross_purchase",
-            "issuance": "immediate",
+            "qualificationBasis": "cash_paid",
+            "issuance": "after_return_window",
             "refundHandling": "reverse",
             "returnWindowDays": 30,
             "promoCreditCountsTowardThreshold": false
           }
         },
-        "policyHash": "b4006e27f3b0450300824a8affc3a4ae2e06cfa4207febe610bf631198424a69",
+        "policyHash": "46b79479f87603e9657cd3a30b8d1a134156e3d9b4c5a6debb0c1375fa441e62",
         "referenceActions": [
           {
             "type": "refer",
@@ -3844,20 +4141,63 @@
           "honestReward": 20
         },
         "simpleActionSearch": {
-          "status": "not_supported_for_commerce",
-          "limits": null,
-          "attempts": []
+          "status": "completed",
+          "limits": {
+            "maxActions": 5,
+            "maxExpandedStates": 5000,
+            "deterministic": true
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "outcome": "no_failure_found",
+              "expandedStates": 5000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            }
+          ]
         },
         "muse": {
-          "status": "not_run",
+          "status": "completed",
           "limits": {
             "maxInferenceRequests": 1,
             "maxCandidateActions": 40,
             "requestTimeoutMs": 60000
           },
-          "attempts": [],
-          "interpretationMismatches": 0,
-          "discoveryAttemptsScored": 0
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "22aba663-e104-45a3-8f00-3e05a0002c41",
+              "mappingMatchesFrozenPolicy": false,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.010805
+            },
+            {
+              "provenance": "model_found",
+              "runId": "5d7187f8-a405-4e86-a96e-170d95586d87",
+              "mappingMatchesFrozenPolicy": false,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.012833
+            },
+            {
+              "provenance": "model_found",
+              "runId": "665b77c6-a587-473b-b950-b61d0295af2a",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.008616
+            }
+          ],
+          "interpretationMismatches": 2,
+          "discoveryAttemptsScored": 1
         }
       }
     ],

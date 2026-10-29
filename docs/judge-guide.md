@@ -24,9 +24,11 @@ host verdict, durable evidence, regression case
 
 Muse cannot set a result, edit a rule, access credentials, or execute code. Recorded evidence in the public build comes from live Muse runs whose complete artifacts, usage, and run IDs are checked into `artifacts/`.
 
+Fresh repair checks do not reinterpret the repair. The host loads the exact stored policy and starting state, Muse proposes transactions, and a separately labelled bounded action search covers the small deterministic state space when needed.
+
 The repair card's exposure is the highest value observed across applicable confirmed cases, not a guaranteed maximum. A blocked replay means only that one trace was blocked; a bounded miss, invalid sequence, and provider/schema failure remain distinct outcomes and do not erase earlier evidence.
 
-The repository's designed `fine-print-eval-v3` suite contains 12 frozen failure/control cases. The three-minute video should not enumerate them: show the commerce recommendation update, transfer to Bottle Return, and leave the complete attempt table—including misses—to `docs/evaluation.md`.
+The repository's designed `fine-print-eval-v4` suite contains 12 frozen failure/control cases plus a separate six-case interpretation matrix. The three-minute video should not enumerate them: show the commerce recommendation update, transfer to Bottle Return, and leave the complete attempt table—including misses—to `docs/evaluation.md`.
 
 ## Reproduce locally
 

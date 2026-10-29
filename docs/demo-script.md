@@ -14,7 +14,7 @@ Fine Print then compares repairs instead of simply shutting the programme down. 
 
 This is not a one-off referral demo. The Bottle Return lab applies the same method to a physical reward system. Muse found that one bottle could be deposited repeatedly for thirty points while nothing was recycled. The three-dimensional replay makes every action and payout inspectable. The recommended rule pays once, only after an eligible item is actually processed, while preserving the honest workflow.
 
-Bounded Muse tools propose tests; strict schemas validate them and deterministic simulators decide every payout. Confirmed cases stay bound to the exact policy version. Each new case rechecks every repair, and misses never erase confirmed loss. A frozen twelve-case evaluation retains every attempt. Ordinary search was more consistent in Bottle Return. Muse provides interpretation and repair ideas—not the verdict.
+Bounded Muse tools propose tests; strict schemas validate them and deterministic simulators decide every payout. Confirmed cases stay bound to the exact policy version. Each new case rechecks every repair, and misses never erase confirmed loss. A frozen twelve-case evaluation retains every attempt. Ordinary search independently covers the small action spaces. Muse provides interpretation and repair ideas—not the verdict.
 
 Fine Print helps teams answer one question before launch: are we rewarding the behaviour we actually want? It turns vague incentive rules into reproducible evidence and repairs that keep honest users whole.
 

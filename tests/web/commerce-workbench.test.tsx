@@ -178,6 +178,23 @@ describe("commerce incentive workbench", () => {
     const liveResult = {
       ...recordedCommerceInvestigation,
       provenance: "live" as const,
+      attack: {
+        ...recordedCommerceInvestigation.attack!,
+        discoveryMethod: "none" as const,
+        modelProposalStatus: "candidate_invalid" as const,
+        searchOutcome: "no_failure_found" as const,
+        searchExpandedStates: 2_610,
+        minimizedActions: [],
+        events: [],
+        verification: {
+          status: "no_exploit" as const,
+          availableRewardUsd: 0,
+          unrecoveredRewardUsd: 0,
+          retainedRevenueUsd: 0,
+          unintendedPayoutUsd: 0,
+          reason: "No failure found within this attempt.",
+        },
+      },
       population: {
         ...population,
         strategies: population.strategies.map((strategy) =>
@@ -223,6 +240,9 @@ describe("commerce incentive workbench", () => {
     expect(freshRequest).toMatchObject({ mode: "attack_only" });
     expect(within(retest).getByText("$77 honest reward")).toBeTruthy();
     expect(within(retest).getByText("9 day wait")).toBeTruthy();
+    expect(within(retest).getByText("No failure found in this attempt")).toBeTruthy();
+    expect(within(retest).getByText("Muse's proposal was rejected; systematic search completed across 2610 states.")).toBeTruthy();
+    expect(within(retest).getByText("Systematic action search · simulator replayed")).toBeTruthy();
     expect(within(retest).queryByText("$999 honest reward")).toBeNull();
     await user.click(screen.getByRole("tab", { name: /Your rule/ }));
     expect(await screen.findByText("Ready")).toBeTruthy();
@@ -271,6 +291,9 @@ describe("commerce incentive workbench", () => {
             evidenceSetId: recordedCommerceInvestigation.id,
             attack: {
               ...recordedCommerceInvestigation.attack,
+              discoveryMethod: "deterministic_search",
+              searchExpandedStates: 73,
+              searchOutcome: "failure_found",
               verification: {
                 ...recordedCommerceInvestigation.attack!.verification,
                 unintendedPayoutUsd: 15,
@@ -319,6 +342,7 @@ describe("commerce incentive workbench", () => {
       ),
     ).toBeTruthy();
     expect(within(screen.getByRole("status", { name: "Fresh repair test" })).getByText("Failure still present")).toBeTruthy();
+    expect(screen.getByText("Systematic action search · simulator replayed")).toBeTruthy();
     expect(screen.getByText("Observed under tested cases, not a guaranteed maximum.")).toBeTruthy();
   });
 
