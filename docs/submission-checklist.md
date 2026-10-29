@@ -1,6 +1,6 @@
 # Submission and judge-access checklist
 
-Updated October 29, 2026. Checked items are verified; unchecked items still require human input or the final publication run.
+Updated October 29, 2026. Checked items are verified; unchecked items still require human input.
 
 ## Product evidence
 
@@ -19,9 +19,9 @@ Updated October 29, 2026. Checked items are verified; unchecked items still requ
 - [x] `.env`, database files, build output, and credentials are ignored.
 - [x] README includes setup, trust boundaries, attribution, limitations, and commands.
 - [x] License decision recorded: no license selected; keep the repository unlicensed until the user chooses otherwise.
-- [ ] Publish the public repository and static judge build.
-- [ ] Run a clean-clone rehearsal on the final published revision.
-- [ ] Test the public URL in a clean browser session.
+- [x] Public repository and static judge build are published.
+- [x] A clean clone of the published revision installs, typechecks, and builds.
+- [x] The public URL passes an Opera browser rehearsal with no console warnings or errors.
 
 ## Demo and submission
 
@@ -36,8 +36,8 @@ Updated October 29, 2026. Checked items are verified; unchecked items still requ
 
 ## Judge access
 
-- [ ] Public repository URL: `https://github.com/JoelObinnaEze/fine-print`
-- [ ] Live product URL: `https://joelobinnaeze.github.io/fine-print/`
+- [x] Public repository URL: `https://github.com/JoelObinnaEze/fine-print`
+- [x] Live product URL: `https://joelobinnaeze.github.io/fine-print/`
 - [ ] Demo video URL:
 - [ ] Test credentials, if needed (prefer none):
 - [x] No API key is shipped to the browser or tracked repository.
