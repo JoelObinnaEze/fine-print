@@ -2,19 +2,21 @@ import { createHash, randomUUID } from "node:crypto";
 
 import * as z from "zod";
 
+import { canonicalHash } from "../../../../packages/engine/src/index.js";
 import {
   commerceActionSchema,
   commerceGoalSchema,
   commercePolicySchema,
   createCommerceState,
   createHonestCustomerActions,
-  evaluateCommerceDesign,
+  evaluateCommerceDesignAgainstEvidence,
   evaluateCommercePopulation,
   minimizeCommerceExploit,
   replayCommerce,
   verifyCommerceExploit,
   type CommerceAction,
-  type CommerceDesignEvaluation,
+  type CommerceAttackEvidence,
+  type CommerceEvidenceEvaluation,
   type CommerceExploitVerification,
   type CommerceGoal,
   type CommercePolicy,
@@ -28,12 +30,29 @@ import { metaUsageSchema, readBoundedJsonResponse } from "./meta-compatibility.j
 
 const maxCompletionTokens = 4_000;
 
-export const commerceInvestigationRequestSchema = z.strictObject({
-  sourceText: z.string().trim().min(1).max(4_000),
-  goal: commerceGoalSchema,
-  restrictions: z.array(z.string().trim().min(1).max(300)).max(10),
-  mode: z.enum(["full", "attack_only"]).optional(),
-});
+export const commerceInvestigationRequestSchema = z
+  .strictObject({
+    sourceText: z.string().trim().min(1).max(4_000),
+    goal: commerceGoalSchema,
+    restrictions: z.array(z.string().trim().min(1).max(300)).max(10),
+    mode: z.enum(["full", "attack_only"]).optional(),
+    evidenceContext: z
+      .strictObject({
+        evidenceSetId: z.string().uuid(),
+        testedCandidateId: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,31}$/),
+        expectedPolicyHash: z.string().regex(/^[a-f0-9]{64}$/),
+      })
+      .optional(),
+  })
+  .superRefine((request, context) => {
+    if (request.evidenceContext && request.mode !== "attack_only") {
+      context.addIssue({
+        code: "custom",
+        path: ["evidenceContext"],
+        message: "evidence context is only valid for an attack-only recheck",
+      });
+    }
+  });
 
 export type CommerceInvestigationRequest = z.infer<typeof commerceInvestigationRequestSchema>;
 
@@ -277,20 +296,42 @@ interface InvestigationRow {
   readonly result_json: string | null;
 }
 
+interface CounterexampleRow {
+  readonly id: string;
+  readonly source_policy_hash: string;
+  readonly actions_json: string;
+}
+
 export interface CommerceCandidateResult {
   readonly id: string;
   readonly label: string;
   readonly tradeoff: string;
   readonly complexity: number;
   readonly policy: CommercePolicy;
-  readonly evaluation: CommerceDesignEvaluation;
+  readonly policyHash: string;
+  readonly evaluation: CommerceEvidenceEvaluation;
   readonly population: CommercePopulationResult;
+}
+
+export interface CommerceEvidenceUpdate {
+  readonly evidenceSetId: string;
+  readonly sourcePolicyHash: string;
+  readonly totalConfirmedCases: number;
+  readonly candidates: readonly CommerceCandidateResult[];
 }
 
 export interface CommerceInvestigationResult {
   readonly id: string;
   readonly replayed: boolean;
   readonly modelId: string;
+  readonly policyHash: string | null;
+  readonly evidenceSetId: string;
+  readonly testedCandidateId: string | null;
+  readonly attemptOutcome:
+    | "verified_failure"
+    | "no_failure_found"
+    | "candidate_invalid"
+    | "unsupported";
   readonly mapping: {
     readonly status: "candidate" | "unsupported";
     readonly reason: string;
@@ -323,6 +364,7 @@ export interface CommerceInvestigationResult {
   } | null;
   readonly candidates: readonly CommerceCandidateResult[];
   readonly population: CommercePopulationResult | null;
+  readonly evidenceUpdate: CommerceEvidenceUpdate | null;
   readonly usage: {
     readonly promptTokens: number;
     readonly completionTokens: number;
@@ -492,7 +534,7 @@ export class MetaCommerceInvestigator {
         );
       } catch {
         this.#retainReservation(reservation);
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTCOME_UNKNOWN", "Meta request outcome is unknown.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTCOME_UNKNOWN",
           "Meta request outcome is unknown; the reserved cost was retained.",
@@ -502,14 +544,14 @@ export class MetaCommerceInvestigator {
       if (!response.ok) {
         if ([400, 401, 403, 404, 422, 429].includes(response.status)) {
           this.#budget.settle(reservation.id, { state: "released" });
-          this.#markIncomplete(id);
+          this.#markIncomplete(id, "PROVIDER_REJECTED", `Meta API returned HTTP ${response.status}.`);
           throw new MetaCommerceInvestigatorError(
             "PROVIDER_REJECTED",
             `Meta Model API rejected the request with HTTP ${response.status}.`,
           );
         }
         this.#retainReservation(reservation);
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTCOME_UNKNOWN", `Meta API returned HTTP ${response.status}.`);
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTCOME_UNKNOWN",
           `Meta Model API returned HTTP ${response.status}; the reserved cost was retained.`,
@@ -524,7 +566,7 @@ export class MetaCommerceInvestigator {
         raw = await readBoundedJsonResponse(response);
       } catch {
         this.#retainReservation(reservation);
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTCOME_UNKNOWN", "Meta response could not be verified.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTCOME_UNKNOWN",
           "Meta response could not be verified; the reserved cost was retained.",
@@ -536,7 +578,7 @@ export class MetaCommerceInvestigator {
       );
       if (!usage.success) {
         this.#retainReservation(reservation);
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTCOME_UNKNOWN", "Meta usage could not be verified.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTCOME_UNKNOWN",
           "Meta usage could not be verified; the reserved cost was retained.",
@@ -550,7 +592,7 @@ export class MetaCommerceInvestigator {
         this.#budget.settle(reservation.id, { state: "settled", actualUsd });
       } catch {
         this.#retainReservation(reservation);
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTCOME_UNKNOWN", "Meta usage exceeded its reservation.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTCOME_UNKNOWN",
           "Meta usage exceeded its reservation; the reserved cost was retained.",
@@ -559,7 +601,7 @@ export class MetaCommerceInvestigator {
 
       const completion = completionSchema.safeParse(raw);
       if (!completion.success || completion.data.choices[0]!.finish_reason === "length") {
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTPUT_INVALID", "Meta response was invalid or truncated.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTPUT_INVALID",
           "Meta response was invalid or truncated.",
@@ -569,7 +611,7 @@ export class MetaCommerceInvestigator {
       try {
         content = JSON.parse(completion.data.choices[0]!.message.content);
       } catch {
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTPUT_INVALID", "Meta response content was not valid JSON.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTPUT_INVALID",
           "Meta response content was not valid JSON.",
@@ -583,14 +625,32 @@ export class MetaCommerceInvestigator {
           output.data.status === "candidate" &&
           output.data.candidates.length !== 3)
       ) {
-        this.#markIncomplete(id);
+        this.#markIncomplete(id, "PROVIDER_OUTPUT_INVALID", "Meta response did not match the investigation schema.");
         throw new MetaCommerceInvestigatorError(
           "PROVIDER_OUTPUT_INVALID",
           "Meta response did not match the commerce investigation schema.",
         );
       }
 
-      const result = this.#buildResult(
+      if (input.data.evidenceContext) {
+        const mappedHash = output.data.policy ? canonicalHash(output.data.policy) : null;
+        if (
+          mappedHash !== input.data.evidenceContext.expectedPolicyHash ||
+          !this.#evidenceContextMatches(input.data.evidenceContext)
+        ) {
+          this.#markIncomplete(
+            id,
+            "PROVIDER_OUTPUT_INVALID",
+            "The fresh mapping did not match the selected repair version.",
+          );
+          throw new MetaCommerceInvestigatorError(
+            "PROVIDER_OUTPUT_INVALID",
+            "The fresh mapping did not match the selected repair version.",
+          );
+        }
+      }
+
+      let result = this.#buildResult(
         id,
         input.data.goal,
         needsRepairs ? output.data : { ...output.data, candidates: [] },
@@ -600,13 +660,17 @@ export class MetaCommerceInvestigator {
           totalTokens: usage.data.total_tokens,
           actualUsd: Number(actualUsd.toFixed(6)),
         },
+        input.data.evidenceContext,
       );
-      this.#database
-        .prepare(
-          "UPDATE commerce_investigations SET state = 'completed', result_json = ?, updated_at = ? WHERE id = ?",
-        )
-        .run(JSON.stringify(result), new Date().toISOString(), id);
-      return result;
+      return this.#database.transaction(() => {
+        result = this.#persistEvidenceAndRefresh(result, input.data.goal);
+        this.#database
+          .prepare(
+            "UPDATE commerce_investigations SET state = 'completed', result_json = ?, updated_at = ? WHERE id = ?",
+          )
+          .run(JSON.stringify(result), new Date().toISOString(), id);
+        return result;
+      })();
     } finally {
       releaseProviderRequest();
       this.#inFlight = false;
@@ -618,6 +682,7 @@ export class MetaCommerceInvestigator {
     goal: CommerceGoal,
     output: z.infer<typeof modelOutputSchema>,
     usage: CommerceInvestigationResult["usage"],
+    evidenceContext?: CommerceInvestigationRequest["evidenceContext"],
   ): CommerceInvestigationResult {
     const mapping = {
       status: output.status,
@@ -626,18 +691,26 @@ export class MetaCommerceInvestigator {
       supportedClauses: output.supportedClauses,
       unsupportedConditions: output.unsupportedConditions,
     } as const;
+    const evidenceSetId = evidenceContext?.evidenceSetId ?? id;
     if (output.status === "unsupported" || output.policy === null) {
       return {
         id,
         replayed: false,
         modelId: this.#config.provider!.modelId,
+        policyHash: null,
+        evidenceSetId,
+        testedCandidateId: evidenceContext?.testedCandidateId ?? null,
+        attemptOutcome: "unsupported",
         mapping,
         attack: null,
         candidates: [],
         population: null,
+        evidenceUpdate: null,
         usage,
       };
     }
+
+    const policyHash = canonicalHash(output.policy);
 
     let attack: NonNullable<CommerceInvestigationResult["attack"]>;
     let minimizedActions: readonly CommerceAction[] = [];
@@ -689,13 +762,19 @@ export class MetaCommerceInvestigator {
     }
 
     const honestActions = createHonestCustomerActions(output.policy);
+    const initialEvidence: readonly CommerceAttackEvidence[] =
+      attack.verification.status === "exploit_verified"
+        ? [{ id, sourcePolicyHash: policyHash, actions: attack.minimizedActions }]
+        : [];
     const candidates = output.candidates.map(
       (candidate): CommerceCandidateResult => ({
         ...candidate,
-        evaluation: evaluateCommerceDesign(
+        policyHash: canonicalHash(candidate.policy),
+        evaluation: evaluateCommerceDesignAgainstEvidence(
           candidate.policy,
           goal,
-          minimizedActions.length > 0 ? minimizedActions : proposedActions,
+          policyHash,
+          initialEvidence,
           honestActions,
         ),
         population: evaluateCommercePopulation(candidate.policy, goal),
@@ -705,20 +784,137 @@ export class MetaCommerceInvestigator {
       id,
       replayed: false,
       modelId: this.#config.provider!.modelId,
+      policyHash,
+      evidenceSetId,
+      testedCandidateId: evidenceContext?.testedCandidateId ?? null,
+      attemptOutcome:
+        attack.verification.status === "exploit_verified"
+          ? "verified_failure"
+          : attack.verification.status === "candidate_invalid"
+            ? "candidate_invalid"
+            : "no_failure_found",
       mapping,
       attack,
       candidates,
       population: evaluateCommercePopulation(output.policy, goal),
+      evidenceUpdate: null,
       usage,
     };
   }
 
-  #markIncomplete(id: string): void {
+  #evidenceContextMatches(
+    context: NonNullable<CommerceInvestigationRequest["evidenceContext"]>,
+  ): boolean {
+    const row = this.#database
+      .prepare(
+        "SELECT state, result_json FROM commerce_investigations WHERE id = ?",
+      )
+      .get(context.evidenceSetId) as Pick<InvestigationRow, "state" | "result_json"> | undefined;
+    if (!row?.result_json || row.state !== "completed") return false;
+    const root = JSON.parse(row.result_json) as CommerceInvestigationResult;
+    if (
+      root.id !== context.evidenceSetId ||
+      root.evidenceSetId !== root.id ||
+      root.policyHash === null
+    ) {
+      return false;
+    }
+    const candidate = root.candidates.find(
+      (item) => item.id === context.testedCandidateId,
+    );
+    return candidate?.policyHash === context.expectedPolicyHash;
+  }
+
+  #persistEvidenceAndRefresh(
+    result: CommerceInvestigationResult,
+    goal: CommerceGoal,
+  ): CommerceInvestigationResult {
+    if (result.policyHash === null || result.mapping.policy === null) return result;
+    let root = result;
+    if (result.evidenceSetId !== result.id) {
+      const row = this.#database
+        .prepare("SELECT result_json FROM commerce_investigations WHERE id = ? AND state = 'completed'")
+        .get(result.evidenceSetId) as Pick<InvestigationRow, "result_json"> | undefined;
+      if (!row?.result_json) return result;
+      root = JSON.parse(row.result_json) as CommerceInvestigationResult;
+    }
+    if (root.policyHash === null || root.mapping.policy === null) return result;
+
+    if (result.attack?.verification.status === "exploit_verified") {
+      this.#database
+        .prepare(`
+          INSERT OR IGNORE INTO commerce_counterexamples
+            (id, evidence_set_id, source_investigation_id, source_policy_hash,
+             tested_policy_hash, tested_candidate_id, actions_json, verification_json,
+             observed_exposure_usd, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .run(
+          result.id,
+          root.id,
+          result.id,
+          root.policyHash,
+          result.policyHash,
+          result.testedCandidateId,
+          JSON.stringify(result.attack.minimizedActions),
+          JSON.stringify(result.attack.verification),
+          result.attack.verification.unintendedPayoutUsd,
+          new Date().toISOString(),
+        );
+    }
+
+    const rows = this.#database
+      .prepare(`
+        SELECT id, source_policy_hash, actions_json
+        FROM commerce_counterexamples
+        WHERE evidence_set_id = ?
+        ORDER BY created_at, id
+      `)
+      .all(root.id) as CounterexampleRow[];
+    const evidence = rows.map(
+      (row): CommerceAttackEvidence => ({
+        id: row.id,
+        sourcePolicyHash: row.source_policy_hash,
+        actions: JSON.parse(row.actions_json) as CommerceAction[],
+      }),
+    );
+    const honestActions = createHonestCustomerActions(root.mapping.policy);
+    const candidates = root.candidates.map(
+      (candidate): CommerceCandidateResult => ({
+        ...candidate,
+        evaluation: evaluateCommerceDesignAgainstEvidence(
+          candidate.policy,
+          goal,
+          root.policyHash!,
+          evidence,
+          honestActions,
+        ),
+      }),
+    );
+    const updatedRoot = { ...root, candidates };
+    if (result.id !== root.id) {
+      this.#database
+        .prepare("UPDATE commerce_investigations SET result_json = ?, updated_at = ? WHERE id = ?")
+        .run(JSON.stringify(updatedRoot), new Date().toISOString(), root.id);
+      return {
+        ...result,
+        evidenceUpdate: {
+          evidenceSetId: root.id,
+          sourcePolicyHash: root.policyHash,
+          totalConfirmedCases: rows.length,
+          candidates,
+        },
+      };
+    }
+    return updatedRoot;
+  }
+
+  #markIncomplete(id: string, errorCode?: string, errorMessage?: string): void {
     this.#database
       .prepare(
-        "UPDATE commerce_investigations SET state = 'incomplete', updated_at = ? WHERE id = ?",
+        "UPDATE commerce_investigations SET state = 'incomplete', error_code = ?, error_message = ?, updated_at = ? WHERE id = ?",
       )
-      .run(new Date().toISOString(), id);
+      .run(errorCode ?? null, errorMessage ?? null, new Date().toISOString(), id);
   }
 
   #retainReservation(reservation: UsageReservation): void {

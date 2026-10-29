@@ -28,7 +28,7 @@ The video is a product demonstration, not a pitch deck. The face-camera take pro
 | 0:00–0:14 | Webcam | None | The problem and product are understandable immediately |
 | 0:14–0:35 | Commerce · Step 1 | Start on the prefilled rule and its mapped summary | Rule, intended retained value, and honest-user promise are separate |
 | 0:35–1:13 | Commerce · Step 2 | Click **What went wrong**; hold on `$20`, `$0`, and the three-event trace | Muse proposed four actions; simulator reduced and confirmed three |
-| 1:13–1:56 | Commerce · Step 3 | Click **Best repair**; hold on the rejected immediate reversal and stronger recommendation | `$10` unrecovered in the recheck; recommended repair exposes `$0`, preserves `$20`, and waits 30 days |
+| 1:13–1:56 | Commerce · Step 3 | Click **Best repair**; hold on the rejected immediate reversal, case count, and updated recommendation | `$10` unrecovered in the recheck; applicable cases re-rank the repairs; recommended repair has `$0` observed exposure, preserves `$20`, and waits 30 days |
 | 1:56–2:10 | Commerce · Step 3 | Open **Compare all repairs**, then close it | Competing repairs and tradeoffs exist without crowding the main story |
 | 2:10–2:38 | Bottle Return · Step 2 | Switch domains and click **What went wrong**; hold on `30 points / 0 recycled`, then click **Replay from start** at 2× | Same method transfers to a visibly different system |
 | 2:38–2:47 | Bottle Return · Step 3 | Click **Best repair** | Processing-backed recommendation is obvious |
@@ -57,5 +57,6 @@ The video is a product demonstration, not a pitch deck. The face-camera take pro
 - Opening explains the problem within 10 seconds.
 - Muse is visibly central, but the host—not the model—decides results.
 - Every spoken number matches the UI and checked-in artifacts.
+- The 12-case evaluation is named once, not enumerated; complete misses and errors stay in the report rather than crowding the demo.
 - Captions, audio, and app text are legible on a 13-inch laptop.
 - The video link works in an incognito window without sign-in.

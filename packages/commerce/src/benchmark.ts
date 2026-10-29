@@ -214,6 +214,21 @@ export interface CommerceDesignEvaluation {
   readonly honestRewardsPreserved: boolean;
 }
 
+export interface CommerceAttackEvidence {
+  readonly id: string;
+  readonly sourcePolicyHash: string;
+  readonly actions: readonly CommerceAction[];
+}
+
+export interface CommerceEvidenceEvaluation extends CommerceDesignEvaluation {
+  readonly evidence: {
+    readonly applicableCases: number;
+    readonly blockedCases: number;
+    readonly highestObservedExposureUsd: number;
+    readonly worstCaseId: string | null;
+  };
+}
+
 export function calculateCommerceStrategyMetrics(
   replay: CommerceReplay,
   goal: CommerceGoal,
@@ -272,5 +287,45 @@ export function evaluateCommerceDesign(
     honestRewardsPreserved:
       honest.retainedRevenueUsd >= goal.minimumUsd &&
       honest.availableRewardUsd === policy.referral.rewardUsd * 2,
+  };
+}
+
+export function evaluateCommerceDesignAgainstEvidence(
+  policy: CommercePolicy,
+  goal: CommerceGoal,
+  sourcePolicyHash: string,
+  evidence: readonly CommerceAttackEvidence[],
+  honestActions: readonly CommerceAction[],
+): CommerceEvidenceEvaluation {
+  const applicable = evidence.filter((attack) => attack.sourcePolicyHash === sourcePolicyHash);
+  const evaluations = applicable.map((attack) => ({
+    id: attack.id,
+    result: evaluateCommerceDesign(policy, goal, attack.actions, honestActions),
+  }));
+  const fallback = evaluateCommerceDesign(policy, goal, [], honestActions);
+  const worst = evaluations.reduce<(typeof evaluations)[number] | null>(
+    (current, candidate) =>
+      current === null ||
+      candidate.result.attack.verifiedUnintendedPayoutUsd >
+        current.result.attack.verifiedUnintendedPayoutUsd
+        ? candidate
+        : current,
+    null,
+  );
+  const selected = worst?.result ?? fallback;
+  return {
+    ...selected,
+    knownAttackBlocked: evaluations.every(
+      ({ result }) => result.attack.verifiedUnintendedPayoutUsd === 0,
+    ),
+    evidence: {
+      applicableCases: evaluations.length,
+      blockedCases: evaluations.filter(
+        ({ result }) => result.attack.verifiedUnintendedPayoutUsd === 0,
+      ).length,
+      highestObservedExposureUsd:
+        worst?.result.attack.verifiedUnintendedPayoutUsd ?? 0,
+      worstCaseId: worst?.id ?? null,
+    },
   };
 }

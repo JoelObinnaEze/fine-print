@@ -17,6 +17,18 @@ describe("evaluation artifact", () => {
         readonly usage: { readonly requests: number; readonly actualUsd: number };
       };
       readonly usabilityStudy: { readonly status: string; readonly participants: number };
+      readonly frozenBenchmark: {
+        readonly suiteVersion: string;
+        readonly suiteHash: string;
+        readonly cases: readonly {
+          readonly expected: string;
+          readonly referenceResult: {
+            readonly actualClassification: string;
+            readonly protectedBehaviorPreserved: boolean;
+          };
+        }[];
+        readonly interpretation: { readonly status: string };
+      };
     };
 
     expect(Object.fromEntries(report.policyResults.map((policy) => [policy.id, policy.testedPolicyScore]))).toEqual({
@@ -38,5 +50,16 @@ describe("evaluation artifact", () => {
       usage: { requests: 10, actualUsd: 0.070258 },
     });
     expect(report.usabilityStudy).toEqual({ status: "not_run", participants: 0 });
+    expect(report.frozenBenchmark.suiteVersion).toBe("fine-print-eval-v3");
+    expect(report.frozenBenchmark.suiteHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(report.frozenBenchmark.cases).toHaveLength(12);
+    expect(
+      report.frozenBenchmark.cases.every(
+        (item) =>
+          item.expected === item.referenceResult.actualClassification &&
+          item.referenceResult.protectedBehaviorPreserved,
+      ),
+    ).toBe(true);
+    expect(report.frozenBenchmark.interpretation.status).toBe("not_run");
   });
 });

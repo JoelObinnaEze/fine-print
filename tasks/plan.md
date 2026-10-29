@@ -76,3 +76,17 @@ Build order: commerce contracts → deterministic replay and trace reduction →
 - Confirmed usable event credits and explicit project/session/search budgets.
 - A valid Meta Model API credential; the configured key reached the official endpoint but returned HTTP 401 on October 26, 2026.
 
+## Current reliability and evidence slice
+
+The October 29 reliability brief is an approved extension of the existing commerce and Bottle Return evidence workflow, not a new product surface. The three-minute judge path remains **rule → confirmed failure → recommended repair**. New provenance, benchmark, and attempt detail stays behind the existing technical disclosures and in repository artifacts.
+
+Implementation order: aggregate multiple counterexamples deterministically → persist exact policy/evidence links → refresh repair rankings in the existing workbench → freeze and run the 12-case designed benchmark offline → update the judge package and rehearse the unchanged three-step path.
+
+Key decisions:
+
+- Hash every executable policy on the server and compare evidence only inside its originating evidence set.
+- Store confirmed counterexamples append-only; recommendation metrics use the highest observed exposure across all applicable traces.
+- Treat a blocked replay, a bounded search miss, an invalid candidate, and a provider failure as different outcomes.
+- Report exposure as observed under tested cases, never as a maximum or safety guarantee.
+- Keep hidden reference traces out of model requests and preserve every attempted live run when those runs are later authorized and affordable.
+

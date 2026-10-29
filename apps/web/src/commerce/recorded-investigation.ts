@@ -2,7 +2,7 @@ import {
   commerceGoal,
   createCommerceState,
   createHonestCustomerActions,
-  evaluateCommerceDesign,
+  evaluateCommerceDesignAgainstEvidence,
   evaluateCommercePopulation,
   minimizeCommerceExploit,
   refundAttackActions,
@@ -10,7 +10,7 @@ import {
   verifyCommerceExploit,
   vulnerableCommercePolicy,
   type CommerceAction,
-  type CommerceDesignEvaluation,
+  type CommerceEvidenceEvaluation,
   type CommerceGoal,
   type CommercePolicy,
   type CommercePopulationResult,
@@ -26,6 +26,10 @@ export interface CommerceInvestigationView {
   readonly replayed: boolean;
   readonly modelId: string;
   readonly provenance?: "recorded" | "live";
+  readonly policyHash: string | null;
+  readonly evidenceSetId: string;
+  readonly testedCandidateId: string | null;
+  readonly attemptOutcome: "verified_failure" | "no_failure_found" | "candidate_invalid" | "unsupported";
   readonly mapping: {
     readonly status: "candidate" | "unsupported";
     readonly reason: string;
@@ -60,10 +64,17 @@ export interface CommerceInvestigationView {
     readonly tradeoff: string;
     readonly complexity: number;
     readonly policy: CommercePolicy;
-    readonly evaluation: CommerceDesignEvaluation;
+    readonly policyHash: string;
+    readonly evaluation: CommerceEvidenceEvaluation;
     readonly population: CommercePopulationResult;
   }[];
   readonly population: CommercePopulationResult | null;
+  readonly evidenceUpdate: {
+    readonly evidenceSetId: string;
+    readonly sourcePolicyHash: string;
+    readonly totalConfirmedCases: number;
+    readonly candidates: CommerceInvestigationView["candidates"];
+  } | null;
   readonly usage: {
     readonly promptTokens: number;
     readonly completionTokens: number;
@@ -137,6 +148,13 @@ const recordedRepairRecheckActions = [
   { type: "advance_days", days: 31 },
 ] as const satisfies readonly CommerceAction[];
 
+const recordedPolicyHash = "29f8e0bf17a44d4d85c98660e800cf13a3ab24a693971c3c08d99d0cdfa4c08f";
+const recordedCandidateHashes = {
+  c1: "a5454242a6eff1c2654923f6c98247562f431db951a48509f03b014a3b811061",
+  c2: "08f33f0cfe817c2fb78b8d25d9d2f152d8488414a0290b024ae05e408b4493a6",
+  c3: "b14c1234f1c324783d8c48cc8a2dedde4574f2b7100934d52b1dd7e525074783",
+} as const;
+
 function createRecordedInvestigation(): CommerceInvestigationView {
   const minimizedActions = minimizeCommerceExploit(
     createCommerceState(),
@@ -149,11 +167,19 @@ function createRecordedInvestigation(): CommerceInvestigationView {
     minimizedActions,
     vulnerableCommercePolicy,
   );
+  const evidence = [
+    { id: "243986a6-b49a-4b16-9930-bee96912b6e4", sourcePolicyHash: recordedPolicyHash, actions: minimizedActions },
+    { id: "c7191265-4e4c-41ca-8940-52b724211a8d", sourcePolicyHash: recordedPolicyHash, actions: recordedRepairRecheckActions },
+  ] as const;
   return {
     id: "243986a6-b49a-4b16-9930-bee96912b6e4",
     replayed: false,
     modelId: "muse-spark-1.3",
     provenance: "recorded",
+    policyHash: recordedPolicyHash,
+    evidenceSetId: "243986a6-b49a-4b16-9930-bee96912b6e4",
+    testedCandidateId: null,
+    attemptOutcome: "verified_failure",
     mapping: {
       status: "candidate",
       reason: "Muse mapped every payout clause into the simulator without dropping a condition.",
@@ -178,15 +204,18 @@ function createRecordedInvestigation(): CommerceInvestigationView {
     },
     candidates: recordedMuseCandidates.map((candidate) => ({
       ...candidate,
-      evaluation: evaluateCommerceDesign(
+      policyHash: recordedCandidateHashes[candidate.id],
+      evaluation: evaluateCommerceDesignAgainstEvidence(
         candidate.policy,
         commerceGoal,
-        recordedRepairRecheckActions,
+        recordedPolicyHash,
+        evidence,
         createHonestCustomerActions(vulnerableCommercePolicy),
       ),
       population: evaluateCommercePopulation(candidate.policy, commerceGoal),
     })),
     population: evaluateCommercePopulation(vulnerableCommercePolicy, commerceGoal),
+    evidenceUpdate: null,
     usage: { promptTokens: 1_000, completionTokens: 2_811, totalTokens: 3_811, actualUsd: 0.013197 },
   };
 }

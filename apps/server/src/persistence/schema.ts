@@ -120,8 +120,23 @@ export function initializeRunSchema(database: AppDatabase): void {
       request_hash TEXT NOT NULL,
       state TEXT NOT NULL CHECK (state IN ('claimed', 'completed', 'incomplete')),
       result_json TEXT,
+      error_code TEXT,
+      error_message TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS commerce_counterexamples (
+      id TEXT PRIMARY KEY,
+      evidence_set_id TEXT NOT NULL REFERENCES commerce_investigations(id) ON DELETE CASCADE,
+      source_investigation_id TEXT NOT NULL UNIQUE REFERENCES commerce_investigations(id) ON DELETE CASCADE,
+      source_policy_hash TEXT NOT NULL,
+      tested_policy_hash TEXT NOT NULL,
+      tested_candidate_id TEXT,
+      actions_json TEXT NOT NULL,
+      verification_json TEXT NOT NULL,
+      observed_exposure_usd INTEGER NOT NULL CHECK (observed_exposure_usd > 0),
+      created_at TEXT NOT NULL
     );
   `);
 
@@ -148,6 +163,17 @@ export function initializeRunSchema(database: AppDatabase): void {
   }
   if (!searchColumns.has("policy_json")) {
     database.exec("ALTER TABLE agent_searches ADD COLUMN policy_json TEXT");
+  }
+  const commerceColumns = new Set(
+    (database.pragma("table_info(commerce_investigations)") as { readonly name: string }[]).map(
+      (column) => column.name,
+    ),
+  );
+  if (!commerceColumns.has("error_code")) {
+    database.exec("ALTER TABLE commerce_investigations ADD COLUMN error_code TEXT");
+  }
+  if (!commerceColumns.has("error_message")) {
+    database.exec("ALTER TABLE commerce_investigations ADD COLUMN error_message TEXT");
   }
   database.exec(`
     UPDATE runs

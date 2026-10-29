@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -99,7 +99,7 @@ describe("commerce incentive workbench", () => {
     expect(candidate).toBeTruthy();
     await user.click(within(candidate!).getByRole("button", { name: "Replay known failure" }));
     const retest = screen.getByRole("status", { name: "Fresh repair test" });
-    expect(within(retest).getByText("Known failure blocked")).toBeTruthy();
+    expect(within(retest).getByText("This trace was blocked")).toBeTruthy();
     expect(within(retest).getByText("$0 reward value exposed")).toBeTruthy();
     expect(within(retest).getByText("$20 honest reward")).toBeTruthy();
     expect(within(retest).getByText("30 day wait")).toBeTruthy();
@@ -228,6 +228,100 @@ describe("commerce incentive workbench", () => {
     expect(await screen.findByText("Ready")).toBeTruthy();
   });
 
+  it("changes the recommended repair when a fresh confirmed case raises its observed exposure", async () => {
+    let submitted: unknown;
+    const previousRecommendation = recordedCommerceInvestigation.candidates.find(
+      (candidate) => candidate.id === "c2",
+    )!;
+    const refreshedCandidates = recordedCommerceInvestigation.candidates.map((candidate) =>
+      candidate.id === "c2"
+        ? {
+            ...candidate,
+            evaluation: {
+              ...candidate.evaluation,
+              attack: {
+                ...candidate.evaluation.attack,
+                verifiedUnintendedPayoutUsd: 15,
+              },
+              knownAttackBlocked: false,
+              evidence: {
+                applicableCases: 3,
+                blockedCases: 2,
+                highestObservedExposureUsd: 15,
+                worstCaseId: "fresh-confirmed",
+              },
+            },
+          }
+        : candidate,
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async (input, init) => {
+        if (String(input) === "/api/health") {
+          return Response.json({ liveAgent: { isEnabled: true } });
+        }
+        submitted = JSON.parse(String(init?.body));
+        return Response.json(
+          {
+            ...recordedCommerceInvestigation,
+            id: "fresh-confirmed",
+            provenance: "live",
+            testedCandidateId: previousRecommendation.id,
+            policyHash: previousRecommendation.policyHash,
+            evidenceSetId: recordedCommerceInvestigation.id,
+            attack: {
+              ...recordedCommerceInvestigation.attack,
+              verification: {
+                ...recordedCommerceInvestigation.attack!.verification,
+                unintendedPayoutUsd: 15,
+              },
+            },
+            candidates: [],
+            evidenceUpdate: {
+              evidenceSetId: recordedCommerceInvestigation.id,
+              sourcePolicyHash: recordedCommerceInvestigation.policyHash,
+              totalConfirmedCases: 3,
+              candidates: refreshedCandidates,
+            },
+          },
+          { status: 201 },
+        );
+      }),
+    );
+    const user = userEvent.setup();
+    render(<CommerceWorkbench />);
+
+    await user.click(screen.getByRole("tab", { name: /Best repair/ }));
+    expect(
+      within(screen.getByRole("region", { name: "Recommended repair" })).getByRole(
+        "heading",
+        { name: "Pay after return window" },
+      ),
+    ).toBeTruthy();
+    const freshButton = within(
+      screen.getByRole("region", { name: "Recommended repair" }),
+    ).getByRole("button", { name: "Run fresh recheck" });
+    await waitFor(() => expect((freshButton as HTMLButtonElement).disabled).toBe(false));
+    await user.click(freshButton);
+
+    expect(submitted).toMatchObject({
+      mode: "attack_only",
+      evidenceContext: {
+        evidenceSetId: recordedCommerceInvestigation.id,
+        testedCandidateId: "c2",
+        expectedPolicyHash: previousRecommendation.policyHash,
+      },
+    });
+    expect(
+      await within(screen.getByRole("region", { name: "Recommended repair" })).findByRole(
+        "heading",
+        { name: "Reverse credit on refund" },
+      ),
+    ).toBeTruthy();
+    expect(within(screen.getByRole("status", { name: "Fresh repair test" })).getByText("Failure still present")).toBeTruthy();
+    expect(screen.getByText("Observed under tested cases, not a guaranteed maximum.")).toBeTruthy();
+  });
+
   it("does not present an unsupported fresh recheck as a blocked failure", async () => {
     vi.stubGlobal(
       "fetch",
@@ -262,12 +356,12 @@ describe("commerce incentive workbench", () => {
     await user.click(screen.getByRole("tab", { name: /Best repair/ }));
     await user.click(screen.getByText("Compare all repairs"));
     const freshButton = screen.getAllByRole("button", { name: "Run fresh recheck" })[0]!;
-    await screen.findByText(/Lowest observed exposure, then fastest reward/);
+    await screen.findByText(/Lowest exposure observed across .* confirmed cases, then fastest reward/);
     await user.click(freshButton);
 
     expect(await screen.findByText("Fresh recheck could not run: The selected condition is outside this simulator.")).toBeTruthy();
     expect(screen.queryByRole("status", { name: "Fresh repair test" })).toBeNull();
-    expect(screen.queryByText("Known failure blocked")).toBeNull();
+    expect(screen.queryByText("This trace was blocked")).toBeNull();
   });
 
   it("presents a rejected sequence as rejection rather than verified evidence", async () => {

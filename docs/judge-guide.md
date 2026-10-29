@@ -7,7 +7,7 @@ Fine Print is designed to make its core claim reviewable without spending credit
 1. Open the live demo. It starts on **Commerce · What went wrong**.
 2. Read the three headline metrics: `$20` reward, `$0` retained value, `3` required transactions.
 3. Follow the three replay events: referral → purchase → refund.
-4. Open **Best repair**. The recorded recheck shows why immediate reversal still leaves `$10` unrecovered; the recommended pay-after-window design exposes `$0`, preserves `$20` of honest reward, and discloses a 30-day wait.
+4. Open **Best repair**. The recorded recheck shows why immediate reversal still leaves `$10` unrecovered. Fine Print adds that case to the policy's evidence set, rechecks every repair, and recommends pay-after-window: `$0` observed exposure, `$20` honest reward, and a disclosed 30-day wait.
 5. Switch to **Bottle Return lab** to see the same method transfer to a 3D processing-reward system.
 
 ## Trust boundary
@@ -23,6 +23,10 @@ host verdict, durable evidence, regression case
 ```
 
 Muse cannot set a result, edit a rule, access credentials, or execute code. Recorded evidence in the public build comes from live Muse runs whose complete artifacts, usage, and run IDs are checked into `artifacts/`.
+
+The repair card's exposure is the highest value observed across applicable confirmed cases, not a guaranteed maximum. A blocked replay means only that one trace was blocked; a bounded miss, invalid sequence, and provider/schema failure remain distinct outcomes and do not erase earlier evidence.
+
+The repository's designed `fine-print-eval-v3` suite contains 12 frozen failure/control cases. The three-minute video should not enumerate them: show the commerce recommendation update, transfer to Bottle Return, and leave the complete attempt table—including misses—to `docs/evaluation.md`.
 
 ## Reproduce locally
 

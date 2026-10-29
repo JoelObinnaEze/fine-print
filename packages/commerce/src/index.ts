@@ -18,6 +18,7 @@ export {
   createHonestCustomerActions,
   createRefundAttackActions,
   evaluateCommerceDesign,
+  evaluateCommerceDesignAgainstEvidence,
   honestCustomerActions,
   minimizeCommerceExploit,
   refundAttackActions,
@@ -41,6 +42,8 @@ export type {
 } from "./simulator.js";
 export type {
   CommerceDesignEvaluation,
+  CommerceAttackEvidence,
+  CommerceEvidenceEvaluation,
   CommerceExploitVerification,
   CommerceRepairCandidate,
   CommerceStrategyMetrics,

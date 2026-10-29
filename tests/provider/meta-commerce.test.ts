@@ -276,6 +276,129 @@ describe("Meta commerce investigation", () => {
     });
   });
 
+  it("persists a fresh counterexample and refreshes the originating repair evidence", async () => {
+    const reverseNowPolicy = {
+      ...vulnerableCommercePolicy,
+      name: "Reverse immediately",
+      referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+    };
+    const fullOutput = {
+      ...modelOutput,
+      candidates: [
+        {
+          id: "reverse-now",
+          label: "Reverse credit on refund",
+          tradeoff: "Fast rewards, with recovery bookkeeping.",
+          complexity: 1,
+          policy: reverseNowPolicy,
+        },
+        ...modelOutput.candidates.slice(0, 2),
+      ],
+    };
+    const spentBeforeRefund = [
+      { type: "refer", referrerId: "A", customerId: "B" },
+      { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 0 },
+      { type: "purchase", accountId: "A", purchaseId: "P2", priceUsd: 10, promoCreditUsd: 10 },
+      { type: "refund", accountId: "B", purchaseId: "P1" },
+    ] as const;
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(completion(fullOutput))
+      .mockResolvedValueOnce(
+        completion({
+          ...modelOutput,
+          policy: reverseNowPolicy,
+          attackHypothesis: "Spend one issued credit before refunding the qualifying purchase.",
+          attackActions: spentBeforeRefund,
+          candidates: [],
+        }),
+      );
+    const { commerce, database } = createServices(fetchMock);
+
+    const first = await commerce.investigate(request, "commerce-evidence-root");
+    const reverseCandidate = first.candidates.find((candidate) => candidate.id === "reverse-now")!;
+    expect(reverseCandidate.evaluation.attack.verifiedUnintendedPayoutUsd).toBe(0);
+
+    const fresh = await commerce.investigate(
+      {
+        ...request,
+        mode: "attack_only",
+        sourceText: "Give both people $10 immediately and reverse it after a refund.",
+        evidenceContext: {
+          evidenceSetId: first.id,
+          testedCandidateId: reverseCandidate.id,
+          expectedPolicyHash: reverseCandidate.policyHash,
+        },
+      },
+      "commerce-evidence-fresh",
+    );
+
+    expect(fresh).toMatchObject({
+      testedCandidateId: "reverse-now",
+      policyHash: reverseCandidate.policyHash,
+      attack: { verification: { status: "exploit_verified", unintendedPayoutUsd: 10 } },
+      evidenceUpdate: {
+        evidenceSetId: first.id,
+        totalConfirmedCases: 2,
+      },
+    });
+    const updatedReverse = fresh.evidenceUpdate?.candidates.find(
+      (candidate) => candidate.id === "reverse-now",
+    );
+    expect(updatedReverse?.evaluation.attack.verifiedUnintendedPayoutUsd).toBe(10);
+    expect(updatedReverse?.evaluation.evidence).toMatchObject({
+      applicableCases: 2,
+      highestObservedExposureUsd: 10,
+    });
+    expect(
+      database
+        .prepare("SELECT tested_candidate_id, observed_exposure_usd FROM commerce_counterexamples ORDER BY created_at")
+        .all(),
+    ).toEqual([
+      { tested_candidate_id: null, observed_exposure_usd: 20 },
+      { tested_candidate_id: "reverse-now", observed_exposure_usd: 10 },
+    ]);
+  });
+
+  it("rejects fresh evidence mapped to a different repair version", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(completion(modelOutput))
+      .mockResolvedValueOnce(
+        completion({
+          ...modelOutput,
+          policy: vulnerableCommercePolicy,
+          candidates: [],
+        }),
+      );
+    const { commerce, database } = createServices(fetchMock);
+    const first = await commerce.investigate(request, "commerce-version-root");
+    const selected = first.candidates[0]!;
+
+    await expect(
+      commerce.investigate(
+        {
+          ...request,
+          mode: "attack_only",
+          evidenceContext: {
+            evidenceSetId: first.id,
+            testedCandidateId: selected.id,
+            expectedPolicyHash: selected.policyHash,
+          },
+        },
+        "commerce-version-mismatch",
+      ),
+    ).rejects.toMatchObject({ code: "PROVIDER_OUTPUT_INVALID" });
+    expect(
+      database.prepare("SELECT COUNT(*) AS count FROM commerce_counterexamples").get(),
+    ).toEqual({ count: 1 });
+    expect(
+      database
+        .prepare("SELECT state, error_code FROM commerce_investigations WHERE idempotency_key = ?")
+        .get("commerce-version-mismatch"),
+    ).toEqual({ state: "incomplete", error_code: "PROVIDER_OUTPUT_INVALID" });
+  });
+
   it("surfaces unsupported conditions without inventing an executable mapping", async () => {
     const { commerce } = createServices(async () =>
       completion({

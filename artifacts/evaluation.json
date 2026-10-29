@@ -591,7 +591,7 @@
         "muse": {
           "status": "completed",
           "verifiedExploitsFound": 1,
-          "repeatedRuns": 2,
+          "repeatedRuns": 3,
           "rejectedClaims": 0,
           "attempts": [
             {
@@ -623,6 +623,21 @@
               "usefulItems": 0,
               "verifiedExcessReward": 5,
               "actualUsd": 0.099192
+            },
+            {
+              "searchId": "arena-77d881cf-7059-445e-bb75-b2df1e2cfe44",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 18,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.102603
             }
           ]
         }
@@ -671,7 +686,7 @@
         "muse": {
           "status": "completed",
           "verifiedExploitsFound": 0,
-          "repeatedRuns": 2,
+          "repeatedRuns": 3,
           "rejectedClaims": 0,
           "attempts": [
             {
@@ -703,9 +718,3189 @@
               "usefulItems": 0,
               "verifiedExcessReward": 0,
               "actualUsd": 0.09885
+            },
+            {
+              "searchId": "arena-420cb916-524b-444e-b8a2-dd18bed6c1d0",
+              "runId": null,
+              "persistedStatus": "completed",
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "trialsCompleted": 1,
+              "actionsTested": 29,
+              "verificationStatus": "no_exploit_found_within_budget",
+              "totalReward": 0,
+              "usefulItems": 0,
+              "verifiedExcessReward": 0,
+              "actualUsd": 0.097591
             }
           ]
         }
+      }
+    ]
+  },
+  "frozenBenchmark": {
+    "status": "offline_complete_live_incomplete",
+    "designedBenchmark": true,
+    "suiteVersion": "fine-print-eval-v3",
+    "suiteHash": "d9a1360ff04f78964244934adc17dda8556a9904a40159b233b5fb230c04dc3a",
+    "attemptsRequestedPerCase": 3,
+    "supersededCommerceAttempts": [
+      {
+        "idempotencyKey": "frozen-v2-commerce-refund-retention-flawed-1",
+        "runId": "98e64886-2ce1-4bad-85cc-e3e57c0c0dc8",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.015865,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-refund-retention-flawed-2",
+        "runId": "4207d101-0510-4bdd-b38b-1e0540f3addc",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.012541,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-refund-retention-flawed-3",
+        "runId": "e9ad4c1a-bcfd-44e6-a877-2e8bf4f40b64",
+        "outcome": "unsupported",
+        "actualUsd": 0.00691,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-refund-retention-control-1",
+        "runId": "e53c62b1-438b-448d-8266-436c5cbe3fbb",
+        "outcome": "verified_failure",
+        "actualUsd": 0.014101,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-refund-retention-control-2",
+        "runId": "07a46aa0-4960-477d-a6eb-810008560f68",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.010786,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-refund-retention-control-3",
+        "runId": "f5b0c03b-451f-4c28-a8c9-c8948f8d2d07",
+        "outcome": "unsupported",
+        "actualUsd": 0.007506,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-spent-reversal-flawed-1",
+        "runId": "011e37ea-46be-44de-afef-b1ccb06c4077",
+        "outcome": "unsupported",
+        "actualUsd": 0.01058,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-spent-reversal-flawed-2",
+        "runId": "909af279-6086-4177-b9d2-cb2bd8b9be5e",
+        "outcome": "unsupported",
+        "actualUsd": 0.010384,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-spent-reversal-flawed-3",
+        "runId": "af91e87f-b5ef-4f6e-b959-e0bb216975c7",
+        "outcome": "unsupported",
+        "actualUsd": 0.007651,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-spent-reversal-control-1",
+        "runId": "f3d4e36e-95d2-43a3-a17a-f7d3dc88295e",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.009594,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-spent-reversal-control-2",
+        "runId": "b1464649-2608-4250-ba89-e5d9b6cd4b40",
+        "outcome": "verified_failure",
+        "actualUsd": 0.018273,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      },
+      {
+        "idempotencyKey": "frozen-v2-commerce-spent-reversal-control-3",
+        "runId": "b48cfa48-4861-479e-b186-e5d3181bf6ac",
+        "outcome": "no_failure_found",
+        "actualUsd": 0.011354,
+        "excludedReason": "Superseded benchmark wording did not preserve the frozen executable mapping."
+      }
+    ],
+    "interpretation": {
+      "status": "not_run",
+      "attemptsPerCase": 0,
+      "cases": [
+        {
+          "id": "commerce-explicit-refund",
+          "sourceText": "Pay both people $9 after a $35 purchase, keep credit after refunds, with a 21-day return window.",
+          "expectedDisposition": "map",
+          "expectedFields": {
+            "rewardUsd": 9,
+            "qualifyingPurchaseUsd": 35,
+            "refundHandling": "keep",
+            "returnWindowDays": 21
+          }
+        },
+        {
+          "id": "commerce-explicit-promo",
+          "sourceText": "Only cash paid counts toward a $40 referral threshold; pay $12 after 14 days.",
+          "expectedDisposition": "map",
+          "expectedFields": {
+            "rewardUsd": 12,
+            "qualifyingPurchaseUsd": 40,
+            "promoCreditCountsTowardThreshold": false,
+            "returnWindowDays": 14
+          }
+        },
+        {
+          "id": "bottle-explicit-processing",
+          "sourceText": "Pay seven points once per aluminium item after successful processing.",
+          "expectedDisposition": "map",
+          "expectedFields": {
+            "trigger": "process",
+            "points": 7,
+            "materials": [
+              "aluminium"
+            ],
+            "repetition": "once_per_item"
+          }
+        },
+        {
+          "id": "bottle-ambiguous-good-recycling",
+          "sourceText": "Reward good recycling fairly.",
+          "expectedDisposition": "clarify",
+          "expectedFields": {}
+        },
+        {
+          "id": "commerce-unsupported-geography",
+          "sourceText": "Pay only Canadian customers using a unique device fingerprint.",
+          "expectedDisposition": "unsupported",
+          "expectedFields": {}
+        },
+        {
+          "id": "bottle-unsupported-dynamic-market-price",
+          "sourceText": "Pay the live commodity-market value of each item.",
+          "expectedDisposition": "unsupported",
+          "expectedFields": {}
+        }
+      ],
+      "note": "Expected fields are frozen separately from discovery. No fixture output is counted as a live interpretation result."
+    },
+    "cases": [
+      {
+        "id": "bottle-repeated-deposits-flawed",
+        "domain": "bottle_return",
+        "mechanism": "repeated_deposits",
+        "expected": "flawed",
+        "intendedOutcome": "Reward useful processing once per eligible item, not repeated handling.",
+        "protectedLegitimateBehavior": "Six eligible items processed honestly still earn 60 points.",
+        "initialState": {
+          "schemaVersion": 1,
+          "seed": "bottle-return-v1",
+          "width": 9,
+          "height": 7,
+          "tick": 0,
+          "horizon": 120,
+          "worker": {
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          "stations": {
+            "input": {
+              "x": 1,
+              "y": 1
+            },
+            "hopper": {
+              "x": 6,
+              "y": 2
+            },
+            "processor": {
+              "x": 6,
+              "y": 4
+            },
+            "reject": {
+              "x": 3,
+              "y": 5
+            }
+          },
+          "items": [
+            {
+              "id": "B1",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B2",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B3",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C1",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C2",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C3",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "X1",
+              "material": "carton",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "R1",
+              "material": "rubbish",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            }
+          ],
+          "terminal": false,
+          "outcomeLedger": {
+            "processedEligibleItemIds": [],
+            "contaminationItemIds": []
+          },
+          "rewardLedger": {
+            "totalPoints": 0,
+            "rewardedItemIdsByClause": {}
+          }
+        },
+        "initialStateHash": "0db59be658f7f9a21d3732554e1141255a7a99f835ab9d1b3d9a69ca64a3a997",
+        "policy": {
+          "schemaVersion": 1,
+          "clauses": [
+            {
+              "id": "deposit-reward",
+              "enabled": true,
+              "trigger": "deposit",
+              "points": 10,
+              "eligibleOnly": false,
+              "materials": [
+                "plastic",
+                "aluminium",
+                "carton",
+                "rubbish"
+              ],
+              "repetition": "every_event"
+            }
+          ]
+        },
+        "policyHash": "d16430a8134824dd257fa11c33d7e782196dd31a1f4c968858b93d107d44cc9e",
+        "referenceActions": [
+          {
+            "type": "move",
+            "direction": "up"
+          },
+          {
+            "type": "take",
+            "itemId": "B1"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B1"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B1"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "finish"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "flawed",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "exploit_verified",
+            "actions": [
+              {
+                "type": "move",
+                "direction": "up"
+              },
+              {
+                "type": "take",
+                "itemId": "B1"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B1"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B1"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "finish"
+              }
+            ],
+            "verifiedActionCount": 12,
+            "invalidActionCount": 0,
+            "totalReward": 30,
+            "usefulItems": 0,
+            "contamination": 0,
+            "excessReward": 30,
+            "stateHash": "0a1195c04b71ff68a9212a2341fc3f0dabafd674a2b68aaa14ad7d51d10571fd",
+            "evidenceEventIds": [
+              7,
+              9,
+              11
+            ]
+          },
+          "honestReward": 60
+        },
+        "simpleActionSearch": {
+          "status": "completed",
+          "limits": {
+            "seeds": [
+              17,
+              29,
+              43
+            ],
+            "maxExpandedStates": 30000,
+            "maxActions": 40,
+            "beamWidth": 256
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "seed": 17,
+              "outcome": "exploit_verified",
+              "expandedStates": 645,
+              "actionsToFirstFailure": 7,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 29,
+              "outcome": "exploit_verified",
+              "expandedStates": 645,
+              "actionsToFirstFailure": 7,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 43,
+              "outcome": "exploit_verified",
+              "expandedStates": 645,
+              "actionsToFirstFailure": 7,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 12,
+            "maxTrials": 4,
+            "maxTicksPerTrial": 120,
+            "searchDeadlineMs": 120000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "ec857336-234d-413b-a98e-1657011fb29c",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 20 unintended reward points across 11 actions.",
+              "requestsUsed": 9,
+              "actionsTested": 22,
+              "actualUsd": 0.061238
+            },
+            {
+              "provenance": "model_found",
+              "runId": "71ec4691-cef9-4b15-89bc-7449c9c69062",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 10 unintended reward points across 12 actions.",
+              "requestsUsed": 9,
+              "actionsTested": 24,
+              "actualUsd": 0.062722
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "actionsTested": 20,
+              "actualUsd": 0.101971
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "bottle-repeated-deposits-control",
+        "domain": "bottle_return",
+        "mechanism": "repeated_deposits",
+        "expected": "blocked",
+        "intendedOutcome": "Reward useful processing once per eligible item, not repeated handling.",
+        "protectedLegitimateBehavior": "Six eligible items processed honestly still earn 60 points.",
+        "initialState": {
+          "schemaVersion": 1,
+          "seed": "bottle-return-v1",
+          "width": 9,
+          "height": 7,
+          "tick": 0,
+          "horizon": 120,
+          "worker": {
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          "stations": {
+            "input": {
+              "x": 1,
+              "y": 1
+            },
+            "hopper": {
+              "x": 6,
+              "y": 2
+            },
+            "processor": {
+              "x": 6,
+              "y": 4
+            },
+            "reject": {
+              "x": 3,
+              "y": 5
+            }
+          },
+          "items": [
+            {
+              "id": "B1",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B2",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B3",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C1",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C2",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C3",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "X1",
+              "material": "carton",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "R1",
+              "material": "rubbish",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            }
+          ],
+          "terminal": false,
+          "outcomeLedger": {
+            "processedEligibleItemIds": [],
+            "contaminationItemIds": []
+          },
+          "rewardLedger": {
+            "totalPoints": 0,
+            "rewardedItemIdsByClause": {}
+          }
+        },
+        "initialStateHash": "0db59be658f7f9a21d3732554e1141255a7a99f835ab9d1b3d9a69ca64a3a997",
+        "policy": {
+          "schemaVersion": 1,
+          "clauses": [
+            {
+              "id": "deposit-reward",
+              "enabled": true,
+              "trigger": "process",
+              "points": 10,
+              "eligibleOnly": true,
+              "materials": [
+                "plastic",
+                "aluminium"
+              ],
+              "repetition": "once_per_item"
+            }
+          ]
+        },
+        "policyHash": "83ab90050b3b76fd58efbdb90e757ed474382774fe0881b96e7690d33f8789cf",
+        "referenceActions": [
+          {
+            "type": "move",
+            "direction": "up"
+          },
+          {
+            "type": "take",
+            "itemId": "B1"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B1"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B1"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "finish"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "blocked",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "no_exploit_in_submitted_trace",
+            "actions": [
+              {
+                "type": "move",
+                "direction": "up"
+              },
+              {
+                "type": "take",
+                "itemId": "B1"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B1"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B1"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "finish"
+              }
+            ],
+            "verifiedActionCount": 12,
+            "invalidActionCount": 0,
+            "totalReward": 0,
+            "usefulItems": 0,
+            "contamination": 0,
+            "excessReward": 0,
+            "stateHash": "b357388605ed214c811ccfb1a9354b5806f6dc231411d20b18c86a50647eaa40",
+            "evidenceEventIds": []
+          },
+          "honestReward": 60
+        },
+        "simpleActionSearch": {
+          "status": "completed",
+          "limits": {
+            "seeds": [
+              17,
+              29,
+              43
+            ],
+            "maxExpandedStates": 30000,
+            "maxActions": 40,
+            "beamWidth": 256
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "seed": 17,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 29,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 43,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 12,
+            "maxTrials": 4,
+            "maxTicksPerTrial": 120,
+            "searchDeadlineMs": 120000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "No failure was verified within this attempt's budget.",
+              "requestsUsed": 12,
+              "actionsTested": 0,
+              "actualUsd": 0.098851
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "No failure was verified within this attempt's budget.",
+              "requestsUsed": 12,
+              "actionsTested": 0,
+              "actualUsd": 0.09558
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "No failure was verified within this attempt's budget.",
+              "requestsUsed": 12,
+              "actionsTested": 0,
+              "actualUsd": 0.091733
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "bottle-ineligible-material-flawed",
+        "domain": "bottle_return",
+        "mechanism": "ineligible_material",
+        "expected": "flawed",
+        "intendedOutcome": "Only eligible plastic and aluminium processing should earn rewards.",
+        "protectedLegitimateBehavior": "Six eligible items processed honestly still earn 60 points.",
+        "initialState": {
+          "schemaVersion": 1,
+          "seed": "bottle-return-v1",
+          "width": 9,
+          "height": 7,
+          "tick": 0,
+          "horizon": 120,
+          "worker": {
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          "stations": {
+            "input": {
+              "x": 1,
+              "y": 1
+            },
+            "hopper": {
+              "x": 6,
+              "y": 2
+            },
+            "processor": {
+              "x": 6,
+              "y": 4
+            },
+            "reject": {
+              "x": 3,
+              "y": 5
+            }
+          },
+          "items": [
+            {
+              "id": "B1",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B2",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B3",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C1",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C2",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C3",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "X1",
+              "material": "carton",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "R1",
+              "material": "rubbish",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            }
+          ],
+          "terminal": false,
+          "outcomeLedger": {
+            "processedEligibleItemIds": [],
+            "contaminationItemIds": []
+          },
+          "rewardLedger": {
+            "totalPoints": 0,
+            "rewardedItemIdsByClause": {}
+          }
+        },
+        "initialStateHash": "0db59be658f7f9a21d3732554e1141255a7a99f835ab9d1b3d9a69ca64a3a997",
+        "policy": {
+          "schemaVersion": 1,
+          "clauses": [
+            {
+              "id": "all-material-processing",
+              "enabled": true,
+              "trigger": "process",
+              "points": 10,
+              "eligibleOnly": false,
+              "materials": [
+                "plastic",
+                "aluminium",
+                "carton",
+                "rubbish"
+              ],
+              "repetition": "once_per_item"
+            }
+          ]
+        },
+        "policyHash": "16a3c095bd8367ddc1598cd54148f4fad4fb228032d96a203c6210a24ae8eab9",
+        "referenceActions": [
+          {
+            "type": "move",
+            "direction": "up"
+          },
+          {
+            "type": "take",
+            "itemId": "R1"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "move",
+            "direction": "down"
+          },
+          {
+            "type": "move",
+            "direction": "down"
+          },
+          {
+            "type": "process",
+            "itemId": "R1"
+          },
+          {
+            "type": "finish"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "flawed",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "exploit_verified",
+            "actions": [
+              {
+                "type": "move",
+                "direction": "up"
+              },
+              {
+                "type": "take",
+                "itemId": "R1"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "move",
+                "direction": "down"
+              },
+              {
+                "type": "move",
+                "direction": "down"
+              },
+              {
+                "type": "process",
+                "itemId": "R1"
+              },
+              {
+                "type": "finish"
+              }
+            ],
+            "verifiedActionCount": 11,
+            "invalidActionCount": 0,
+            "totalReward": 10,
+            "usefulItems": 0,
+            "contamination": 1,
+            "excessReward": 10,
+            "stateHash": "97b15b09b283a8da06a6e2d22395d21565292d433a77cc52571c08839586b3ff",
+            "evidenceEventIds": [
+              10
+            ]
+          },
+          "honestReward": 60
+        },
+        "simpleActionSearch": {
+          "status": "completed",
+          "limits": {
+            "seeds": [
+              17,
+              29,
+              43
+            ],
+            "maxExpandedStates": 30000,
+            "maxActions": 40,
+            "beamWidth": 256
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "seed": 17,
+              "outcome": "exploit_verified",
+              "expandedStates": 1536,
+              "actionsToFirstFailure": 10,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 29,
+              "outcome": "exploit_verified",
+              "expandedStates": 1520,
+              "actionsToFirstFailure": 10,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 43,
+              "outcome": "exploit_verified",
+              "expandedStates": 1544,
+              "actionsToFirstFailure": 10,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 12,
+            "maxTrials": 4,
+            "maxTicksPerTrial": 120,
+            "searchDeadlineMs": 120000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "4aa78ee2-857c-4e68-8d3f-ed81fc2fb890",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 10 unintended reward points across 10 actions.",
+              "requestsUsed": 12,
+              "actionsTested": 23,
+              "actualUsd": 0.094022
+            },
+            {
+              "provenance": "model_found",
+              "runId": "d2e9ef07-013a-4ba3-bb34-cc6118db9c4b",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 10 unintended reward points across 10 actions.",
+              "requestsUsed": 12,
+              "actionsTested": 23,
+              "actualUsd": 0.095285
+            },
+            {
+              "provenance": "model_found",
+              "runId": "b75b35aa-727a-4662-9306-1c440f8ed5fa",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 10 unintended reward points across 12 actions.",
+              "requestsUsed": 11,
+              "actionsTested": 24,
+              "actualUsd": 0.081766
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "bottle-ineligible-material-control",
+        "domain": "bottle_return",
+        "mechanism": "ineligible_material",
+        "expected": "blocked",
+        "intendedOutcome": "Only eligible plastic and aluminium processing should earn rewards.",
+        "protectedLegitimateBehavior": "Six eligible items processed honestly still earn 60 points.",
+        "initialState": {
+          "schemaVersion": 1,
+          "seed": "bottle-return-v1",
+          "width": 9,
+          "height": 7,
+          "tick": 0,
+          "horizon": 120,
+          "worker": {
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          "stations": {
+            "input": {
+              "x": 1,
+              "y": 1
+            },
+            "hopper": {
+              "x": 6,
+              "y": 2
+            },
+            "processor": {
+              "x": 6,
+              "y": 4
+            },
+            "reject": {
+              "x": 3,
+              "y": 5
+            }
+          },
+          "items": [
+            {
+              "id": "B1",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B2",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B3",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C1",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C2",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C3",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "X1",
+              "material": "carton",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "R1",
+              "material": "rubbish",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            }
+          ],
+          "terminal": false,
+          "outcomeLedger": {
+            "processedEligibleItemIds": [],
+            "contaminationItemIds": []
+          },
+          "rewardLedger": {
+            "totalPoints": 0,
+            "rewardedItemIdsByClause": {}
+          }
+        },
+        "initialStateHash": "0db59be658f7f9a21d3732554e1141255a7a99f835ab9d1b3d9a69ca64a3a997",
+        "policy": {
+          "schemaVersion": 1,
+          "clauses": [
+            {
+              "id": "deposit-reward",
+              "enabled": true,
+              "trigger": "process",
+              "points": 10,
+              "eligibleOnly": true,
+              "materials": [
+                "plastic",
+                "aluminium"
+              ],
+              "repetition": "once_per_item"
+            }
+          ]
+        },
+        "policyHash": "83ab90050b3b76fd58efbdb90e757ed474382774fe0881b96e7690d33f8789cf",
+        "referenceActions": [
+          {
+            "type": "move",
+            "direction": "up"
+          },
+          {
+            "type": "take",
+            "itemId": "R1"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "move",
+            "direction": "down"
+          },
+          {
+            "type": "move",
+            "direction": "down"
+          },
+          {
+            "type": "process",
+            "itemId": "R1"
+          },
+          {
+            "type": "finish"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "blocked",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "no_exploit_in_submitted_trace",
+            "actions": [
+              {
+                "type": "move",
+                "direction": "up"
+              },
+              {
+                "type": "take",
+                "itemId": "R1"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "move",
+                "direction": "down"
+              },
+              {
+                "type": "move",
+                "direction": "down"
+              },
+              {
+                "type": "process",
+                "itemId": "R1"
+              },
+              {
+                "type": "finish"
+              }
+            ],
+            "verifiedActionCount": 11,
+            "invalidActionCount": 0,
+            "totalReward": 0,
+            "usefulItems": 0,
+            "contamination": 1,
+            "excessReward": 0,
+            "stateHash": "051bc3341673abc679556afffa99e27c19756842e33d2a15f0634a6323de3bb3",
+            "evidenceEventIds": []
+          },
+          "honestReward": 60
+        },
+        "simpleActionSearch": {
+          "status": "completed",
+          "limits": {
+            "seeds": [
+              17,
+              29,
+              43
+            ],
+            "maxExpandedStates": 30000,
+            "maxActions": 40,
+            "beamWidth": 256
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "seed": 17,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 29,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 43,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 12,
+            "maxTrials": 4,
+            "maxTicksPerTrial": 120,
+            "searchDeadlineMs": 120000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "No failure was verified within this attempt's budget.",
+              "requestsUsed": 12,
+              "actionsTested": 0,
+              "actualUsd": 0.098851
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "No failure was verified within this attempt's budget.",
+              "requestsUsed": 12,
+              "actionsTested": 0,
+              "actualUsd": 0.09558
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "No failure was verified within this attempt's budget.",
+              "requestsUsed": 12,
+              "actionsTested": 0,
+              "actualUsd": 0.091733
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "bottle-transient-batch-flawed",
+        "domain": "bottle_return",
+        "mechanism": "transient_batch_bonus",
+        "expected": "flawed",
+        "intendedOutcome": "Each batch bonus should correspond to three permanently processed eligible items.",
+        "protectedLegitimateBehavior": "Two honest three-item batches still earn 70 total points.",
+        "initialState": {
+          "schemaVersion": 1,
+          "seed": "bottle-return-v1",
+          "width": 9,
+          "height": 7,
+          "tick": 0,
+          "horizon": 120,
+          "worker": {
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          "stations": {
+            "input": {
+              "x": 1,
+              "y": 1
+            },
+            "hopper": {
+              "x": 6,
+              "y": 2
+            },
+            "processor": {
+              "x": 6,
+              "y": 4
+            },
+            "reject": {
+              "x": 3,
+              "y": 5
+            }
+          },
+          "items": [
+            {
+              "id": "B1",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B2",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B3",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C1",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C2",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C3",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "X1",
+              "material": "carton",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "R1",
+              "material": "rubbish",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            }
+          ],
+          "terminal": false,
+          "outcomeLedger": {
+            "processedEligibleItemIds": [],
+            "contaminationItemIds": []
+          },
+          "rewardLedger": {
+            "totalPoints": 0,
+            "rewardedItemIdsByClause": {}
+          }
+        },
+        "initialStateHash": "0db59be658f7f9a21d3732554e1141255a7a99f835ab9d1b3d9a69ca64a3a997",
+        "policy": {
+          "schemaVersion": 1,
+          "clauses": [
+            {
+              "id": "processed-item",
+              "enabled": true,
+              "trigger": "process",
+              "points": 10,
+              "eligibleOnly": true,
+              "materials": [
+                "plastic",
+                "aluminium"
+              ],
+              "repetition": "once_per_item"
+            },
+            {
+              "id": "hopper-batch",
+              "enabled": true,
+              "trigger": "hopper_threshold",
+              "points": 5,
+              "eligibleOnly": true,
+              "materials": [
+                "plastic",
+                "aluminium"
+              ],
+              "repetition": "every_event",
+              "batchSize": 3
+            }
+          ]
+        },
+        "policyHash": "259cd52ec61f3bf562692727ba7ae5d9271486e00b4030025c372f11f4f08347",
+        "referenceActions": [
+          {
+            "type": "move",
+            "direction": "up"
+          },
+          {
+            "type": "take",
+            "itemId": "B1"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "take",
+            "itemId": "B2"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "take",
+            "itemId": "B3"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B3"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B3"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "finish"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "flawed",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "exploit_verified",
+            "actions": [
+              {
+                "type": "move",
+                "direction": "up"
+              },
+              {
+                "type": "take",
+                "itemId": "B1"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "take",
+                "itemId": "B2"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "take",
+                "itemId": "B3"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B3"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B3"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "finish"
+              }
+            ],
+            "verifiedActionCount": 32,
+            "invalidActionCount": 0,
+            "totalReward": 15,
+            "usefulItems": 0,
+            "contamination": 0,
+            "excessReward": 15,
+            "stateHash": "e37c16614f7a38dca3a1d955e98d35afff35bd122bc324bcaf716824ecd636d8",
+            "evidenceEventIds": [
+              27,
+              29,
+              31
+            ]
+          },
+          "honestReward": 70
+        },
+        "simpleActionSearch": {
+          "status": "completed",
+          "limits": {
+            "seeds": [
+              17,
+              29,
+              43
+            ],
+            "maxExpandedStates": 30000,
+            "maxActions": 40,
+            "beamWidth": 256
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "seed": 17,
+              "outcome": "exploit_verified",
+              "expandedStates": 16753,
+              "actionsToFirstFailure": 27,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 29,
+              "outcome": "exploit_verified",
+              "expandedStates": 16747,
+              "actionsToFirstFailure": 27,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 43,
+              "outcome": "exploit_verified",
+              "expandedStates": 16725,
+              "actionsToFirstFailure": 27,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 12,
+            "maxTrials": 4,
+            "maxTicksPerTrial": 120,
+            "searchDeadlineMs": 120000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "actionsTested": 31,
+              "actualUsd": 0.099919
+            },
+            {
+              "provenance": "model_found",
+              "runId": "5d8be41e-9238-4fc8-9de7-f2ccc0e23f97",
+              "outcome": "verified_exploit",
+              "reason": "Host replay verified 5 unintended reward points across 38 actions.",
+              "requestsUsed": 12,
+              "actionsTested": 76,
+              "actualUsd": 0.099192
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "actionsTested": 18,
+              "actualUsd": 0.102603
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "bottle-transient-batch-control",
+        "domain": "bottle_return",
+        "mechanism": "transient_batch_bonus",
+        "expected": "blocked",
+        "intendedOutcome": "Each batch bonus should correspond to three permanently processed eligible items.",
+        "protectedLegitimateBehavior": "Two honest three-item batches still earn 70 total points.",
+        "initialState": {
+          "schemaVersion": 1,
+          "seed": "bottle-return-v1",
+          "width": 9,
+          "height": 7,
+          "tick": 0,
+          "horizon": 120,
+          "worker": {
+            "position": {
+              "x": 1,
+              "y": 3
+            }
+          },
+          "stations": {
+            "input": {
+              "x": 1,
+              "y": 1
+            },
+            "hopper": {
+              "x": 6,
+              "y": 2
+            },
+            "processor": {
+              "x": 6,
+              "y": 4
+            },
+            "reject": {
+              "x": 3,
+              "y": 5
+            }
+          },
+          "items": [
+            {
+              "id": "B1",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B2",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "B3",
+              "material": "plastic",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C1",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C2",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "C3",
+              "material": "aluminium",
+              "eligible": true,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "X1",
+              "material": "carton",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            },
+            {
+              "id": "R1",
+              "material": "rubbish",
+              "eligible": false,
+              "locus": {
+                "kind": "input"
+              }
+            }
+          ],
+          "terminal": false,
+          "outcomeLedger": {
+            "processedEligibleItemIds": [],
+            "contaminationItemIds": []
+          },
+          "rewardLedger": {
+            "totalPoints": 0,
+            "rewardedItemIdsByClause": {}
+          }
+        },
+        "initialStateHash": "0db59be658f7f9a21d3732554e1141255a7a99f835ab9d1b3d9a69ca64a3a997",
+        "policy": {
+          "schemaVersion": 1,
+          "clauses": [
+            {
+              "id": "processed-item",
+              "enabled": true,
+              "trigger": "process",
+              "points": 10,
+              "eligibleOnly": true,
+              "materials": [
+                "plastic",
+                "aluminium"
+              ],
+              "repetition": "once_per_item"
+            },
+            {
+              "id": "receipt-batch",
+              "enabled": true,
+              "trigger": "processed_batch",
+              "points": 5,
+              "eligibleOnly": true,
+              "materials": [
+                "plastic",
+                "aluminium"
+              ],
+              "repetition": "every_event",
+              "batchSize": 3
+            }
+          ]
+        },
+        "policyHash": "5bdde1e816e75ec480a9553448466ced921f17958516c6bb8ffab8444da6628f",
+        "referenceActions": [
+          {
+            "type": "move",
+            "direction": "up"
+          },
+          {
+            "type": "take",
+            "itemId": "B1"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "take",
+            "itemId": "B2"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "move",
+            "direction": "left"
+          },
+          {
+            "type": "take",
+            "itemId": "B3"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "move",
+            "direction": "right"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B3"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "retrieve",
+            "itemId": "B3"
+          },
+          {
+            "type": "deposit"
+          },
+          {
+            "type": "finish"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "blocked",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "no_exploit_in_submitted_trace",
+            "actions": [
+              {
+                "type": "move",
+                "direction": "up"
+              },
+              {
+                "type": "take",
+                "itemId": "B1"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "take",
+                "itemId": "B2"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "move",
+                "direction": "left"
+              },
+              {
+                "type": "take",
+                "itemId": "B3"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "move",
+                "direction": "right"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B3"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "retrieve",
+                "itemId": "B3"
+              },
+              {
+                "type": "deposit"
+              },
+              {
+                "type": "finish"
+              }
+            ],
+            "verifiedActionCount": 32,
+            "invalidActionCount": 0,
+            "totalReward": 0,
+            "usefulItems": 0,
+            "contamination": 0,
+            "excessReward": 0,
+            "stateHash": "570df9feb0dbb5216a58b36182c25a80f2dc59d52cf6ae8873c7c978d838ce36",
+            "evidenceEventIds": []
+          },
+          "honestReward": 70
+        },
+        "simpleActionSearch": {
+          "status": "completed",
+          "limits": {
+            "seeds": [
+              17,
+              29,
+              43
+            ],
+            "maxExpandedStates": 30000,
+            "maxActions": 40,
+            "beamWidth": 256
+          },
+          "attempts": [
+            {
+              "provenance": "baseline_found",
+              "seed": 17,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 29,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            },
+            {
+              "provenance": "baseline_found",
+              "seed": 43,
+              "outcome": "no_exploit_found_within_budget",
+              "expandedStates": 30000,
+              "actionsToFirstFailure": null,
+              "rejectedClaims": 0
+            }
+          ]
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 12,
+            "maxTrials": 4,
+            "maxTicksPerTrial": 120,
+            "searchDeadlineMs": 120000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "actionsTested": 12,
+              "actualUsd": 0.100602
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "actionsTested": 13,
+              "actualUsd": 0.09885
+            },
+            {
+              "provenance": "model_found",
+              "runId": null,
+              "outcome": "search_completed",
+              "reason": "The bounded search completed; no exploit was found within the stated budget.",
+              "requestsUsed": 12,
+              "actionsTested": 29,
+              "actualUsd": 0.097591
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "commerce-refund-retention-flawed",
+        "domain": "commerce",
+        "mechanism": "credit_retained_after_refund",
+        "expected": "flawed",
+        "intendedOutcome": "Referral rewards require at least $20 of retained revenue.",
+        "protectedLegitimateBehavior": "A kept $20 cash purchase still earns $20 of referral reward.",
+        "initialState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "B",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [],
+          "purchases": [],
+          "rewards": [],
+          "retainedRevenueUsd": 0
+        },
+        "initialStateHash": "340f46339b0cf054a4206d68402517a499b98a1a8ab7aff85acc9a2587738051",
+        "policy": {
+          "schemaVersion": 1,
+          "name": "Immediate referral credit",
+          "referral": {
+            "rewardUsd": 10,
+            "qualifyingPurchaseUsd": 20,
+            "qualificationBasis": "gross_purchase",
+            "issuance": "immediate",
+            "refundHandling": "keep",
+            "returnWindowDays": 30,
+            "promoCreditCountsTowardThreshold": true
+          }
+        },
+        "policyHash": "29f8e0bf17a44d4d85c98660e800cf13a3ab24a693971c3c08d99d0cdfa4c08f",
+        "referenceActions": [
+          {
+            "type": "refer",
+            "referrerId": "A",
+            "customerId": "B"
+          },
+          {
+            "type": "purchase",
+            "accountId": "B",
+            "purchaseId": "P1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "refund",
+            "accountId": "B",
+            "purchaseId": "P1"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "flawed",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "exploit_verified",
+            "availableRewardUsd": 20,
+            "unrecoveredRewardUsd": 0,
+            "retainedRevenueUsd": 0,
+            "unintendedPayoutUsd": 20,
+            "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome."
+          },
+          "honestReward": 20
+        },
+        "simpleActionSearch": {
+          "status": "not_supported_for_commerce",
+          "limits": null,
+          "attempts": []
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 1,
+            "maxCandidateActions": 40,
+            "requestTimeoutMs": 60000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "051efcfd-f3b9-4796-bacb-93db39987554",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "verified_failure",
+              "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 3,
+              "actualUsd": 0.011556
+            },
+            {
+              "provenance": "model_found",
+              "runId": "fdb86629-8d8a-4632-a686-7254204307f8",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "verified_failure",
+              "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 3,
+              "actualUsd": 0.007527
+            },
+            {
+              "provenance": "model_found",
+              "runId": "d5003de8-8455-4b9f-b8e1-932e48c72c5f",
+              "mappingMatchesFrozenPolicy": null,
+              "outcome": "PROVIDER_OUTPUT_INVALID",
+              "reason": "Meta response was invalid or truncated.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": null
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 2
+        }
+      },
+      {
+        "id": "commerce-refund-retention-control",
+        "domain": "commerce",
+        "mechanism": "credit_retained_after_refund",
+        "expected": "blocked",
+        "intendedOutcome": "Referral rewards require at least $20 of retained revenue.",
+        "protectedLegitimateBehavior": "A kept $20 cash purchase still earns $20 of referral reward.",
+        "initialState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "B",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [],
+          "purchases": [],
+          "rewards": [],
+          "retainedRevenueUsd": 0
+        },
+        "initialStateHash": "340f46339b0cf054a4206d68402517a499b98a1a8ab7aff85acc9a2587738051",
+        "policy": {
+          "schemaVersion": 1,
+          "name": "Pay after return window",
+          "referral": {
+            "rewardUsd": 10,
+            "qualifyingPurchaseUsd": 20,
+            "qualificationBasis": "gross_purchase",
+            "issuance": "after_return_window",
+            "refundHandling": "reverse",
+            "returnWindowDays": 30,
+            "promoCreditCountsTowardThreshold": true
+          }
+        },
+        "policyHash": "79cb6f090056833c9e7e717afc8909b098c77d9334dd480ea3282cfe37a7c306",
+        "referenceActions": [
+          {
+            "type": "refer",
+            "referrerId": "A",
+            "customerId": "B"
+          },
+          {
+            "type": "purchase",
+            "accountId": "B",
+            "purchaseId": "P1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "refund",
+            "accountId": "B",
+            "purchaseId": "P1"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "blocked",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "no_exploit",
+            "availableRewardUsd": 0,
+            "unrecoveredRewardUsd": 0,
+            "retainedRevenueUsd": 0,
+            "unintendedPayoutUsd": 0,
+            "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome."
+          },
+          "honestReward": 20
+        },
+        "simpleActionSearch": {
+          "status": "not_supported_for_commerce",
+          "limits": null,
+          "attempts": []
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 1,
+            "maxCandidateActions": 40,
+            "requestTimeoutMs": 60000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "1ece70d0-4bff-4e2e-8534-a3b77e66f2f4",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.008992
+            },
+            {
+              "provenance": "model_found",
+              "runId": "11ca1707-88aa-44d9-8410-dafd9a35382b",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "candidate_invalid",
+              "reason": "The host rejected the proposed transaction sequence.",
+              "requestsUsed": 1,
+              "actionsTested": 3,
+              "actualUsd": 0.012473
+            },
+            {
+              "provenance": "model_found",
+              "runId": "ed0146ef-04a8-4017-8675-eb8da936e585",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.009715
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "commerce-spent-reversal-flawed",
+        "domain": "commerce",
+        "mechanism": "credit_spent_before_reversal",
+        "expected": "flawed",
+        "intendedOutcome": "A refund should leave no spendable or unrecovered reward value.",
+        "protectedLegitimateBehavior": "A kept $20 cash purchase still earns $20 of referral reward immediately.",
+        "initialState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "B",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [],
+          "purchases": [],
+          "rewards": [],
+          "retainedRevenueUsd": 0
+        },
+        "initialStateHash": "340f46339b0cf054a4206d68402517a499b98a1a8ab7aff85acc9a2587738051",
+        "policy": {
+          "schemaVersion": 1,
+          "name": "Reverse immediate referral credit",
+          "referral": {
+            "rewardUsd": 10,
+            "qualifyingPurchaseUsd": 20,
+            "qualificationBasis": "gross_purchase",
+            "issuance": "immediate",
+            "refundHandling": "reverse",
+            "returnWindowDays": 30,
+            "promoCreditCountsTowardThreshold": true
+          }
+        },
+        "policyHash": "0a4ce98545dfa0548e66cfbfccc19fa8a5d30fd6b6886b5fe75d8d786d4d0237",
+        "referenceActions": [
+          {
+            "type": "refer",
+            "referrerId": "A",
+            "customerId": "B"
+          },
+          {
+            "type": "purchase",
+            "accountId": "B",
+            "purchaseId": "P1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "purchase",
+            "accountId": "A",
+            "purchaseId": "P2",
+            "priceUsd": 10,
+            "promoCreditUsd": 10
+          },
+          {
+            "type": "refund",
+            "accountId": "B",
+            "purchaseId": "P1"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "flawed",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "exploit_verified",
+            "availableRewardUsd": 0,
+            "unrecoveredRewardUsd": 10,
+            "retainedRevenueUsd": 0,
+            "unintendedPayoutUsd": 10,
+            "reason": "$10 of issued reward had already been spent and remained unrecovered while retained revenue was $0, below the $20 intended outcome."
+          },
+          "honestReward": 20
+        },
+        "simpleActionSearch": {
+          "status": "not_supported_for_commerce",
+          "limits": null,
+          "attempts": []
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 1,
+            "maxCandidateActions": 40,
+            "requestTimeoutMs": 60000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "80267429-bb1c-43e4-8e99-b3636ebe016e",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.013336
+            },
+            {
+              "provenance": "model_found",
+              "runId": "454ac36e-af6d-4fde-a84e-e528eaac3fe1",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "candidate_invalid",
+              "reason": "The host rejected the proposed transaction sequence.",
+              "requestsUsed": 1,
+              "actionsTested": 2,
+              "actualUsd": 0.011411
+            },
+            {
+              "provenance": "model_found",
+              "runId": "a55cd56e-7f6e-4bd6-8a2d-d867e5d7e94b",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.014858
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "commerce-spent-reversal-control",
+        "domain": "commerce",
+        "mechanism": "credit_spent_before_reversal",
+        "expected": "blocked",
+        "intendedOutcome": "A refund should leave no spendable or unrecovered reward value.",
+        "protectedLegitimateBehavior": "A kept $20 cash purchase still earns $20 of referral reward after 30 days.",
+        "initialState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "B",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [],
+          "purchases": [],
+          "rewards": [],
+          "retainedRevenueUsd": 0
+        },
+        "initialStateHash": "340f46339b0cf054a4206d68402517a499b98a1a8ab7aff85acc9a2587738051",
+        "policy": {
+          "schemaVersion": 1,
+          "name": "Pay after return window",
+          "referral": {
+            "rewardUsd": 10,
+            "qualifyingPurchaseUsd": 20,
+            "qualificationBasis": "gross_purchase",
+            "issuance": "after_return_window",
+            "refundHandling": "reverse",
+            "returnWindowDays": 30,
+            "promoCreditCountsTowardThreshold": true
+          }
+        },
+        "policyHash": "79cb6f090056833c9e7e717afc8909b098c77d9334dd480ea3282cfe37a7c306",
+        "referenceActions": [
+          {
+            "type": "refer",
+            "referrerId": "A",
+            "customerId": "B"
+          },
+          {
+            "type": "purchase",
+            "accountId": "B",
+            "purchaseId": "P1",
+            "priceUsd": 20,
+            "promoCreditUsd": 0
+          },
+          {
+            "type": "purchase",
+            "accountId": "A",
+            "purchaseId": "P2",
+            "priceUsd": 10,
+            "promoCreditUsd": 10
+          },
+          {
+            "type": "refund",
+            "accountId": "B",
+            "purchaseId": "P1"
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "blocked",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "no_exploit",
+            "availableRewardUsd": 0,
+            "unrecoveredRewardUsd": 0,
+            "retainedRevenueUsd": 20,
+            "unintendedPayoutUsd": 0,
+            "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome."
+          },
+          "honestReward": 20
+        },
+        "simpleActionSearch": {
+          "status": "not_supported_for_commerce",
+          "limits": null,
+          "attempts": []
+        },
+        "muse": {
+          "status": "completed",
+          "limits": {
+            "maxInferenceRequests": 1,
+            "maxCandidateActions": 40,
+            "requestTimeoutMs": 60000
+          },
+          "attempts": [
+            {
+              "provenance": "model_found",
+              "runId": "7fc49a5e-44d4-4d08-8f8d-f1569a324e78",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.009218
+            },
+            {
+              "provenance": "model_found",
+              "runId": "92c378f0-70eb-42c0-8526-cbb4a1271c77",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.009193
+            },
+            {
+              "provenance": "model_found",
+              "runId": "8a2b202b-c888-4245-9ccb-015d5d353fa9",
+              "mappingMatchesFrozenPolicy": true,
+              "outcome": "no_failure_found",
+              "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome.",
+              "requestsUsed": 1,
+              "actionsTested": 0,
+              "actualUsd": 0.014879
+            }
+          ],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 3
+        }
+      },
+      {
+        "id": "commerce-promo-qualification-flawed",
+        "domain": "commerce",
+        "mechanism": "promotional_credit_qualification",
+        "expected": "flawed",
+        "intendedOutcome": "The qualifying purchase should contribute at least $20 of retained cash revenue.",
+        "protectedLegitimateBehavior": "A $20 cash purchase still earns $20 of referral reward.",
+        "initialState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "B",
+              "availableCreditUsd": 20,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [],
+          "purchases": [],
+          "rewards": [],
+          "retainedRevenueUsd": 0
+        },
+        "initialStateHash": "faab0a6f8dbe1f4a567ea77ccd808fa16735763fddb81c32ae1ef5fede155dc7",
+        "policy": {
+          "schemaVersion": 1,
+          "name": "Promotional credit qualifies",
+          "referral": {
+            "rewardUsd": 10,
+            "qualifyingPurchaseUsd": 20,
+            "qualificationBasis": "gross_purchase",
+            "issuance": "immediate",
+            "refundHandling": "reverse",
+            "returnWindowDays": 30,
+            "promoCreditCountsTowardThreshold": true
+          }
+        },
+        "policyHash": "e5d7ed3b7f55ce5d911b36eb1b561ffec0caff510bcd78eaba053484dddb8e7e",
+        "referenceActions": [
+          {
+            "type": "refer",
+            "referrerId": "A",
+            "customerId": "B"
+          },
+          {
+            "type": "purchase",
+            "accountId": "B",
+            "purchaseId": "P1",
+            "priceUsd": 20,
+            "promoCreditUsd": 20
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "flawed",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "exploit_verified",
+            "availableRewardUsd": 20,
+            "unrecoveredRewardUsd": 0,
+            "retainedRevenueUsd": 0,
+            "unintendedPayoutUsd": 20,
+            "reason": "$20 became spendable while retained revenue was $0, below the $20 intended outcome."
+          },
+          "honestReward": 20
+        },
+        "simpleActionSearch": {
+          "status": "not_supported_for_commerce",
+          "limits": null,
+          "attempts": []
+        },
+        "muse": {
+          "status": "not_run",
+          "limits": {
+            "maxInferenceRequests": 1,
+            "maxCandidateActions": 40,
+            "requestTimeoutMs": 60000
+          },
+          "attempts": [],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 0
+        }
+      },
+      {
+        "id": "commerce-promo-qualification-control",
+        "domain": "commerce",
+        "mechanism": "promotional_credit_qualification",
+        "expected": "blocked",
+        "intendedOutcome": "The qualifying purchase should contribute at least $20 of retained cash revenue.",
+        "protectedLegitimateBehavior": "A $20 cash purchase still earns $20 of referral reward.",
+        "initialState": {
+          "schemaVersion": 1,
+          "day": 0,
+          "accounts": [
+            {
+              "id": "A",
+              "availableCreditUsd": 0,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            },
+            {
+              "id": "B",
+              "availableCreditUsd": 20,
+              "pendingCreditUsd": 0,
+              "reversalDebtUsd": 0
+            }
+          ],
+          "referrals": [],
+          "purchases": [],
+          "rewards": [],
+          "retainedRevenueUsd": 0
+        },
+        "initialStateHash": "faab0a6f8dbe1f4a567ea77ccd808fa16735763fddb81c32ae1ef5fede155dc7",
+        "policy": {
+          "schemaVersion": 1,
+          "name": "Cash qualifies",
+          "referral": {
+            "rewardUsd": 10,
+            "qualifyingPurchaseUsd": 20,
+            "qualificationBasis": "gross_purchase",
+            "issuance": "immediate",
+            "refundHandling": "reverse",
+            "returnWindowDays": 30,
+            "promoCreditCountsTowardThreshold": false
+          }
+        },
+        "policyHash": "b4006e27f3b0450300824a8affc3a4ae2e06cfa4207febe610bf631198424a69",
+        "referenceActions": [
+          {
+            "type": "refer",
+            "referrerId": "A",
+            "customerId": "B"
+          },
+          {
+            "type": "purchase",
+            "accountId": "B",
+            "purchaseId": "P1",
+            "priceUsd": 20,
+            "promoCreditUsd": 20
+          }
+        ],
+        "referenceResult": {
+          "actualClassification": "blocked",
+          "protectedBehaviorPreserved": true,
+          "deterministicReplayAgreement": true,
+          "referenceResult": {
+            "status": "no_exploit",
+            "availableRewardUsd": 0,
+            "unrecoveredRewardUsd": 0,
+            "retainedRevenueUsd": 0,
+            "unintendedPayoutUsd": 0,
+            "reason": "No spendable or unrecovered reward value was observed below the $20 retained-revenue outcome."
+          },
+          "honestReward": 20
+        },
+        "simpleActionSearch": {
+          "status": "not_supported_for_commerce",
+          "limits": null,
+          "attempts": []
+        },
+        "muse": {
+          "status": "not_run",
+          "limits": {
+            "maxInferenceRequests": 1,
+            "maxCandidateActions": 40,
+            "requestTimeoutMs": 60000
+          },
+          "attempts": [],
+          "interpretationMismatches": 0,
+          "discoveryAttemptsScored": 0
+        }
+      }
+    ],
+    "acceptanceCases": [
+      {
+        "id": "supported-policy-maps",
+        "status": "automated",
+        "evidence": "tests/provider/meta-commerce.test.ts"
+      },
+      {
+        "id": "genuine-failure-verifies",
+        "status": "automated",
+        "evidence": "tests/evaluation/frozen-suite.test.ts"
+      },
+      {
+        "id": "trace-minimizes",
+        "status": "automated",
+        "evidence": "tests/commerce/benchmark.test.ts"
+      },
+      {
+        "id": "plausible-repair-fails-another-case",
+        "status": "automated",
+        "evidence": "tests/commerce/benchmark.test.ts"
+      },
+      {
+        "id": "stronger-repair-preserves-honest-reward",
+        "status": "automated",
+        "evidence": "tests/commerce/benchmark.test.ts"
+      },
+      {
+        "id": "recommendation-updates",
+        "status": "automated",
+        "evidence": "tests/web/commerce-workbench.test.tsx"
+      },
+      {
+        "id": "unsupported-condition-disclosed",
+        "status": "automated",
+        "evidence": "tests/provider/meta-commerce.test.ts"
+      },
+      {
+        "id": "unsuccessful-search-is-not-a-safety-claim",
+        "status": "automated",
+        "evidence": "tests/web/commerce-workbench.test.tsx"
       }
     ]
   },

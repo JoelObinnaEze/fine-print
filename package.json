@@ -16,6 +16,7 @@
     "build:types": "tsc -p tsconfig.build.json",
     "build:web": "vite build --config apps/web/vite.config.ts",
     "benchmark:discovery": "npm run build:types && node --env-file=.env dist/scripts/run-discovery-benchmark.js",
+    "benchmark:frozen": "npm run build:types && node --env-file=.env dist/scripts/run-frozen-benchmark.js",
     "check:meta": "npm run build && node --env-file=.env dist/scripts/check-meta-compatibility.js",
     "dev": "vite --config apps/web/vite.config.ts",
     "evaluate": "npm run build:types && node dist/scripts/evaluate.js",

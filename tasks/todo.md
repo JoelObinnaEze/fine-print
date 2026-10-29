@@ -532,3 +532,88 @@
 
 **Estimated scope:** Medium
 
+## Task 31: Aggregate repair evidence without losing prior failures
+
+**Description:** Evaluate every commerce repair against an accumulated set of applicable counterexamples and retain the highest observed exposure.
+
+**Acceptance criteria:**
+- [x] A newly confirmed trace can raise a repair's observed exposure and change its rank.
+- [x] A later bounded miss never erases an earlier confirmed failure.
+- [x] Evidence from another source-policy hash is excluded.
+
+**Verification:** Commerce benchmark tests reproduce the stale-ranking bug, retain the highest exposure after a later miss, and exclude a different policy hash. The complete suite passes: 151/151 tests across 29 files.
+
+**Dependencies:** Task 30
+
+**Files likely touched:** `packages/commerce/src/benchmark.ts`, `packages/commerce/src/index.ts`, `tests/commerce/benchmark.test.ts`
+
+**Estimated scope:** Medium
+
+## Task 32: Persist policy-bound commerce counterexamples
+
+**Description:** Link each commerce attempt to the exact tested policy and repair, persist confirmed traces append-only, and return refreshed candidate evidence.
+
+**Acceptance criteria:**
+- [x] Full and fresh results include exact policy hashes and tested-repair identity.
+- [x] Confirmed traces persist in SQLite and update the originating recommendation set.
+- [x] Invalid, unsuccessful, and provider-failed attempts remain distinguishable and cannot contaminate another policy version.
+
+**Verification:** Provider and persistence tests cover append-only counterexamples, atomic recommendation refresh, exact repair-version validation, idempotency, and separate miss/invalid/provider-failure classifications.
+
+**Dependencies:** Task 31
+
+**Files likely touched:** `apps/server/src/persistence/schema.ts`, `apps/server/src/providers/meta-commerce.ts`, `tests/provider/meta-commerce.test.ts`
+
+**Estimated scope:** Medium
+
+## Task 33: Refresh the existing three-step workbench after a fresh finding
+
+**Description:** Apply the server's refreshed evidence to the current repair view without adding navigation or increasing the three-minute demo burden.
+
+**Acceptance criteria:**
+- [x] A confirmed fresh result updates exposure, recommendation order, and explanation immediately.
+- [x] The UI distinguishes a blocked replay, bounded miss, invalid candidate, and request failure.
+- [x] Every exposure value is labelled as observed in tested cases.
+
+**Verification:** Component tests cover a live ranking change and preservation of prior evidence. Opera GX shows the same three tabs, a plain-language `$20`/`$0` transaction story, and the `$0` observed-exposure repair with two confirmed cases and no console errors.
+
+**Dependencies:** Task 32
+
+**Files likely touched:** `apps/web/src/commerce/recorded-investigation.ts`, `apps/web/src/commerce/CommerceWorkbench.tsx`, `tests/web/commerce-workbench.test.tsx`, `apps/web/src/styles.css`
+
+**Estimated scope:** Medium
+
+## Task 34: Freeze the versioned 12-case evaluation and acceptance matrix
+
+**Description:** Add six designed failure/control pairs using only supported Bottle Return and commerce mechanisms, with hidden deterministic reference traces and separate interpretation/discovery reporting.
+
+**Acceptance criteria:**
+- [x] All 12 cases have version/hash, intended outcome, protected behavior, expected classification, and a deterministic reference result.
+- [x] The offline report retains misses/errors and attributes model, baseline, and regression provenance separately.
+- [x] End-to-end acceptance checks cover mapping, verification, minimization, failed repair, stronger repair, recommendation change, unsupported conditions, and bounded-search language.
+
+**Verification:** Frozen-suite tests validate all six failure/control pairs and protected honest behavior. `npm run evaluate` regenerated suite `fine-print-eval-v3` with hash `d9a1360ff04f78964244934adc17dda8556a9904a40159b233b5fb230c04dc3a`; the artifact retains every model attempt, baseline limitation, error, and skipped initial-state case.
+
+**Dependencies:** Tasks 31–33
+
+**Files likely touched:** `scripts/discovery-suite.ts`, `scripts/evaluate.ts`, `tests/evaluation/`, `artifacts/evaluation.json`
+
+**Estimated scope:** Large, delivered as Bottle Return and commerce sub-slices
+
+## Task 35: Rehearse and document the evidence-complete judge path
+
+**Description:** Update the README, evaluation report, judge guide, and three-minute script so the stronger evidence remains understandable without expanding the demo.
+
+**Acceptance criteria:**
+- [x] The narration remains under three minutes and the core result is understandable before technical detail.
+- [x] Documentation reports actual checks, all completed attempts, and unvalidated market usefulness honestly.
+- [x] Full tests, typecheck, build, offline evaluation, and local browser inspection pass.
+
+**Verification:** The teleprompter is 368 words (2:50–2:57 at 125–130 wpm). `npm test` passes 151/151 tests, `npm run typecheck` and `npm run build` pass, `npm audit --audit-level=high` reports zero vulnerabilities, `npm run evaluate` succeeds, `git diff --check` is clean, and the tracked-file secret scan finds no credential pattern. Opera GX confirms the three-step repair path and no browser errors.
+
+**Dependencies:** Task 34
+
+**Files likely touched:** `README.md`, `docs/evaluation.md`, `docs/judge-guide.md`, `docs/demo-script.md`, `docs/demo-production-plan.md`
+
+**Estimated scope:** Medium
+

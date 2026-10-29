@@ -50,7 +50,7 @@ export function CommerceWorkbench() {
   const [message, setMessage] = useState<string | null>(null);
   const [freshTest, setFreshTest] = useState<{
     readonly label: string;
-    readonly verdict: "Known failure blocked" | "No failure found in this attempt" | "Test could not be replayed" | "Failure still present";
+    readonly verdict: "This trace was blocked" | "No failure found in this attempt" | "Test could not be replayed" | "Failure still present";
     readonly leakage: number;
     readonly honestReward: number;
     readonly delay: number | null;
@@ -112,7 +112,7 @@ export function CommerceWorkbench() {
   const requestInvestigation = async (
     text: string,
     mode: "primary" | "fresh",
-    freshLabel?: string,
+    freshCandidate?: CommerceInvestigationView["candidates"][number],
   ) => {
     const minimumUsd = Number(minimumRevenue);
     if (!Number.isInteger(minimumUsd) || minimumUsd < 1 || minimumUsd > 10_000) {
@@ -136,7 +136,16 @@ export function CommerceWorkbench() {
             .split("\n")
             .map((restriction) => restriction.trim())
             .filter(Boolean),
-          ...(mode === "fresh" ? { mode: "attack_only" } : {}),
+          ...(mode === "fresh" && freshCandidate
+            ? {
+                mode: "attack_only",
+                evidenceContext: {
+                  evidenceSetId: investigation.evidenceSetId,
+                  testedCandidateId: freshCandidate.id,
+                  expectedPolicyHash: freshCandidate.policyHash,
+                },
+              }
+            : {}),
         }),
       });
       const payload = (await response.json()) as CommerceInvestigationView & {
@@ -158,7 +167,7 @@ export function CommerceWorkbench() {
           (strategy) => strategy.id === "ordinary",
         );
         setFreshTest({
-          label: freshLabel ?? "Selected design",
+          label: freshCandidate?.label ?? "Selected design",
           verdict:
             liveResult.attack.verification.status === "exploit_verified"
               ? "Failure still present"
@@ -170,6 +179,14 @@ export function CommerceWorkbench() {
           delay: ordinaryResult?.metrics.rewardDelayDays ?? null,
           provenance: "live",
         });
+        if (
+          liveResult.evidenceUpdate?.evidenceSetId === investigation.evidenceSetId
+        ) {
+          setInvestigation((current) => ({
+            ...current,
+            candidates: liveResult.evidenceUpdate!.candidates,
+          }));
+        }
       }
       setMessage(null);
     } catch (error) {
@@ -311,7 +328,8 @@ export function CommerceWorkbench() {
             <div className="commerce__recommendation" role="region" aria-label="Recommended repair">
               <div className="commerce__recommendation-copy">
                 <h3>{recommended.label}</h3>
-                <p><b>Lowest observed exposure, then {priorityLabels[priority]}.</b> {recommended.tradeoff}</p>
+                <p><b>Lowest exposure observed across {recommended.evaluation.evidence.applicableCases} confirmed case{recommended.evaluation.evidence.applicableCases === 1 ? "" : "s"}, then {priorityLabels[priority]}.</b> {recommended.tradeoff}</p>
+                <small>Observed under tested cases, not a guaranteed maximum.</small>
               </div>
               <dl>
                 <div><dt>Reward value exposed</dt><dd>{dollars(recommended.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div>
@@ -319,10 +337,10 @@ export function CommerceWorkbench() {
                 <div><dt>Customer wait</dt><dd>{recommended.evaluation.honest.rewardDelayDays ?? "—"} day{recommended.evaluation.honest.rewardDelayDays === 1 ? "" : "s"}</dd></div>
               </dl>
               <div className="commerce__candidate-actions">
-                <button type="button" onClick={() => setFreshTest({ label: recommended.label, verdict: recommended.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "Known failure blocked" : "Failure still present", leakage: recommended.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: recommended.evaluation.honest.availableRewardUsd, delay: recommended.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>
+                <button type="button" onClick={() => setFreshTest({ label: recommended.label, verdict: recommended.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "This trace was blocked" : "Failure still present", leakage: recommended.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: recommended.evaluation.honest.availableRewardUsd, delay: recommended.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>
                 {isStaticDemo
                   ? <small className="commerce__static-note">Live rechecks are disabled in the public demo.</small>
-                  : <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(recommended.policy), "fresh", recommended.label)}>Run fresh recheck</button>}
+                  : <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(recommended.policy), "fresh", recommended)}>Run fresh recheck</button>}
               </div>
             </div>
             {message && <p aria-live="polite">{message}</p>}
@@ -336,8 +354,8 @@ export function CommerceWorkbench() {
                 {rankedCandidates.map((candidate) => (
                   <article key={candidate.id}>
                     <div><h3>{candidate.label}</h3><span className="commerce__complexity">Complexity {candidate.complexity} / 3</span><p>{candidate.tradeoff}</p></div>
-                    <dl><div><dt>Reward value exposed</dt><dd>{dollars(candidate.evaluation.attack.verifiedUnintendedPayoutUsd)}</dd></div><div><dt>Honest reward</dt><dd>{dollars(candidate.evaluation.honest.availableRewardUsd)}</dd></div><div><dt>Value kept</dt><dd>{dollars(candidate.evaluation.honest.retainedRevenueUsd)}</dd></div><div><dt>Customer wait</dt><dd>{candidate.evaluation.honest.rewardDelayDays ?? "—"} days</dd></div></dl>
-                    <div className="commerce__candidate-actions"><button type="button" onClick={() => setFreshTest({ label: candidate.label, verdict: candidate.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "Known failure blocked" : "Failure still present", leakage: candidate.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: candidate.evaluation.honest.availableRewardUsd, delay: candidate.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>{!isStaticDemo && <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(candidate.policy), "fresh", candidate.label)}>Run fresh recheck</button>}</div>
+                    <dl><div><dt>Reward value exposed</dt><dd>{dollars(candidate.evaluation.attack.verifiedUnintendedPayoutUsd)}<small>Observed in {candidate.evaluation.evidence.applicableCases} confirmed case{candidate.evaluation.evidence.applicableCases === 1 ? "" : "s"}</small></dd></div><div><dt>Honest reward</dt><dd>{dollars(candidate.evaluation.honest.availableRewardUsd)}</dd></div><div><dt>Value kept</dt><dd>{dollars(candidate.evaluation.honest.retainedRevenueUsd)}</dd></div><div><dt>Customer wait</dt><dd>{candidate.evaluation.honest.rewardDelayDays ?? "—"} days</dd></div></dl>
+                    <div className="commerce__candidate-actions"><button type="button" onClick={() => setFreshTest({ label: candidate.label, verdict: candidate.evaluation.attack.verifiedUnintendedPayoutUsd === 0 ? "This trace was blocked" : "Failure still present", leakage: candidate.evaluation.attack.verifiedUnintendedPayoutUsd, honestReward: candidate.evaluation.honest.availableRewardUsd, delay: candidate.evaluation.honest.rewardDelayDays, provenance: "host" })}>Replay known failure</button>{!isStaticDemo && <button type="button" disabled={connection !== "ready" || isRunning} onClick={() => void requestInvestigation(commercePolicyText(candidate.policy), "fresh", candidate)}>Run fresh recheck</button>}</div>
                   </article>
                 ))}
               </div>

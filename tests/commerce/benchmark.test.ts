@@ -7,6 +7,7 @@ import {
   commerceGoal,
   commerceRepairCandidates,
   evaluateCommerceDesign,
+  evaluateCommerceDesignAgainstEvidence,
   honestCustomerActions,
   minimizeCommerceExploit,
   refundAttackActions,
@@ -185,5 +186,89 @@ describe("commerce referral/refund benchmark", () => {
     expect(vulnerable.attack.verifiedUnintendedPayoutUsd).toBe(20);
     expect(repaired.attack.verifiedUnintendedPayoutUsd).toBe(0);
     expect(repaired.knownAttackBlocked).toBe(true);
+  });
+
+  it("raises a repair's observed exposure when a later applicable trace finds spent credit", () => {
+    const reverseCredit = {
+      policy: {
+        ...vulnerableCommercePolicy,
+        referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+      },
+    };
+    const evidence = [
+      {
+        id: "initial-refund",
+        sourcePolicyHash: "policy-v1",
+        actions: refundAttackActions,
+      },
+      {
+        id: "spent-before-reversal",
+        sourcePolicyHash: "policy-v1",
+        actions: [
+          { type: "refer", referrerId: "A", customerId: "B" },
+          { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 0 },
+          { type: "purchase", accountId: "A", purchaseId: "P2", priceUsd: 10, promoCreditUsd: 10 },
+          { type: "refund", accountId: "B", purchaseId: "P1" },
+        ],
+      },
+    ] as const;
+
+    const result = evaluateCommerceDesignAgainstEvidence(
+      reverseCredit.policy,
+      commerceGoal,
+      "policy-v1",
+      evidence,
+      honestCustomerActions,
+    );
+
+    expect(result.attack.verifiedUnintendedPayoutUsd).toBe(10);
+    expect(result.knownAttackBlocked).toBe(false);
+    expect(result.evidence).toEqual({
+      applicableCases: 2,
+      blockedCases: 1,
+      highestObservedExposureUsd: 10,
+      worstCaseId: "spent-before-reversal",
+    });
+  });
+
+  it("preserves prior confirmed exposure across misses and isolates another policy version", () => {
+    const reverseCredit = {
+      policy: {
+        ...vulnerableCommercePolicy,
+        referral: { ...vulnerableCommercePolicy.referral, refundHandling: "reverse" as const },
+      },
+    };
+    const result = evaluateCommerceDesignAgainstEvidence(
+      reverseCredit.policy,
+      commerceGoal,
+      "policy-v1",
+      [
+        {
+          id: "confirmed",
+          sourcePolicyHash: "policy-v1",
+          actions: [
+            { type: "refer", referrerId: "A", customerId: "B" },
+            { type: "purchase", accountId: "B", purchaseId: "P1", priceUsd: 20, promoCreditUsd: 0 },
+            { type: "purchase", accountId: "A", purchaseId: "P2", priceUsd: 10, promoCreditUsd: 10 },
+            { type: "refund", accountId: "B", purchaseId: "P1" },
+          ],
+        },
+        {
+          id: "later-miss",
+          sourcePolicyHash: "policy-v1",
+          actions: [{ type: "advance_days", days: 1 }],
+        },
+        {
+          id: "stale-version",
+          sourcePolicyHash: "policy-v2",
+          actions: refundAttackActions,
+        },
+      ],
+      honestCustomerActions,
+    );
+
+    expect(result.attack.verifiedUnintendedPayoutUsd).toBe(10);
+    expect(result.evidence.applicableCases).toBe(2);
+    expect(result.evidence.worstCaseId).toBe("confirmed");
   });
 });
