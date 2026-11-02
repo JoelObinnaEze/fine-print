@@ -1,108 +1,155 @@
 # Fine Print
 
-Fine Print helps teams test reward rules before launch. A rule can pay exactly what it says while rewarding behavior its author never intended. Meta Muse translates plain language and searches for failure cases; deterministic host code validates every transaction, payout, and final claim.
+> Test reward rules before they reward the wrong behaviour.
 
-The primary workbench investigates a referral-credit programme across purchases, promotional credit, returns, and refunds. It separates the written rule from the intended business outcome, reduces a confirmed failure to its shortest proof, and compares repairs by customer delay and legitimate rewards preserved. Bottle Return demonstrates the same proposal-versus-verification boundary in a 3D recycling system.
+Fine Print asks Meta Muse to turn plain-English incentive rules into concrete transaction tests and repair ideas. Deterministic simulators—not the model—execute every action, calculate every payout, and decide what the evidence proves.
 
-- **Live judge build:** [joelobinnaeze.github.io/fine-print](https://joelobinnaeze.github.io/fine-print/)
-- **60-second judge path:** [docs/judge-guide.md](docs/judge-guide.md)
-- **Three-minute recording package:** [script](docs/demo-script.md) · [production plan](docs/demo-production-plan.md)
+**Indie developer · Push the Frontier · Best Agentic Use-Case**
 
-## Verified result
+[Open the live judge demo](https://joelobinnaeze.github.io/fine-print/) · [Take the 60-second judge path](docs/judge-guide.md) · [Read the evaluation](docs/evaluation.md)
 
-- A live `muse-spark-1.3` commerce investigation proposed four transactions; the host reduced them to the three required steps and verified `$20` spendable referral credit against `$0` retained revenue. The call cost `$0.013197`.
-- Muse proposed three materially different repairs. A separate five-action recheck spent `$10` of reward before refund; the strengthened verifier now counts that reversal debt as `$10` of unrecovered value and rejects immediate reversal. **Pay after return window** is the recommended tested repair: `$0` reward value exposed, `$20` honest reward preserved, and a disclosed 30-day wait.
-- Confirmed commerce cases are now stored against the exact source-policy and tested-repair hashes. Every repair is replayed against the accumulated applicable cases; the recommendation uses the highest observed exposure, and a later miss cannot erase an earlier confirmed failure. Exposure is always labelled as observed under tested cases, not a guaranteed maximum.
-- A fresh repair recheck now loads the selected structured policy directly from its evidence set and asks Muse only for transactions. A systematic bounded action search supplements the proposal and is labelled separately. In the reviewer’s `$11` / `$45` / 7-day scenario, the recheck found `$11` of unrecovered spent credit, raised that repair’s exposure, and changed the recommendation; the stronger repair then completed a 2,610-state bounded search with no verified failure.
-- The commerce population view reports ordinary customers, bargain hunters, and coordinated adversaries under disclosed deterministic assumptions. It is not a forecast of real fraud rates.
-- The scripted trace pays 30 points for one bottle deposited three times while recycling zero items.
-- A browser-launched `muse-spark-1.3` search independently found a second loophole: two ineligible items earned 20 points while recycling zero items. It used 11 requests, submitted 17 valid actions, and cost $0.082180.
-- The once-per-item patch removes repeat rewards but still fails on eligibility and completion: the disclosed gauntlet preserves 3/3 honest workflows while blocking only 1/3 known failures. A fresh Muse search verified an ineligible-item payout of 10 points with zero useful recycling in 8 requests at $0.052854.
-- The eligible-processing patch preserves 3/3 honest workflows and blocks all 3 disclosed failures. A separate 12-request Muse search found no failure within its bounded budget at $0.098851; that is evidence from one search, not a proof of safety.
-- The designed batch benchmark pays 15 points for cycling a transient three-item hopper while doing zero useful processing. Its receipt-backed patch pays zero on that trace while preserving 35 points for one honest batch and 70 for two.
-- In the frozen discovery suite, Muse found the premature-deposit flaw 2/2 and the interacting batch flaw 1/2, with no confirmed failure in 4/4 blocked-control runs. The simple beam-search baseline found both flaws 3/3 and both controls 0/3; every attempt remains in the report.
-- The versioned `fine-print-eval-v4` suite expands this to six designed failure/control pairs (12 cases) across repeated deposits, ineligible material, transient batch bonuses, refund-retained credit, spent-before-reversal credit, and promotional-credit qualification. All 12 deterministic reference replays matched their frozen labels and preserved their stated honest behavior. Validated starting states let the live evaluator run the promotional-credit pair. The separate six-case interpretation matrix passed 6/6; every miss, invalid sequence, provider interruption, and mapping mismatch remains visible.
-- An earlier live trace independently replayed 13 submitted actions as 30 excess points, zero recycled items, two rejected actions, and three payout receipts at $0.070258.
-- Confirmed failures can be saved as durable SQLite regression cases and are replayed automatically against the selected policy.
-- [artifacts/commerce-investigation-live.json](artifacts/commerce-investigation-live.json) and [artifacts/commerce-repair-live.json](artifacts/commerce-repair-live.json) preserve the original live runs; [artifacts/commerce-repair-reverified.json](artifacts/commerce-repair-reverified.json) records the corrected deterministic verdict without making a new model call. [artifacts/evaluation.json](artifacts/evaluation.json) contains the offline and frozen live evaluation.
+![Fine Print comparing a failed repair with the recommended policy](artifacts/opera-commerce-repair.png)
 
-These are observations from bounded traces, not a proof that a policy is safe.
+## The result in 20 seconds
+
+A referral rule promised two $10 rewards after a referred customer spent $20.
+
+1. Muse proposed four transactions.
+2. The host reduced them to the three required steps: refer, purchase, refund.
+3. Deterministic replay confirmed **$20 of spendable reward while the business kept $0**.
+4. A second Muse check showed why immediate reversal still fails: **$10 had already been spent**.
+5. Fine Print re-ranked the repairs and recommended paying after the return window: **$0 observed exposure, $20 honest reward preserved, 30-day wait**.
+
+The Bottle Return lab applies the same boundary to a physical reward system. A recorded Muse case pays **30 points for one bottle deposited three times while recycling zero items**. The recommended rule pays once, only after an eligible item is processed.
+
+## Why this is useful
+
+Reward software can implement a written rule perfectly and still reward behaviour its author never intended. Fine Print separates three things that are usually blurred together:
+
+- the rule that determines payment;
+- the real-world outcome the programme wants;
+- the honest-customer promise a repair must preserve.
+
+It then produces an inspectable sequence that a deterministic simulator can replay. Confirmed cases stay attached to the exact policy version and become permanent regression checks. A later unsuccessful search cannot erase an earlier confirmed failure.
+
+## How it works
+
+```text
+Plain-English rule + intended outcome + honest-user promise
+                              │
+                              ▼
+               Meta Muse proposes tests and repairs
+                              │ untrusted JSON/tool calls
+                              ▼
+               strict schemas + host-enforced limits
+                              │
+                              ▼
+        deterministic replay + payout and outcome ledgers
+                              │
+                              ▼
+           minimized evidence + repair comparison + regression case
+```
+
+Muse is essential for interpreting unfamiliar wording, forming hypotheses, proposing executable sequences, and generating repairs with different tradeoffs. It cannot edit active policies, execute code, access credentials, or declare success. The host alone emits verdicts.
+
+## Verified evidence
+
+| Check | Model contribution | Host-verified result |
+| --- | --- | --- |
+| Referral reward after refund | Muse proposed 4 transactions | Reduced to 3; `$20` reward remained against `$0` retained value |
+| Immediate refund reversal | Muse proposed a 5-action recheck | `$10` had already been spent and remained unrecovered |
+| Pay after return window | Muse proposed the repair | `$0` observed exposure; `$20` honest reward; 30-day delay |
+| Repeated bottle deposits | Recorded Muse action sequence | 30 points paid; 0 items recycled |
+| Frozen evaluation | Muse attempts retained with misses and invalid sequences | 12/12 deterministic reference classifications reproduced; interpretation matrix 6/6 |
+
+The small deterministic search baseline finds the seeded failures more consistently than Muse. Fine Print does not claim otherwise. Muse's demonstrated value is connecting unfamiliar language to inspectable tests and repair choices; independent replay supplies the evidence.
+
+Complete provenance, limits, actions, token usage, costs, unsuccessful attempts, and deterministic baselines are preserved in [the evaluation report](docs/evaluation.md) and [machine-readable artifact](artifacts/evaluation.json). These are bounded observations, not proof that a policy is universally safe.
+
+## Judge path
+
+The public build opens directly on the strongest result and makes no paid request.
+
+1. **Commerce · What went wrong:** read `$20 reward`, `$0 value kept`, and the three required transactions.
+2. **Commerce · Best repair:** see why immediate reversal still exposes `$10`, then inspect the recommended delayed repair.
+3. **Bottle Return · Your rule:** select **Load recorded case**.
+4. **Bottle Return · What went wrong:** replay `30 points / 0 recycled` in the 3D depot.
+5. **Bottle Return · Best repair:** inspect the processing-backed rule.
+
+The static judge build contains recorded evidence from real Muse runs but no API key or public paid endpoint. Live reproduction remains local and budget-capped.
 
 ## Run locally
 
-Requirements: Node.js 22.18.0 or newer and npm 11. The repository pins the oldest verified runtime, `22.18.0`, in `.nvmrc`; run `nvm use 22.18.0` first when using nvm.
+Requirements: Node.js 22.18.0 or newer and npm 11. Both Node 22 and Node 24 are verified.
 
 ```bash
 npm ci
-cp .env.example .env
 npm test
 npm run typecheck
 npm run build
 npm run dev
 ```
 
-Node 22 and Node 24 are both verified. Persistence uses Node's built-in synchronous SQLite API, so a clean install does not require a native compiler or Visual Studio C++ tools.
+Open `http://127.0.0.1:5173`. The recorded judge workflow needs no environment file or network call.
 
-Open `http://127.0.0.1:5173`. On PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Start the API in a second terminal before using live translation or attack buttons; the Vite development server proxies `/api` to port 8787.
+### Optional live Meta reproduction
 
-The local API runs at `http://127.0.0.1:8787`:
+Copy `.env.example` to an untracked `.env`, add your own Meta key, confirm available credits, and keep positive app/session/search caps. Then run:
 
 ```bash
+npm run check:meta
 npm run start:server
+npm run dev
 ```
 
-Live calls are disabled in `.env.example`. To enable them, add your Meta key to the untracked `.env`, confirm available event credits, and set positive app/session/search caps. The usable app allowance keeps the larger of $1 or 10% in reserve. The server serializes provider calls, reserves worst-case usage before each request, and retains ambiguous reservations after unverifiable outcomes.
+The API binds to `127.0.0.1:8787`. Live inference is disabled by default. The server serializes provider calls, reserves worst-case usage before each request, and retains ambiguous reservations after unknown outcomes.
 
-## Useful commands
+## Technical depth
+
+- Strict TypeScript and Zod validation at every HTTP and model boundary.
+- Pure commerce and Bottle Return simulators with deterministic replay hashes.
+- Bounded Muse structured output and tool calling with explicit request, trial, action, and cost limits.
+- Trace minimization from immutable initial state.
+- SQLite persistence, idempotent run creation, budget reservation, and startup recovery.
+- Policy-bound regression cases and hash-verified portable exports.
+- Frozen repeated-run evaluation against a disclosed deterministic baseline.
+- Keyboard-accessible React interface with reduced-motion support and a CSS 3D replay.
+
+## Reproduce the project checks
 
 | Command | Purpose |
 | --- | --- |
-| `npm test` | Run deterministic, property, route, provider-fixture, persistence, and UI tests. |
-| `npm run typecheck` | Run strict TypeScript checks. |
-| `npm run build` | Build server scripts and the production web bundle. |
-| `npm run evaluate` | Regenerate the offline scorecard without inference. |
-| `npm run benchmark:discovery` | Replay or, when absent, run the eight idempotent paid Muse attempts in the frozen suite. Requires explicit authorization and enabled budgets. |
-| `npm run benchmark:frozen` | Fill up to three idempotent live attempts for each `fine-print-eval-v4` case without changing configured caps. |
-| `npm run benchmark:interpretation` | Run the six idempotent interpretation-only cases separately from transaction discovery. |
-| `npm run check:meta` | Verify the configured Meta account/model catalog without inference. |
-| `npm run smoke:meta-translation` | Run the idempotent paid translation smoke test when authorized. |
-| `npm run smoke:meta-attacker` | Run the one-shot bounded paid attacker search when authorized. The checked-in search ID cannot be sent twice. |
-| `npm run export:run -- <run-id> <path>` | Write a new, hash-verified replay export without overwriting an existing file. |
+| `npm test` | Run deterministic, property, route, provider-fixture, persistence, and UI tests |
+| `npm run typecheck` | Run strict TypeScript checks |
+| `npm run build` | Build the server scripts and production web application |
+| `npm run evaluate` | Regenerate the offline scorecard without inference |
+| `npm run check:meta` | Verify the configured Meta account and model catalog without inference |
 
-## Architecture and trust boundary
+Paid benchmark and smoke scripts are intentionally not part of the default verification path.
 
-```text
-Meta policy/action proposal
-          │ untrusted JSON/tool calls
-          ▼
-strict schemas → host limits → deterministic engine → payout/oracle replay
-                                           │
-                                           ▼
-                         SQLite evidence + hash-verified export
-```
+## Evidence and documentation
 
-The model never receives credentials, filesystem access, database handles, hidden evaluation cases, or policy-write tools. It cannot set success. Candidate actions are discarded from mutable trial state and replayed from the immutable root before the host emits a verdict.
-
-## Evidence and project status
-
+- [Three-minute voiceover script](docs/demo-script.md)
+- [Screen-recording production plan](docs/demo-production-plan.md)
 - [Evaluation report](docs/evaluation.md)
-- [Three-minute demo script](docs/demo-script.md)
-- [Demo production plan](docs/demo-production-plan.md)
 - [Paste-ready submission copy](docs/submission-copy.md)
-- [One-minute judge guide](docs/judge-guide.md)
-- [Honest usability protocol](docs/usability-protocol.md)
-- [Competition expansion brief](docs/ideas/red-team-arena.md)
-- [Opera GX verification capture](artifacts/opera-fine-print.png)
-- [Opera GX commerce workbench](artifacts/opera-commerce-workbench.png)
-- [Opera GX selected-repair verdict](artifacts/opera-commerce-repair.png)
 - [Submission and judge-access checklist](docs/submission-checklist.md)
+- [Usability protocol](docs/usability-protocol.md)
 - [Implementation ledger](tasks/todo.md)
-- [Original build brief](creation.md)
+- [Original planning brief](creation.md)
+- [Recorded commerce investigation](artifacts/commerce-investigation-live.json)
+- [Recorded repair recheck](artifacts/commerce-repair-live.json)
 
-The public judge build is a static, deterministic replay with no key or paid endpoint in the browser. Live Muse requests remain local and budget-capped. Video recording, usability participants, portal submission, and legal acceptance still require human action.
+## Limitations
+
+- Fine Print evaluates only behaviours represented by its simulators and the bounded searches that were run.
+- A search that finds no failure is evidence from one attempt, not a safety guarantee.
+- Population examples are deterministic strategy traces, not forecasts of real customer behaviour.
+- The public build replays recorded evidence; live Muse controls require a local server and private key.
+- No user adoption, revenue, industrial deployment, or formal verification is claimed.
 
 ## Attribution and license
 
-Fine Print uses React, Vite, TypeScript, Zod, Node SQLite, Vitest, Testing Library, and fast-check. The interface uses repository-authored CSS and SVG-like CSS shapes; no purchased or generated art is included. Meta Model API integration follows the official [Chat Completions](https://dev.meta.ai/docs/protocols/chat-completions), [tool calling](https://dev.meta.ai/docs/tool-calling), [structured output](https://dev.meta.ai/docs/structured-output), [reasoning](https://dev.meta.ai/docs/reasoning), and [pricing](https://dev.meta.ai/docs/pricing-rate-limits) documentation.
+Fine Print uses React, Vite, TypeScript, Zod, Node SQLite, Vitest, Testing Library, and fast-check. The interface uses repository-authored CSS and shapes; no purchased or generated art is included. Meta Model API integration follows the official Chat Completions, tool-calling, structured-output, reasoning, and pricing documentation.
 
-No open-source license has been selected and no `LICENSE` file is present. By default, the repository is not licensed for reuse; choose a license before publishing if reuse is intended.
+No open-source license has been selected. The repository is public for judging but is not licensed for reuse.
