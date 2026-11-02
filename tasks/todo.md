@@ -673,3 +673,15 @@
 
 **Verification:** Provider and component regression tests inspect the outbound schema, prove the one-retry boundary, and prove that an unknown outcome stops after one request. The complete 160-test suite, strict typecheck, production build, offline evaluation, and high-severity audit pass. Opera GX shows the existing failed-repair → changed-recommendation view with no console warnings or errors.
 
+## Task 41: Prepare the judge-first README and voice-only recording package
+
+**Description:** Make the repository understandable on first open and replace the face-camera plan with a provenance-correct product recording driven by the user's voiceover.
+
+**Acceptance criteria:**
+- [x] The README leads with the verified commerce result, the failed first repair, the stronger recommendation, and a 60-second judge path.
+- [x] The final narration is voice-only, leaves timing margin below three minutes, and keeps Meta proposals separate from host verdicts.
+- [x] The Bottle Return shot list loads the recorded Muse case before attributing its replay to Muse.
+- [x] Local documentation links resolve and the public repository renders the new judge sections and hero image.
+
+**Verification:** The voiceover is 322 words (2:35 at 125 wpm before visual pauses). All 160 tests, strict typecheck, production build, high-severity audit, Markdown diff check, and local-link check pass. GitHub Actions run `41510519873` verifies and deploys commit `74aeaff`; the rendered README contains the result, live-demo link, hero image, and recorded-case provenance step.
+
