@@ -1,63 +1,71 @@
 # Demo video production plan
 
-The video is a product demonstration, not a pitch deck. The face-camera take provides the human opening and closing; the middle is a clean screencast of the public recorded demo. This follows the official three-minute limit and Devpost guidance to lead with the elevator pitch and show the working product directly.
+The submission video is a voice-led screen recording of the working product. There is no face camera, pitch deck, stock footage, or live paid request. The picture must continuously prove the narration with readable product evidence.
 
 ## Source files
 
 | Asset | Owner | Requirement |
 | --- | --- | --- |
-| `fine-print-webcam-original.*` | Joel | One uninterrupted landscape take of `docs/demo-script.md` |
-| `fine-print-screen-original.*` | Codex | 1920×1080, 30 fps capture of the sequence below |
-| `fine-print-final.mp4` | Codex | H.264, 1080p, AAC audio, no more than 2:57 |
-| `fine-print-captions.srt` | Codex | Corrected captions matching the final edit |
-| `fine-print-thumbnail.png` | Codex | Product result, not a face-only thumbnail |
+| `fine-print-voice-original.*` | Joel | Original voice-only recording of `docs/demo-script.md`; WAV, M4A, or high-quality MP3 |
+| `fine-print-screen-original.mp4` | Codex | Clean 1920×1080 or 1600×900 product capture at 30 fps or better |
+| `fine-print-final.mp4` | Codex | H.264, 1080p, AAC audio, target 2:35–2:48 and never over 3:00 |
+| `fine-print-captions.srt` | Codex | Corrected captions timed to the final edit |
+| `fine-print-thumbnail.png` | Codex | The `$20 reward / $0 value` result at readable size |
 
-## Webcam handoff
+## Voice recording handoff
 
-1. Record horizontally at 1080p or better, eye-level, with the camera stable.
-2. Use a quiet room and the clearest microphone available. Do not add music or noise reduction.
-3. Frame from mid-chest upward with a simple background and light in front of you.
-4. Leave two silent seconds before the first word and after the last word.
-5. Read the teleprompter copy once without stopping. If you make a mistake, pause, repeat the sentence, and continue; the edit will remove it.
-6. Send the original file, not a messaging-app recompression.
+1. Record in the quietest room available using Voice Memos, Windows Sound Recorder, Audacity, or another lossless/high-quality recorder.
+2. Keep the microphone roughly 15–20 cm from your mouth and slightly off-axis so breaths do not hit it directly.
+3. Read naturally at a steady volume. No background music is needed.
+4. Leave two silent seconds before the first word and after the final word.
+5. If you make a mistake, pause, restart that sentence, and keep recording. The edit will remove the failed take.
+6. Send the original recording file rather than a messaging-app recompression.
 
 ## Edit decision list
 
 | Time | Picture | Screen action | Claim the picture must prove |
 | --- | --- | --- | --- |
-| 0:00–0:14 | Webcam | None | The problem and product are understandable immediately |
-| 0:14–0:35 | Commerce · Step 1 | Start on the prefilled rule and its mapped summary | Rule, intended retained value, and honest-user promise are separate |
-| 0:35–1:13 | Commerce · Step 2 | Click **What went wrong**; hold on `$20`, `$0`, and the three-event trace | Muse proposed four actions; simulator reduced and confirmed three |
-| 1:13–1:56 | Commerce · Step 3 | Click **Best repair**; first hold on immediate reversal at `$10` exposed, then hold on the changed recommendation at `$0` exposed / `$20` honest reward / `30 days` | The first repair fails, its confirmed case re-ranks every repair, and the stronger recommendation preserves the intended reward at an explicit customer cost |
-| 1:56–2:10 | Commerce · Step 3 | Open **Compare all repairs**, then close it | Competing repairs and tradeoffs exist without crowding the main story |
-| 2:10–2:38 | Bottle Return · Step 2 | Switch domains and click **What went wrong**; hold on `30 points / 0 recycled`, then click **Replay from start** at 2× | Same method transfers to a visibly different system |
-| 2:38–2:47 | Bottle Return · Step 3 | Click **Best repair** | Processing-backed recommendation is obvious |
-| 2:47–end | Webcam | None | Human close and memorable one-question framing |
+| 0:00–0:12 | Commerce · Step 1 | Open on the rule, retained-value goal, and honest-customer promise | The problem is understandable before any internals appear |
+| 0:12–0:28 | Commerce · Step 1 | Hold on **How Fine Print understood it**, briefly open the technical mapping | Muse converted language into a reviewable executable meaning |
+| 0:28–0:50 | Commerce · Step 2 | Show `$20 reward`, `$0 value kept`, and the three transactions | Model proposal and host-confirmed outcome remain distinct |
+| 0:50–0:58 | Commerce · Step 2 | Open **Show run details** without hiding the headline result | Recorded Muse provenance, simulator replay, and actual model cost are visible |
+| 0:58–1:34 | Commerce · Step 3 | Hold first on `$10` still exposed, then on `$0 / $20 / 30 days`; briefly open **Compare all repairs** | The first repair fails and the confirmed case changes the recommendation |
+| 1:34–1:48 | Bottle Return · Step 1 | Switch domains, then click **Load recorded case** before leaving Step 1 | The following replay is the recorded Muse evidence, not the scripted fixture |
+| 1:48–2:20 | Bottle Return · Step 2 | Show `30 points / 0 recycled`; select 2×, click **Replay from start**, and hold on a payout event | The method transfers to a visibly different system and every action is inspectable |
+| 2:20–2:36 | Bottle Return · Step 3 | Show **Require successful processing**, then open technical evidence if the voice continues | The repair ties payment to the intended physical outcome |
+| 2:36–end | Bottle Return · Step 3 | Hold still on the repair while the final question lands | End on the product, not an outro card |
 
-## Recording setup
+Timing follows the recorded voice. Preserve the order and proof points even if exact cuts shift by a few seconds.
 
-- Use the public static judge build so the recording has no network dependency or paid request.
-- Browser viewport: 1920×1080 or 1600×900 at 100% zoom.
-- Hide bookmarks, downloads, extensions, notifications, and unrelated tabs.
-- Keep the cursor visible but still while narration lands on a result.
-- Use hard cuts or short dissolves only. Do not add stock footage, animated logos, or decorative transitions.
-- Use quiet captions in the lower safe area. Highlight only `$20 reward`, `$0 value`, and `30 points / 0 recycled`.
-- Keep all on-screen evidence large enough to read on a laptop without pausing.
+## Screen recording setup
 
-## Reliability plan
+- Use the public judge build: `https://joelobinnaeze.github.io/fine-print/`.
+- Capture at 1920×1080 or 1600×900, 100% browser zoom, and 30 fps or better.
+- Hide bookmarks, the Opera sidebar, downloads, extension popups, notifications, and unrelated tabs.
+- Keep the cursor visible. Move directly to the next control, then stop while the audience reads.
+- Record two complete screen takes. The second is a clean fallback for mistimed clicks.
+- Use hard cuts or very short dissolves only. Do not add decorative motion, fake loading, or stock footage.
+- Use quiet captions in the lower safe area. Do not cover the app's metrics or event timeline.
+- Highlight only the three decisive comparisons: `$20 / $0`, `$10 still exposed`, and `30 points / 0 recycled`.
+- Keep all app text legible on a 13-inch laptop without pausing the video.
 
-- Primary path: recorded Muse evidence bundled into the public build.
-- If a click is mistimed, cut to the same scene from a second screencast take; never show loading.
-- Keep the recommendation-change sequence in one uninterrupted screen capture so the ranking change reads as one causal story, not two unrelated examples.
-- The 3D scene opens on its final state so the result is never hidden; the replay is supporting motion, not required evidence.
-- Do not run a fresh paid request in the submitted video. The exact live run IDs and costs remain available under run details and in the repository.
+## Reliability and provenance
+
+- Do not run a fresh paid request in the submitted video. The public build replays real recorded Muse evidence without a network dependency.
+- Bottle Return must click **Load recorded case** before Step 2. Skipping this would show the scripted fixture while the voice attributes the case to Muse.
+- Keep **Show run details** visible long enough to read “Recorded Muse run,” simulator replay, and model cost.
+- Keep the failed-repair → changed-recommendation sequence in one continuous capture so the causal story is obvious.
+- The 3D scene opens on its final state. Playback is supporting motion, not required proof.
+- If a click is mistimed, replace it with the matching section from the second screen take; never fabricate a model response.
 
 ## Final review gate
 
-- Runtime is below 3:00 after the host platform processes the file.
-- Opening explains the problem within 10 seconds.
-- Muse is visibly central, but the host—not the model—decides results.
+- Final runtime remains below 3:00 after the hosting platform processes the file; target no more than 2:48.
+- The opening explains the problem within 10 seconds using only the product screen and voice.
+- No face camera, unrelated desktop content, API key, environment file, balance, or private notification appears.
+- Muse is visibly central, while the simulator—not the model—decides results.
+- Bottle Return visibly loads the recorded case before the replay.
 - Every spoken number matches the UI and checked-in artifacts.
-- The 12-case evaluation is named once, not enumerated; complete misses and errors stay in the report rather than crowding the demo.
-- Captions, audio, and app text are legible on a 13-inch laptop.
+- Captions are corrected by hand and remain readable on a 13-inch laptop and phone.
+- Audio has no clipping, long silence, distracting room noise, or music competing with the voice.
 - The video link works in an incognito window without sign-in.
