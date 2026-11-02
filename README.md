@@ -129,16 +129,12 @@ Paid benchmark and smoke scripts are intentionally not part of the default verif
 
 ## Evidence and documentation
 
+- [60-second judge guide](docs/judge-guide.md)
 - [Three-minute voiceover script](docs/demo-script.md)
-- [Screen-recording production plan](docs/demo-production-plan.md)
 - [Evaluation report](docs/evaluation.md)
-- [Paste-ready submission copy](docs/submission-copy.md)
-- [Submission and judge-access checklist](docs/submission-checklist.md)
-- [Usability protocol](docs/usability-protocol.md)
-- [Implementation ledger](tasks/todo.md)
-- [Original planning brief](creation.md)
 - [Recorded commerce investigation](artifacts/commerce-investigation-live.json)
 - [Recorded repair recheck](artifacts/commerce-repair-live.json)
+- [Machine-readable evaluation](artifacts/evaluation.json)
 
 ## Limitations
 
