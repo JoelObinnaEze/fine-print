@@ -147,7 +147,6 @@ Paid benchmark and smoke scripts are intentionally not part of the default verif
 ## Evidence and documentation
 
 - [60-second judge guide](docs/judge-guide.md)
-- [Three-minute voiceover script](docs/demo-script.md)
 - [Evaluation report](docs/evaluation.md)
 - [Recorded commerce investigation](artifacts/commerce-investigation-live.json)
 - [Recorded repair recheck](artifacts/commerce-repair-live.json)
