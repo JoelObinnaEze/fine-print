@@ -2,15 +2,17 @@
 
 > Test reward rules before they reward the wrong behaviour.
 
-Fine Print asks Meta Muse to turn plain-English incentive rules into concrete transaction tests and repair ideas. Deterministic simulators—not the model—execute every action, calculate every payout, and decide what the evidence proves.
+Fine Print asks Meta Muse to turn plain-English incentive rules into concrete transaction tests and repair ideas. Deterministic host simulators—not the model—execute every action, calculate every payout, and decide what the evidence proves.
 
-**Indie developer · Push the Frontier · Best Agentic Use-Case**
+[![Verify and deploy judge demo](https://github.com/JoelObinnaEze/fine-print/actions/workflows/pages.yml/badge.svg)](https://github.com/JoelObinnaEze/fine-print/actions/workflows/pages.yml)
 
-[Open the live judge demo](https://joelobinnaeze.github.io/fine-print/) · [Take the 60-second judge path](docs/judge-guide.md) · [Read the evaluation](docs/evaluation.md)
+**Track:** Indie developer · **Theme:** Push the Frontier
+
+**[Open the live demo](https://joelobinnaeze.github.io/fine-print/)** · [Follow the 60-second judge path](docs/judge-guide.md) · [Inspect the evaluation](docs/evaluation.md)
 
 ![Fine Print comparing a failed repair with the recommended policy](artifacts/opera-commerce-repair.png)
 
-## The result in 20 seconds
+## Judge snapshot
 
 A referral rule promised two $10 rewards after a referred customer spent $20.
 
@@ -22,7 +24,25 @@ A referral rule promised two $10 rewards after a referred customer spent $20.
 
 The Bottle Return lab applies the same boundary to a physical reward system. A recorded Muse case pays **30 points for one bottle deposited three times while recycling zero items**. The recommended rule pays once, only after an eligible item is processed.
 
-## Why this is useful
+### What to notice
+
+| Indie criterion | What Fine Print demonstrates |
+| --- | --- |
+| **Creativity** | It tests whether a written rule rewards the intended real-world outcome, not merely whether code follows the rule. The same method transfers from referral credit to a 3D recycling depot. |
+| **Technical ambition** | Muse interprets unfamiliar wording and proposes executable tests and repairs; strict schemas, bounded tool calls, deterministic replay, trace minimization, versioned evidence, and regression checks keep the result inspectable. |
+| **Whether it works** | The public build replays checked-in Muse runs without a key. CI runs type checking, the full test suite, a high-severity dependency audit, and the production build before deployment. |
+
+## 60-second judge path
+
+The public build opens on the strongest confirmed result and makes no paid request.
+
+1. **Commerce · What went wrong:** read `$20 reward`, `$0 value kept`, and the three required transactions.
+2. **Commerce · Best repair:** see why immediate reversal still exposes `$10`, then inspect the delayed recommendation.
+3. **Bottle Return · Your rule:** select **Load recorded case**.
+4. **Bottle Return · What went wrong:** replay `30 points / 0 recycled` in the 3D depot.
+5. **Bottle Return · Best repair:** inspect the processing-backed rule and its preserved honest reward.
+
+## Why it matters
 
 Reward software can implement a written rule perfectly and still reward behaviour its author never intended. Fine Print separates three things that are usually blurred together:
 
@@ -32,7 +52,7 @@ Reward software can implement a written rule perfectly and still reward behaviou
 
 It then produces an inspectable sequence that a deterministic simulator can replay. Confirmed cases stay attached to the exact policy version and become permanent regression checks. A later unsuccessful search cannot erase an earlier confirmed failure.
 
-## How it works
+## Muse proposes; the host decides
 
 ```text
 Plain-English rule + intended outcome + honest-user promise
@@ -50,7 +70,14 @@ Plain-English rule + intended outcome + honest-user promise
            minimized evidence + repair comparison + regression case
 ```
 
-Muse is essential for interpreting unfamiliar wording, forming hypotheses, proposing executable sequences, and generating repairs with different tradeoffs. It cannot edit active policies, execute code, access credentials, or declare success. The host alone emits verdicts.
+| Meta Muse does | Deterministic host does |
+| --- | --- |
+| Interpret unfamiliar policy wording | Validate every model response at the trust boundary |
+| Form a testable hypothesis | Enforce request, trial, action, time, and cost limits |
+| Propose an executable action sequence | Replay actions from an immutable initial state |
+| Suggest repairs with explicit tradeoffs | Calculate payouts and outcomes, minimize evidence, and emit the verdict |
+
+Muse cannot edit active policies, execute code, access credentials, calculate rewards, or declare success.
 
 ## Verified evidence
 
@@ -65,18 +92,6 @@ Muse is essential for interpreting unfamiliar wording, forming hypotheses, propo
 The small deterministic search baseline finds the seeded failures more consistently than Muse. Fine Print does not claim otherwise. Muse's demonstrated value is connecting unfamiliar language to inspectable tests and repair choices; independent replay supplies the evidence.
 
 Complete provenance, limits, actions, token usage, costs, unsuccessful attempts, and deterministic baselines are preserved in [the evaluation report](docs/evaluation.md) and [machine-readable artifact](artifacts/evaluation.json). These are bounded observations, not proof that a policy is universally safe.
-
-## Judge path
-
-The public build opens directly on the strongest result and makes no paid request.
-
-1. **Commerce · What went wrong:** read `$20 reward`, `$0 value kept`, and the three required transactions.
-2. **Commerce · Best repair:** see why immediate reversal still exposes `$10`, then inspect the recommended delayed repair.
-3. **Bottle Return · Your rule:** select **Load recorded case**.
-4. **Bottle Return · What went wrong:** replay `30 points / 0 recycled` in the 3D depot.
-5. **Bottle Return · Best repair:** inspect the processing-backed rule.
-
-The static judge build contains recorded evidence from real Muse runs but no API key or public paid endpoint. Live reproduction remains local and budget-capped.
 
 ## Run locally
 
@@ -104,16 +119,18 @@ npm run dev
 
 The API binds to `127.0.0.1:8787`. Live inference is disabled by default. The server serializes provider calls, reserves worst-case usage before each request, and retains ambiguous reservations after unknown outcomes.
 
-## Technical depth
+## Repository map
 
-- Strict TypeScript and Zod validation at every HTTP and model boundary.
-- Pure commerce and Bottle Return simulators with deterministic replay hashes.
-- Bounded Muse structured output and tool calling with explicit request, trial, action, and cost limits.
-- Trace minimization from immutable initial state.
-- SQLite persistence, idempotent run creation, budget reservation, and startup recovery.
-- Policy-bound regression cases and hash-verified portable exports.
-- Frozen repeated-run evaluation against a disclosed deterministic baseline.
-- Keyboard-accessible React interface with reduced-motion support and a CSS 3D replay.
+| Path | Purpose |
+| --- | --- |
+| `apps/web` | Judge interface, commerce workbench, 3D depot, replay, and repair comparison |
+| `apps/server` | Meta Model API boundary, budgets, persistence, run lifecycle, and verification |
+| `packages/engine` | Pure Bottle Return simulator |
+| `packages/commerce` | Pure referral-reward simulator and benchmarks |
+| `packages/policy` | Validated policy interpretation and payout evaluation |
+| `packages/evaluation` | Deterministic replay metrics and reference classifications |
+| `artifacts` | Checked-in Muse runs, corrected host evidence, evaluation JSON, and screenshot |
+| `tests` | Deterministic, property, provider-fixture, persistence, server, and UI coverage |
 
 ## Reproduce the project checks
 
@@ -134,6 +151,7 @@ Paid benchmark and smoke scripts are intentionally not part of the default verif
 - [Evaluation report](docs/evaluation.md)
 - [Recorded commerce investigation](artifacts/commerce-investigation-live.json)
 - [Recorded repair recheck](artifacts/commerce-repair-live.json)
+- [Corrected host re-verification](artifacts/commerce-repair-reverified.json)
 - [Machine-readable evaluation](artifacts/evaluation.json)
 
 ## Limitations
